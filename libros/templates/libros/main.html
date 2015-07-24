@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<!-- WELCOME -->
+<section>
+	<div class="container">	
+		<div class="row">
+			<div class="col-md-6">
+				<h1> Club de Libros Compartidos en Quito </h1>
+				<p class="lead">Deja que ese libro al fondo de tu escritorio sea leído una vez más, 
+				<em class="styleColor">y ten acceso a los libros de otros miembros del club.</em></p>
+
+				{% if user.is_authenticated %}
+					<div class="divider"><!-- divider -->
+						<i class="fa fa-user"></i>
+					</div>
+					<p> 
+					Estás autenticado como <strong>{{perfil_usuario.usuario.username}}</strong>, continúa a tu <a href="{% url 'perfiles:perfil_propio' %}">perfil</a><br>
+					o has <a href="{% url 'perfiles:logout' %}">logout</a> si deseas entrar con otra cuenta.
+					</p>
+
+				{% else %}
+					<a href="{% url 'social:begin' 'facebook' %}" class="btn btn-facebook btn-lg btn-block"><i class="fa fa-facebook"></i> Entra con Facebook</a>
+					<a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-google-plus btn-lg btn-block"><i class="fa fa-google-plus"></i> Entra con Google</a>
+				{% endif %}				
+				<br>
+
+			</div>
+			<div class="col-md-6 text-center">
+				<img class="img-responsive animate_fade_in" src="{% static 'assets/images/letrasclub/booksmain.jpg' %}" alt=""/>
+
+				<hr class="half-margins invisible" /><!-- divider 30px -->
+
+				<!-- facebook fan page -->
+				<div class="fb-page" data-width="500" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true" data-show-posts="false"><div class="fb-xfbml-parse-ignore"><blockquote cite="https://www.facebook.com/facebook"><a href="https://www.facebook.com/facebook">Facebook</a></blockquote></div></div>				
+			</div>
+		</div>
+		<div class ="row">
+			<div class="divider"><!-- divider -->
+				<i class="fa fa-chevron-down"></i>
+			</div>
+
+			<div class ="col-md-10 col-md-offset-1">
+				{% for lcompartido in ultimos_libros_compartidos %}
+					<div class="alert callout alert-default">
+						<div class="row">
+							<div class="col-md-9 col-sm-9"><!-- left text -->
+								<h4>{{lcompartido.perfil.usuario.username}} compartió <strong>{{lcompartido.libro.titulo}}</strong> de {{lcompartido.libro.autor}}. </h4>
+							</div><!-- /left text -->
+													
+							<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+								<img src="{{lcompartido.perfil.imagen_perfil}}" class="img-responsive img-circle">
+							</div><!-- /right btn -->
+
+						</div>
+					</div>
+				{% endfor %}
+
+				<div class="divider"><!-- divider -->
+					<i class="fa fa-book"></i>
+				</div>				
+
+				{% for lprestado in ultimos_libros_prestados %}
+					<div class="alert callout alert-default">
+						<div class="row">
+							<div class="col-md-9 col-sm-9"><!-- left text -->
+								<h4>{{lprestado.perfil_dueno.usuario.username}} prestó <strong>{{lprestado.libro.titulo}}</strong> de {{lprestado.libro.autor}} a 
+								{{lprestado.perfil_receptor.usuario.username}}. </h4>
+							</div><!-- /left text -->
+													
+							<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+								<img src="{{lprestado.perfil_dueno.imagen_perfil}}" class="img-responsive img-circle">
+								<img src="{{lprestado.perfil_receptor.imagen_perfil}}" class="img-responsive img-circle">
+							</div><!-- /right btn -->
+
+						</div>
+					</div>
+				{% endfor %}
+
+			</div>
+
+		</div>
+	</div>
+</section>
+<!-- /WELCOME -->
+{% endblock content %}

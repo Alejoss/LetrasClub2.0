@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+
+<!-- PAGE TOP -->
+<!-- parallax -->
+<div class="parallax parallax-1" style="background-image:url({% static 'assets/images/letrasclub/books_biblioteca.jpg' %});">
+	<span class="parallax-overlay"></span>
+	<div class="container parallax-content">
+		<div class="row">
+			<div class="col-md-5 col-sm-5 col-md-offset-1">
+				<a href="{% url 'libros:nuevo_libro' 'perfil' perfil_usuario.usuario.username %}"> Sumar un nuevo libro a tu <strong>biblioteca</strong></a>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- /parallax -->
+<!-- /PAGE TOP -->
+
+<div class = "col-md-10 col-md-offset-1">
+	<br>
+	<br>
+
+	<h3>Tus libros prestados a otros usuarios</h3>
+	{% for l in libros_prestados %}
+	<div class="alert callout alert-default">
+		<div class="row">
+			<div class="col-md-8 col-sm-8"><!-- left text -->
+				<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
+				<div class="toggle transparent">
+					<div class="toggle">
+						<label><h6>
+						Prestaste este libro a <a href="{% url 'perfiles:perfil_usuario' l.perfil_receptor.usuario.username %}">
+						{{l.perfil_receptor.usuario.username}}</a>
+						</h6></label>
+						<div class="toggle-content">
+							<p> 
+								<small>
+								Fecha máxima de devolución: {{l.fecha_max_devolucion}}. <br>
+								Mensaje: '{{l.mensaje_aceptacion}}' <br>
+								Teléfono de contacto en el perfil: {{l.perfil_receptor.numero_telefono_contacto}}. <br>
+								Email: {{l.perfil_receptor.usuario.email}}.
+								</small>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div><!-- /left text -->
+			<div class = "col-md-1">
+			</div>
+			<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+				{% if l.receptor_anuncio_devolucion %}
+					<p style="{color: red !important}">* {{l.perfil_receptor.usuario.username}} marcó este libro como devuelto</p>
+					<a href="" rel="nofollow" class="btn btn-danger btn-lg marcar_devuelto" data-id="{{l.id}}">
+					Marcar como Devuelto</a>
+				{% else %}
+					<a href="" rel="nofollow" class="btn btn-info btn-lg marcar_devuelto" data-id="{{l.id}}">
+					Marcar como Devuelto</a>
+				{% endif %}
+			</div><!-- /right btn -->
+		</div>
+	</div>
+	{% endfor %}
+
+	<hr>
+
+	<h3>Disponibles en tu biblioteca </h3>
+	{% for l in libros_disponibles %}
+	<div class="alert callout alert-default">
+		<div class="row">
+			<div class="col-md-9 col-sm-9"><!-- left text -->
+				<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
+			</div><!-- /left text -->			
+			<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+				<a href="" rel="nofollow" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}" title="Ya no estará disponible en tu Biblioteca">
+				Marcar No Disponible</a>
+			</div><!-- /right btn -->
+		</div>
+	</div>
+	{% endfor %}
+
+	<hr>
+
+	<h3> No Disponibles </h3>
+	{% for l in libros_no_disponibles %}
+	<div class="alert callout alert-default">
+		<div class="row">
+			<div class="col-md-9 col-sm-9"><!-- left text -->
+				<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
+			</div><!-- /left text -->			
+			<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+				<a href="" rel="nofollow" class="btn btn-success btn-lg marcar_disponible" data-id="{{l.id}}" title="Este libro estará disponible en tu Biblioteca">
+				Marcar como Disponible</a>
+			</div><!-- /right btn -->
+		</div>
+	</div>
+	{% endfor %}
+
+	<hr class = "invisible">
+</div>
+
+<script>
+	$(document).ready(function(){
+		$(".marcar_no_disponible").on("click", function(e){
+			e.preventDefault();
+			var libro_disp_id = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/marcar_no_disponible/",
+				data: {'id_libro_disp': libro_disp_id, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+		$(".marcar_disponible").on("click", function(e){
+			e.preventDefault();
+			var id_libro = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/marcar_disponible/",
+				data: {'id_libro': id_libro, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+		$(".marcar_devuelto").on("click", function(e){
+			e.preventDefault();
+			var id_libro = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/marcar_devuelto/",
+				data: {'id_libro': id_libro, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+	});
+</script>
+
+{% endblock content %}

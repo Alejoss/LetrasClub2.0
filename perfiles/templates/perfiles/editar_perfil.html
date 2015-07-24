@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class = "col-md-8">
+	<hr class ="invisible half-margins">
+
+	<div class="col-md-offset-1">
+		<h3> {{perfil_usuario.usuario.username}} - <small> {{perfil_usuario.usuario.email}} </small></h3>
+	</div>
+	<form class="form-horizontal" action="{% url 'perfiles:editar_perfil' %}" method="post">
+		{% csrf_token %}		
+			<fieldset>
+				{{form.non_field_errors}}				
+				<!-- Textarea -->
+				<div class="control-group">
+				  <label class="control-label" for="descripcion">Descripción:</label>
+					  <div class = "controls">
+					  	{{form.descripcion}}
+					  </div>
+				</div>
+
+				<!-- Text input-->
+				<div class="control-group">
+				  <label class="control-label" for="telefono">Teléfono:</label>
+				  <div class="controls">
+				    	{{form.numero_telefono_contacto}}
+				    <p class="help-block">Se mostrará tu número de contacto solamente cuando prestes o te presten un libro.</p>
+				  </div>
+				</div>
+
+				<!-- 
+				<div class="control-group">
+				  <label class="control-label" for="ciudad">Ciudad</label>
+				  <div class="controls">
+				    {{form.ciudad}}	
+				  </div>
+				</div>
+				-->
+
+			</fieldset>
+			<br>
+			<input class = "btn btn-success pull-right" type="submit" value="Submit">
+			<hr class = "invisible">
+	</form>
+</div>
+{% endblock content %}

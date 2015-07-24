@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<!--[if IE 8]>			<html class="ie ie8"> <![endif]-->
+<!--[if IE 9]>			<html class="ie ie9"> <![endif]-->
+<!--[if gt IE 9]><!-->	<html> <!--<![endif]-->
+<head>
+	<meta charset="utf-8" />
+	<title>Letras.Club</title>
+	<meta name="keywords" content="Club, Libros, Quito, Compartir, Lectura, ClubLibros, Letras, LetrasClub" />
+	<meta name="description" content="Red Social | Club Online para compartir Libros"/>
+	<meta name="Author" content="letras.club" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+	<!-- mobile settings -->
+	<meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=0" />
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="{% static 'assets/images/letrasclub/letras_small.ico' %}" />
+
+	<!-- WEB FONTS -->
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/letrasclub/extra_css.css' %} ">
+
+	<!-- CORE CSS -->
+	<link href="{% static 'assets/plugins/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />	
+	<link href="{% static 'assets/css/sky-forms.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/weather-icons.min.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/line-icons.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/plugins/owl-carousel/owl.pack.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/plugins/magnific-popup/magnific-popup.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/animate.css' %}" rel="stylesheet" type="text/css" />
+
+	<!-- THEME CSS -->
+	<link href="{% static 'assets/css/essentials.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/layout.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/header-2.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/footer-default.css' %}" rel="stylesheet" type="text/css" />
+	<link href="{% static 'assets/css/color_scheme/brown.css' %}" rel="stylesheet" type="text/css" id="color_scheme" />
+
+	<!-- Morenizr -->
+	<script type="text/javascript" src="{% static 'assets/plugins/modernizr.min.js' %}"></script>
+
+	<!-- Jquery -->		
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+</head>
+
+<body class = "boxed pattern1">
+
+<!-- facebook -->
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v2.3&appId=496030367220511";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-54967904-2', 'auto');
+  ga('send', 'pageview');
+
+</script>
+	
+	<div id="wrapper">
+	
+	{% include 'menu.html' %}
+
+	{% block content %}
+
+	{% endblock content %}
+
+	</div>
+
+	<!-- JAVASCRIPT FILES -->
+	<script type="text/javascript" src="{% static 'assets/plugins/jquery-2.1.1.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/jquery.isotope.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/masonry.js' %}"></script>
+
+	<script type="text/javascript" src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/magnific-popup/jquery.magnific-popup.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/owl-carousel/owl.carousel.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/knob/js/jquery.knob.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/flexslider/jquery.flexslider-min.js' %}"></script>
+
+	<!-- REVOLUTION SLIDER -->
+	<script type="text/javascript" src="{% static 'assets/plugins/revolution-slider/js/jquery.themepunch.tools.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/plugins/revolution-slider/js/jquery.themepunch.revolution.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'assets/js/revolution_slider.js' %}"></script>
+	
+
+	<script type="text/javascript" src="{% static 'assets/js/scripts.js' %}"></script>
+
+	{% block extra_javascript %}		
+	{% endblock extra_javascript %}
+</body>
+</html>

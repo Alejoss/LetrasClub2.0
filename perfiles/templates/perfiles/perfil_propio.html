@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<div class = "col-md-8">
+	{% if libros_perfil.tiene_libros_pedidos %}
+		<hr class="half-margins" /><!-- divider 30px -->	
+		<h4> Has pedido prestado estos libros </h4>
+
+		{% for r in libros_pedidos %}
+		<!-- CALLOUT -->
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{r.libro.titulo}}</strong> {{r.libro.autor}}</h4>
+					<p>
+						Jul-5-2015 | pediste este libro a <a href="{% url 'perfiles:perfil_usuario' r.perfil_recepcion.usuario.username %}">{{r.perfil_recepcion.usuario.username}}.
+						</a>
+					</p>
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a class="cancelar_pedido" data-id="{{r.id}}" href="" rel="nofollow">Cancelar</a>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		<!-- /CALLOUT -->
+		{% endfor %}
+	
+	{% endif %}
+
+	{% if libros_perfil.tiene_libros_prestados %}
+		<hr class="half-margins" /><!-- divider 30px -->	
+		<h4> Tienes libros prestados </h4>
+
+		{% for l in libros_prestados %}
+		<!-- CALLOUT -->
+		<div class="alert callout alert-default">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>					
+					<div class="toggle transparent">
+						<div class="toggle">
+							<label><h6>
+							Tienes este libro de <a target="_blank" href="{% url 'perfiles:perfil_usuario' l.perfil_dueno.usuario.username %}">
+							{{l.perfil_dueno.usuario.username}}</a>
+							</h6></label>
+							<div class="toggle-content">
+								<p> 
+									<small>
+									{% if l.fecha_max_devolucion %}
+										Fecha máxima de devolución: {{l.fecha_max_devolucion|date}}. <br>
+									{% endif %}
+									Mensaje: '{{l.mensaje_aceptacion}}' <br>
+									Teléfono de contacto: {{l.perfil_dueno.numero_telefono_contacto}}. <br>
+									Email: {{l.perfil_dueno.usuario.email}}.
+									</small>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					{% if l.receptor_anuncio_devolucion %}
+						<p> <small> marcaste este libro como devuelto </small></p>
+					{% else %}
+						<button class="btn btn-info anunciar_devuelto" data-toggle="modal" data-target=".bs-example-modal-sm" data-id="{{l.id}}" >Ya lo devolví</button>
+					{% endif %}
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		<!-- /CALLOUT -->
+		{% endfor %}
+
+		{% for l in libros_prestados_bcompartida %}
+		<!-- CALLOUT -->
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
+					<div class="toggle transparent">
+						<div class="toggle">
+							<label><h6>
+							Tienes este libro de <a target="_blank" href="{% url 'libros:biblioteca_compartida' l.biblioteca_compartida.slug %}">
+							{{l.biblioteca_compartida.nombre}}</a>
+							</h6></label>
+							<div class="toggle-content">
+								<p>
+									<small>
+									Fecha máxima de devolución: {{l.fecha_max_devolucion|date}}. <br>
+									Dirección: {{l.biblioteca_compartida.direccion}}
+									</small>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->					
+					<button class="btn btn-info" data-toggle="modal" data-target=".bs-example-modal-sm">Ya lo devolví</button>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		<!-- /CALLOUT -->
+		{% endfor %}
+
+		<!--Modal Anunciar Devolucion -->
+		<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+
+					<div class="modal-header"><!-- modal header -->
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="myModalLabel">Anunciar devolución</h4>
+					</div><!-- /modal header -->
+
+					<!-- modal body -->
+					<div class="modal-body">
+						Se enviará un mensaje al dueño recordándole que marque el libro como devuelto.
+					</div>
+					<!-- /modal body -->
+
+					<div class="modal-footer"><!-- modal footer -->
+						<button class="btn btn-default" data-dismiss="modal">Cancelar</button> <button id="modal_devolucion" class="btn btn-primary" data-id="">Ya lo devolví</button>
+					</div><!-- /modal footer -->
+
+				</div>
+			</div>
+		</div>
+
+
+	{% endif %}
+
+		{% if not libros_perfil.tiene_libros_pedidos and not libros_perfil.tiene_libros_prestados %}
+			<hr class ="invisible">
+			<div class="alert alert-default"><!-- INFO -->
+				<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">X</span></button>
+				<strong>No has pedido ningún libro ni tienes un libro prestado.</strong>
+				Si deseas, busca un <a href="{% url 'libros:libros_ciudad' 'quito' '18' 'titulo' %}">libro disponible</a> en Quito
+			</div>
+
+		{% endif %}
+
+	{% if libros_perfil.tiene_requests_pendientes %}
+		<hr class="half-margins" /><!-- divider 30px -->
+		<h4> Tienes pedidos pendientes</h4>
+		<!-- CALLOUT -->
+		{% for r in libros_requests %}
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{r.libro.titulo}}</strong> {{r.libro.autor}}</h4>
+					<p>
+						{{r.fecha_request|date}} | <a href="{% url 'perfiles:perfil_usuario' r.perfil_envio.usuario.username %} ">{{r.perfil_envio.usuario.username}} </a> desea leer este libro.
+					</p>
+				</div><!-- /left text -->				
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a href="{% url 'libros:libro_request' r.id %}" rel="nofollow" target="_blank" class="btn btn-warning btn-lg">Ver mensaje</a>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		{% endfor %}
+		<!-- /CALLOUT -->
+	{% endif %}
+	<hr class="half-margins" /><!-- divider 30px -->
+</div>
+	
+<div class = "col-md-4">
+	<br>
+	
+	<figure class="text-center margin-bottom8">		
+		<img class="img-responsive img-circle" src="{{avatar}}" width="260" height="260" alt="">
+	</figure>
+	
+	<h3 class="nomargin">{{perfil_usuario.usuario.username}}</h3>
+
+	<!--
+	{% if not perfil_usuario.ciudad %}
+		<a href="{% url 'perfiles:editar_perfil' %}" class="margin-bottom20 margin-top6 block gray fsize12">Importante: Define tu Ciudad</a>
+	{% else %}
+		<span class="margin-bottom20 margin-top6 block gray fsize12">{{perfil_usuario.ciudad.name}}</span>
+	{% endif %}
+	-->
+
+	{% if perfil_usuario.descripcion %}	
+		<p class ="gray">{{perfil_usuario.descripcion}}</p>
+	{% else %}
+		<a href="{% url 'perfiles:editar_perfil' %}" class="margin-bottom20 margin-top6 block gray fsize12">Describe tu perfil</a>
+	{% endif %}
+
+	<div class="divider">
+		<i class="fa fa-book"></i>
+	</div>
+
+	<div class="row profile-activity hidden-xs">
+		<!-- activity item -->
+		<div class="col-xs-10 col-sm-11">
+			<h3><a href="{% url 'libros:mi_biblioteca' %}">Biblioteca</a></h3>
+
+			{% for l in libros_disponibles %}
+			<div class="alert alert-default">
+				<div class="row">
+					<div class="col-md-9 col-sm-9"><!-- left text -->						
+						<p>
+							<strong>{{l.libro.titulo}}</strong> <br> <small> {{l.libro.autor}} </small>
+						</p>
+					</div><!-- /left text -->
+				</div>
+			</div>
+			{% empty %}
+			<p> No tienes libros disponibles por ahora </p>
+
+			{% endfor %}
+
+		<div class="col-sm-12">
+			<hr class="half-margins" />
+		</div><!-- /activity separator -->
+	</div>
+	<!-- /activity list -->
+</div>
+{% endblock content %}
+
+
+{% block extra_javascript %}
+<script>
+	$(document).ready(function(){
+
+		$(".cancelar_pedido").on("click", function(e){
+			e.preventDefault();
+			var request_id = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/cancelar_pedido/",
+				data: {'request_id': request_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+
+		$(".anunciar_devuelto").on("click", function(e){
+			e.preventDefault();
+			var lprestado_id = $(this).data("id");
+			console.log(lprestado_id);
+			$("#modal_devolucion").data("id", lprestado_id);			
+		});
+
+		$("#modal_devolucion").on("click", function(e){
+			e.preventDefault();
+			var libro_id = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/anunciar_devolucion/",
+				data: {'id_libro_prestado': libro_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+	});
+
+</script>
+{% endblock extra_javascript %}

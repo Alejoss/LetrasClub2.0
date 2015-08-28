@@ -14,7 +14,7 @@ class Libro(models.Model):
 
 	def save(self, *args, **kwargs):
 		if not self.id:
-			# nuevo objecto, crear slug
+			# nuevo objeto, crear slug
 			self.slug = slugify(self.titulo)
 
 		super(Libro, self).save(*args, **kwargs)

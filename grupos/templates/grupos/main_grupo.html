@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- PAGE TOP -->
+<!-- parallax -->
+<div class="parallax parallax-1" style="background-image:url({{grupo.imagen}});">
+	<span class="parallax-overlay"></span>
+	<div class="container parallax-content">
+		<div class="row">
+			<div class="col-md-5 col-sm-5 col-md-offset-1">
+				<h3> {{grupo.nombre}} </h3>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- /parallax -->
+<!-- /PAGE TOP -->
+
+<div class = "col-md-8">
+	<hr class ="half-margins invisible">
+</div>
+
+<div class ="col-md-4">
+	<p>
+		{{grupo.descripcion}}
+	</p>
+</div>
+
+{% endblock content %}

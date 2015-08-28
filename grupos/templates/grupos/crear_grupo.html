@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class = "col-md-6 col-md-offset-1">
+		<br>
+		<form class="form-horizontal" action="{% url 'grupos:crear_grupo' %}" method="post">
+			{% csrf_token %}		
+				<fieldset>
+					{{form}}
+				</fieldset>
+				<br>
+				<input class = "btn btn-success pull-right" type="submit" value="Submit">	
+		</form>
+		<hr class = "invisible">
+	</div>
+
+	<div class ="col-md-4">
+		<hr class="invisible half-margins">
+		<p class ="well">
+			<i class = "fa fa-info-circle"></i>
+
+			 Información sobre creación de Grupo
+			
+		</p>
+	</div>
+
+	<script type="text/javascript">	
+	</script>
+{% endblock content %}

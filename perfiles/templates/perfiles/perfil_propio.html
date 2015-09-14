@@ -172,6 +172,16 @@
 	
 	<h3 class="nomargin">{{perfil_usuario.usuario.username}}</h3>
 
+	
+	{% if grupos %}
+		<hr class ="half-margins invisible">
+		<h3> Grupos </h3>		
+		{% for grupo in grupos %}
+			<a href="{% url 'grupos:main_grupo' grupo.id %}" class="">{{grupo.nombre}}</a>
+			<br>
+		{% endfor %}
+	{% endif %}
+
 	<!--
 	{% if not perfil_usuario.ciudad %}
 		<a href="{% url 'perfiles:editar_perfil' %}" class="margin-bottom20 margin-top6 block gray fsize12">Importante: Define tu Ciudad</a>
@@ -189,6 +199,8 @@
 	<div class="divider">
 		<i class="fa fa-book"></i>
 	</div>
+
+	<h3>
 
 	<div class="row profile-activity hidden-xs">
 		<!-- activity item -->

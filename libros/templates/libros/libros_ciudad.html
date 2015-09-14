@@ -18,6 +18,18 @@
 <!-- /parallax -->
 <!-- /PAGE TOP -->
 
+<!-- Top Nav -->
+<div class="navbar-collapse nav-main-collapse collapse">
+	<nav class="nav-main">
+		<ul id="topMain" class="nav nav-pills nav-main">								
+			<li><a href="{% url 'libros:nuevo_libro' 'perfil' user.username %}"><i class="fa fa-book"></i> Compartir un Libro</a></li>
+			<li><a href="{% url 'grupos:crear_grupo' %}"><i class="fa fa-group"></i> Crear un Grupo</a></li>
+			<li><a href=""><i class="fa fa-map-marker"></i> Buscar otras Ciudades</a></li>
+		</ul>
+	</nav>
+</div>
+<!-- /Top Nav -->
+
 <div class = "col-md-8">
 	<!--
 	<a href="{% url 'libros:buscar_ciudad' %}" class="pull-right">Buscar libros en otra ciudad <i class="fa fa-external-link-square"></i></a>
@@ -108,8 +120,29 @@
 <div class = "col-md-4">
 	<hr class="half-margins invisible" /><!-- divider 30px -->
 
+	{% if grupos_abiertos %}
+		<h4> Grupos en Quito </h4>
+		{% for grupo in grupos_abiertos %}
+			<a href="{% url 'grupos:main_grupo' grupo.id %}">{{grupo.nombre}}</a>
+			<br>
+		{% endfor %}
+	{% endif %}
+
+	<hr class = "half-margins invisible"></hr>
+
+	{% if grupos_usuario %}
+		<h4> Tus Grupos </h4>
+		{% for u_grupo in grupos_usuario %}
+			<a href="{% url 'grupos:main_grupo' u_grupo.grupo.id %}"> {{ u_grupo.grupo.nombre }} </a>
+			<br>
+		{% endfor %}
+	{% endif %}
+	
+	<div class ="divider"></div>
+
 	<p class ="well">
 	Actualmente hay <strong>{{num_libros_disponibles}}</strong> libros compartidos en {{ciudad.name}}.
+
 	{% if user.is_authenticated %}
 		<a href="{% url 'libros:nuevo_libro' 'perfil' user.username %}">Comparte</a>
 	{% else %}
@@ -132,13 +165,8 @@
 	{% comment 'bibliotecas compartidas' %} 
 	<h4> Bibliotecas Compartidas</h4>
 
-
 	<div class="tabs nomargin">
-
-	
-		<div class="tab-content">
-
-	
+		<div class="tab-content">	
 			<div id="tab_1" class="tab-pane active">
 
 				{% for biblioteca in bibliotecas_compartidas %}
@@ -154,8 +182,7 @@
 					</div>
 				</div>
 				{% endfor %}
-			</div>
-	
+			</div>	
 		</div>
 	</div>
 	

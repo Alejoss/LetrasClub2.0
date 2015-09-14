@@ -16,6 +16,8 @@ from cities_light.models import City
 from libros.models import LibrosDisponibles, LibrosPrestados, Libro, LibrosRequest, BibliotecaCompartida, \
                           LibrosBibliotecaCompartida, LibrosPrestadosBibliotecaCompartida
 from perfiles.models import Perfil
+from grupos.models import Grupo, UsuariosGrupo
+
 from forms import FormNuevoLibro, FormPedirLibro, NuevaBibliotecaCompartida, EditarBibliotecaCompartida, FormPrestarLibroBCompartida
 from letrasclub.utils import obtener_perfil, definir_fecha_devolucion, obtenerquito, mail_pedir_libro, mail_anunciar_devolucion, \
                             mail_aceptar_prestamo, obtener_avatar_large, obtener_historial_libros
@@ -107,9 +109,10 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
     Recibe como parametro una ciudad, un id de la ciudad y un filtro. 
     renderea un html con los libros ordenados por el filtro
     """
-
+    
     template = "libros/libros_ciudad.html"
-    ciudad = City.objects.get(pk=id_ciudad)    
+    ciudad = City.objects.get(pk=id_ciudad)
+    perfil_usuario = obtener_perfil(request.user)
 
     if filtro == "autor":
         lista_libros_disponibles = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True, prestado=False).order_by("libro__autor")
@@ -119,19 +122,24 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
     bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad, eliminada=False)
     num_libros_disponibles = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True, prestado=False).count()
 
-    # paginator
+    # Paginator
     paginator = Paginator(lista_libros_disponibles, 100)
-
     page = request.GET.get("page")
-    
     try:
         libros_disponibles = paginator.page(page)
-    
     except PageNotAnInteger:
         libros_disponibles = paginator.page(1)
-
     except EmptyPage:
         libros_disponibles = paginator.page(paginator.num_pages)
+
+    # Grupos abiertos de la ciudad
+    grupos_abiertos = None
+    if Grupo.objects.filter(ciudad=ciudad, tipo__in=[1, 2]).exists():
+        grupos_abiertos = Grupo.objects.filter(ciudad=ciudad, tipo__in=[1, 2])
+
+    grupos_usuario = None
+    if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
+        grupos_usuario = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True)
 
     context = {
         'filtro': filtro,
@@ -139,7 +147,9 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
         'libros_disponibles': libros_disponibles,
         'num_libros_disponibles': num_libros_disponibles,
         'paginator': paginator,
-        'bibliotecas_compartidas': bibliotecas_compartidas
+        'bibliotecas_compartidas': bibliotecas_compartidas,
+        'grupos_abiertos': grupos_abiertos,
+        'grupos_usuario': grupos_usuario
         }
 
     return render(request, template, context)

@@ -155,3 +155,14 @@ def mail_aceptar_prestamo(libro_prestado):
 		)
 
 	return None
+
+
+def mail_invitar_grupo(email, invitado_por, usuario_invitado, grupo):
+	"""
+	Envía un mail al usuario notificándole que se le ha invitado a formar parte de un grupo en LetrasClub
+	"""
+
+	titulo = "%s te ha invitado al grupo %s de LetrasClub" % (invitado_por, grupo)
+	mensaje_texto = "%s te ha invitado a un grupo de literatura en el cual podrás compartir libros físicos y comentar sobre ellos\
+	en www.letras.club, una red social dedicada a los lectores que buscan compartir sus libros y formar grupos localizados de lectura"
+

@@ -22,7 +22,41 @@
 </div>
 
 <div class ="col-md-4">
-	<p>
+	<hr class ="half-margins invisible">
+	<h3> Miembros </h3>
+	<div class="alert callout alert-default">
+		<div class = "row">
+			{% for miembro in miembros %}
+				<div class="col-md-2 col-sm-2"><!-- right btn -->
+					<a title="{{miembro.usuario.username}}" href=""><img src="{{miembro.imagen_perfil}}" class="img-responsive img-circle"></a>
+				</div><!-- /right btn -->
+			{% endfor %}
+		</div>
+	</div>
+
+	{% for r in requests_entrar_grupo %}
+		<div class ="alert callout alert-default">
+			{% if r.invitado_por %}
+				<p> 
+					<a target="_blank" href="{% url 'perfiles:perfil' r.invitado_por.usuario.username %}">{{r.invitado_por.usuario.username}}</a> invitó a 
+					<a target="_blank" href="{% url 'perfiles:perfil' r.invitado_por.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a>
+					al grupo
+				</p>
+
+			{% else %}
+				<p>
+					<a target="_blank" href="{% url 'perfiles:perfil' r.invitado_por.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a> ha solicitado unirse al grupo
+				</p>
+			{% endif %}
+			<btn data-request-id="{{r.id}}" class ="aceptar_invitacion btn success">
+		</div>
+	{% endfor %}
+
+	<a href ="{% url 'grupos:invitar' grupo.id %}"> Invitar a alguien al grupo </a>
+
+	<hr class ="half-margins invisible">
+	<h3> Información </h3>
+	<p>	
 		{{grupo.descripcion}}
 	</p>
 </div>

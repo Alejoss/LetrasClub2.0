@@ -24,7 +24,7 @@ CITIES_LIGHT_INCLUDE_COUNTRIES = ['EC']
 
 # Context Processors
 TEMPLATE_CONTEXT_PROCESSORS += ('perfiles.context_processors.procesar_perfil', 'perfiles.context_processors.procesar_ciudad',
-                                'perfiles.context_processors.notificaciones_requests',
+                                'perfiles.context_processors.notificaciones',
                                 'social.apps.django_app.context_processors.backends', 
                                 'social.apps.django_app.context_processors.login_redirect')
 
@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'social.apps.django_app.default',
+    'grupos',
     'libros',
     'perfiles',
     'storages',

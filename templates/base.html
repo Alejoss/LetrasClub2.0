@@ -18,11 +18,10 @@
 	<link rel="shortcut icon" href="{% static 'assets/images/letrasclub/letras_small.ico' %}" />
 
 	<!-- WEB FONTS -->
-	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/letrasclub/extra_css.css' %} ">
-
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+	
 	<!-- CORE CSS -->
-	<link href="{% static 'assets/plugins/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />	
+	<link href="{% static 'assets/plugins/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/sky-forms.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/weather-icons.min.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/line-icons.css' %}" rel="stylesheet" type="text/css" />
@@ -36,6 +35,11 @@
 	<link href="{% static 'assets/css/header-2.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/footer-default.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/color_scheme/brown.css' %}" rel="stylesheet" type="text/css" id="color_scheme" />
+
+	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/letrasclub/extra_css.css' %} ">
+
+	{% block extra_css %}
+	{% endblock extra_css %}
 
 	<!-- Morenizr -->
 	<script type="text/javascript" src="{% static 'assets/plugins/modernizr.min.js' %}"></script>

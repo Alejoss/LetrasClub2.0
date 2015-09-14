@@ -1,5 +1,6 @@
 from perfiles.models import Perfil
 from libros.models import LibrosRequest
+from grupos.models import RequestInvitacion, UsuariosGrupo
 
 
 def procesar_perfil(request):
@@ -27,11 +28,28 @@ def procesar_ciudad(request):
 	return context
 
 
-def notificaciones_requests(request):
-	num_requests = None
+def notificaciones(request):
+	"""
+	Devuelve un diccionario con las notificaciones. Notificacion: tipo, notificacion
+	"""
+	notificaciones = None
 	if request.user.is_authenticated():
+
 		perfil_usuario = Perfil.objects.get(usuario=request.user)
-		if LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).exists():		
-			num_requests = LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).count()
-	
-	return {'num_requests': num_requests}
+
+		# Notificacion si tiene pedidos de libros
+		requests_libros = 0
+		if LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).exists():
+			requests_libros = LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).count()
+
+		# Revisar si el usuario es admin de algun grupo, notificacion para los admins si existen requests no aceptados
+		requests_inv_grupos = 0
+		if UsuariosGrupo.objects.filter(usuario=perfil_usuario, es_admin=True).exists():
+			usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, es_admin=True).select_related('grupo')
+			grupos = [x.grupo for x in usuarios_grupo_obj]
+			if RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).exists():
+				requests_inv_grupos = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).count()				
+
+		notificaciones = requests_libros + requests_inv_grupos
+
+	return {'notificaciones': notificaciones}

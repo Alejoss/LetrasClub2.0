@@ -6,10 +6,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 
-from forms import formRegistro, formEditarPerfil
 from cities_light.models import City
 from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles
 from perfiles.models import Perfil
+from grupos.models import UsuariosGrupo, Grupo
+
+from forms import formRegistro, formEditarPerfil
 from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito
 
 
@@ -42,16 +44,17 @@ def perfil_propio(request):
 	"""
 	template = "perfiles/perfil_propio.html"
 	perfil_usuario = obtener_perfil(request.user)
+	avatar = obtener_avatar_large(perfil_usuario)
+	
+
+	# Libros Perfil
 	libros_perfil = {
 		'tiene_requests_pendientes': False,
 		'tiene_libros_prestados': False,
 		'tiene_libros_pedidos': False
 		}
 
-	libros_requests = []
-	libros_prestados = []
-	libros_prestados_bcompartida = []
-	libros_pedidos = []
+	libros_requests = libros_prestados = libros_prestados_bcompartida = libros_pedidos = []
 
 	if LibrosRequest.objects.filter(perfil_envio=perfil_usuario, aceptado=False, eliminado=False).exists():
 		libros_perfil['tiene_libros_pedidos'] = True
@@ -71,11 +74,15 @@ def perfil_propio(request):
 
 	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario, disponible=True, prestado=False)
 
-	avatar = obtener_avatar_large(perfil_usuario)
+	# Grupos Perfil
+	grupos = None
+	if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related('grupo')
+		grupos = [ug.grupo for ug in usuarios_grupo_obj]
 
 	context = {'libros_perfil': libros_perfil, 'libros_requests': libros_requests, 'libros_prestados': libros_prestados,
 	           'libros_pedidos': libros_pedidos, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 
-	           'libros_disponibles': libros_disponibles, 'avatar': avatar}
+	           'libros_disponibles': libros_disponibles, 'avatar': avatar, 'grupos': grupos}
 	
 	return render(request, template, context)
 

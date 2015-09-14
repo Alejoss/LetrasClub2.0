@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.css' %} ">
+{% endblock extra_css %}
+
+{% block content %}
+<!-- PAGE TOP -->
+<!-- parallax -->
+<div class="parallax parallax-1" style="background-image:url({{grupo.imagen}});">
+	<span class="parallax-overlay"></span>
+	<div class="container parallax-content">
+		<div class="row">
+			<div class="col-md-5 col-sm-5 col-md-offset-1">
+				<h3 id="grupo" data-grupo-id="{{grupo.id}}"> {{grupo.nombre}} </h3>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- /parallax -->
+<!-- /PAGE TOP -->
+
+<div class = "col-md-6 col-md-offset-1">
+	<br>
+	<form class="form-horizontal" action="" method="post">
+		{% csrf_token %}		
+			<fieldset>
+				<!-- Form Name -->
+				<legend>Enviar invitaciones</legend>
+
+				<!-- Text input-->		
+				<div class ="row">
+					<div class="form-group">
+					  <label class="col-md-2 control-label" for="textinput">Usuario</label>
+					  <div class="col-md-8">
+						  <input id="username_invitacion" name="textinput" placeholder="nombre de usuario" class="form-control input-md" type="text">
+						  <span class="help-block">Puedes añadir varios usuarios.</span>
+					  </div>
+					  <div clas ="col-md-2">
+					  	<btn id="sumar_username" class = "btn btn-success pull-left">+</btn>
+					  </div>
+					</div>
+				</div>
+
+				<div id="invitaciones" class ="">
+				</div>
+
+			</fieldset>
+			<br>
+			<input id="submit" class = "btn btn-success pull-right disabled" type="submit" value="Invitar" data-url="{% url 'grupos:invitar_ajax' %}">
+	</form>
+	<hr class ="divider invisible">
+</div>
+{% endblock %}
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
+
+<script>
+	$(document).ready(function(){
+		usernames_dict=JSON.parse('{{usernames_dict|safe}}');		
+
+		var usernames_autocomplete = [];
+		$.each(usernames_dict, function(key, value){
+			usernames_autocomplete.push({'label': key+" - "+value.ciudad, 'value': key});
+		});
+
+		$("#username_invitacion").autocomplete({
+			source: usernames_autocomplete,
+			minLength: 2
+		});
+
+		invitaciones = []  // Dict a enviar en Ajax call
+		function renderInvUsuario(usuario_dict){				
+			var username = usuario_dict.username;
+			var imagen = usuario_dict.imagen_perfil;
+			var ciudad = usuario_dict.ciudad;
+
+			var html_invitacion = '<div class = "row">'+
+			'<div class="alert callout alert-default">'+
+			'<div class="row">'+
+			'<div class="col-md-8 col-sm-8">'+
+			'<h4><strong>'+username+'<strong><br><small>'+ciudad+'</small></h4></div>'+
+			'<div class="col-md-2 col-sm-2 text-right">'+
+			'<img src="'+imagen+'"class="img-responsive img-circle">'+
+			'</div></div></div></div>';
+
+			$("#invitaciones").append(html_invitacion);
+		}
+
+		$("#sumar_username").on("click", function(){
+			var nombre_usuario = $("#username_invitacion").val();
+			invitaciones.push({'tipo': 'username', 'nombre_usuario': nombre_usuario});
+
+			var usuario_dict = usernames_dict[nombre_usuario];				
+			renderInvUsuario(usuario_dict);
+
+			if (invitaciones.length > 0){
+				$("#submit").removeClass("disabled");
+			};
+		});
+
+		$("#submit").on("click", function(e){
+			e.preventDefault();
+
+			$(this).text("Enviando Invitaciones");
+
+			var grupo_id = $("#grupo").data("grupo-id");
+
+			var data = {'grupo_id': grupo_id, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'invitaciones': JSON.stringify(invitaciones)}
+
+			$.ajax({
+				method: "POST",
+				url: $("#submit").data("url"),
+				data: data,
+				success: function(){
+					$("#submit").text("Invitaciones Enviadas");
+
+					// Depende de la respuesta, miembro sumado al grupo o invitación enviada
+				},
+				error: function(){
+					$("#submit").text("Hubo un error enviando las invitaciones")
+				}
+			});
+		});
+	});
+</script>
+{% endblock extra_javascript %}

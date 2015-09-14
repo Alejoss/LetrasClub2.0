@@ -6,10 +6,37 @@
 		<form class="form-horizontal" action="{% url 'grupos:crear_grupo' %}" method="post">
 			{% csrf_token %}		
 				<fieldset>
-					{{form}}
+					{{form.non_field_errors}}
+					
+					{{form.nombre.errors}}
+					{{form.nombre.label}}
+					{{form.nombre}}
+
+					{{form.descripcion.errors}}
+					{{form.descripcion.label}}
+					{{form.descripcion}}
+
+					{{form.imagen.errors}}
+					{{form.imagen.label}}
+					{{form.imagen}}
+
+					{{form.tipo_apertura.errors}}
+					{{form.tipo_apertura.label}}
+					{{form.tipo_apertura}}
+
+					{{form.tipo_invitaciones.errors}}
+					{{form.tipo_invitaciones.label}}
+					{{form.tipo_invitaciones}}
+
+					{% if tiene_ciudad %}
+					{{form.situar_ciudad.errors}}
+						<label class="control-label" for="{{form.situar_ciudad.id_for_label}}"> Este grupo estará localizado en la ciudad de {{perfil_ciudad}} &nbsp</label>
+					{{form.situar_ciudad}}
+					{% endif %}
+
 				</fieldset>
 				<br>
-				<input class = "btn btn-success pull-right" type="submit" value="Submit">	
+				<input class = "btn btn-success pull-right" type="submit" value="Submit">
 		</form>
 		<hr class = "invisible">
 	</div>
@@ -18,12 +45,10 @@
 		<hr class="invisible half-margins">
 		<p class ="well">
 			<i class = "fa fa-info-circle"></i>
-
 			 Información sobre creación de Grupo
-			
 		</p>
 	</div>
 
-	<script type="text/javascript">	
+	<script type="text/javascript">
 	</script>
 {% endblock content %}

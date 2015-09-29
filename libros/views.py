@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import json
 from django.db.models import Q
 
 from datetime import datetime
@@ -14,7 +15,7 @@ from django.utils.html import strip_tags
 
 from cities_light.models import City
 from libros.models import LibrosDisponibles, LibrosPrestados, Libro, LibrosRequest, BibliotecaCompartida, \
-                          LibrosBibliotecaCompartida, LibrosPrestadosBibliotecaCompartida
+                          LibrosBibliotecaCompartida, LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo
 from perfiles.models import Perfil
 from grupos.models import Grupo, UsuariosGrupo
 
@@ -91,11 +92,16 @@ def mi_biblioteca(request):
     """
     template = "libros/mi_biblioteca.html"
     perfil_usuario = obtener_perfil(request.user)
+    grupos_usuario = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related("grupo")
     libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario, disponible=True, prestado=False)
     libros_no_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario, disponible=False, prestado=False)
     libros_prestados = LibrosPrestados.objects.filter(perfil_dueno=perfil_usuario, fecha_devolucion=None)
 
+    grupos_list = [(g.grupo.id, g.grupo.nombre) for g in grupos_usuario]
+    grupos_json = json.dumps(grupos_list)
+
     context = {
+        'grupos_json': grupos_json,
         'libros_disponibles': libros_disponibles,
         'libros_prestados': libros_prestados,
         'libros_no_disponibles': libros_no_disponibles
@@ -685,3 +691,66 @@ def cambiar_dueno_libros(request):
     context = {'libros': libros, 'perfiles': perfiles}
 
     return render(request, template, context)
+
+
+def info_libro_grupos_ajax(request):
+        
+        if request.is_ajax():
+            id_libro_disponible = request.GET.get('id_libro_disponible')
+            libro_disponible = LibrosDisponibles.objects.get(id=id_libro_disponible)
+            perfil_usuario = Perfil.objects.get(usuario=request.user)
+
+            grupos = {}
+            grupos_libro = None
+            if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, perfil=perfil_usuario).exists():
+                # Revisa si el libro esta prestado en algun Grupo en especifico
+                grupos_libro = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, perfil=perfil_usuario, activo=True).select_related('grupo')
+                for g in grupos_libro:
+                    grupos[g.grupo.id] = [g.grupo.nombre]     
+            
+            return HttpResponse(json.dumps(grupos), status=200)
+
+        else:
+            return HttpResponse(status=400)
+
+
+def compartir_con_grupo_ajax(request):
+
+    if request.is_ajax():
+        grupo_id = request.POST.get('grupo_id')
+        libro_disp_id = request.POST.get('libro_disp_id')
+
+        grupo = Grupo.objects.get(id=grupo_id)
+        libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
+        perfil_usuario = Perfil.objects.get(usuario=request.user)
+        libro_grupo, creado = LibroDisponibleGrupo.objects.get_or_create(grupo=grupo, libro_disponible=libro_disponible, perfil=perfil_usuario)
+        if not creado:
+            # Si no se creo el obj, asegurarse que este activo
+            libro_grupo.activo = True
+            libro_grupo.save()
+
+        return HttpResponse("Libro compartido", status=200)
+
+    else:
+        return HttpResponse(status=400)
+
+
+def no_compartir_grupo_ajax(request):
+
+    if request.is_ajax():
+        grupo_id = request.POST.get('grupo_id')
+        libro_disp_id = request.POST.get('libro_disp_id')
+
+        grupo = Grupo.objects.get(id=grupo_id)
+        libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
+        perfil_usuario = Perfil.objects.get(usuario=request.user)
+
+        update = LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible, perfil=perfil_usuario).update(activo=False)
+        # libros grupo guarda el numero de fields que fueron hechos update, posiblemente mandar una señal 
+        # o un loggin si es mayor a 1, significa que hay datos duplicados
+
+        return HttpResponse(update, "Libro marcado como No compartido")
+
+    else:
+
+        return HttpResponse(status=400)

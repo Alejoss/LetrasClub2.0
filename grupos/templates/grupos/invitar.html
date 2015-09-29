@@ -13,7 +13,7 @@
 	<div class="container parallax-content">
 		<div class="row">
 			<div class="col-md-5 col-sm-5 col-md-offset-1">
-				<h3 id="grupo" data-grupo-id="{{grupo.id}}"> {{grupo.nombre}} </h3>
+				<h3 id="grupo" data-grupo-id="{{grupo.id}}"> <a href="{% url 'grupos:main_grupo' grupo.id %}">{{grupo.nombre}}</a></h3>
 			</div>
 		</div>
 	</div>
@@ -48,7 +48,8 @@
 
 			</fieldset>
 			<br>
-			<input id="submit" class = "btn btn-success pull-right disabled" type="submit" value="Invitar" data-url="{% url 'grupos:invitar_ajax' %}">
+			<input id="submit" class = "btn btn-success pull-right disabled" type="submit" 
+			value="Invitar" data-url="{% url 'grupos:invitar_ajax' %}">
 	</form>
 	<hr class ="divider invisible">
 </div>
@@ -56,10 +57,9 @@
 
 {% block extra_javascript %}
 <script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
-
 <script>
 	$(document).ready(function(){
-		usernames_dict=JSON.parse('{{usernames_dict|safe}}');		
+		var usernames_dict=JSON.parse('{{usernames_dict|safe}}');		
 
 		var usernames_autocomplete = [];
 		$.each(usernames_dict, function(key, value){
@@ -104,7 +104,7 @@
 		$("#submit").on("click", function(e){
 			e.preventDefault();
 
-			$(this).text("Enviando Invitaciones");
+			$(this).val("Enviando Invitaciones");
 
 			var grupo_id = $("#grupo").data("grupo-id");
 
@@ -115,12 +115,12 @@
 				url: $("#submit").data("url"),
 				data: data,
 				success: function(){
-					$("#submit").text("Invitaciones Enviadas");
-
+					$("#submit").val("Invitaciones Enviadas");
 					// Depende de la respuesta, miembro sumado al grupo o invitación enviada
+					setTimeout(function() {window.location.href = "{% url 'grupos:main_grupo' grupo.id %}"}, 2000);
 				},
 				error: function(){
-					$("#submit").text("Hubo un error enviando las invitaciones")
+					$("#submit").val("Hubo un error enviando las invitaciones");
 				}
 			});
 		});

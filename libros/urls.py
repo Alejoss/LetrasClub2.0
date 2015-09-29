@@ -38,5 +38,9 @@ urlpatterns = [
     # Ajax calls
     url(r'^marcar_no_disponible/$', views.marcar_no_disponible),
     url(r'^marcar_disponible/$', views.marcar_disponible),
-    url(r'^marcar_devuelto/$', views.marcar_devuelto)
+    url(r'^marcar_devuelto/$', views.marcar_devuelto),
+
+    url(r'^info_grupos_libro_ajax/$', views.info_libro_grupos_ajax, name="info_grupos_libro"),
+    url(r'^compartir_con_grupo_ajax/$', views.compartir_con_grupo_ajax),
+    url(r'^no_compartir_grupo_ajax/$', views.no_compartir_grupo_ajax)
 ]

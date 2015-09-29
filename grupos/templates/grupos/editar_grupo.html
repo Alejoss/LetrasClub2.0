@@ -3,7 +3,7 @@
 {% block content %}
 	<div class = "col-md-6 col-md-offset-1">
 		<br>
-		<form class="form-horizontal" action="{% url 'grupos:crear_grupo' %}" method="post">
+		<form class="form-horizontal" action="{% url 'grupos:editar_grupo' grupo.id %}" method="post">
 			{% csrf_token %}		
 				<fieldset>
 					{{form.non_field_errors}}
@@ -33,7 +33,8 @@
 
 					{% if tiene_ciudad %}
 						{{form.situar_ciudad.errors}}
-							<label class="control-label" for="{{form.situar_ciudad.id_for_label}}"> Este grupo estará localizado en la ciudad de {{perfil_ciudad}} &nbsp</label>
+							<label class="control-label" for="{{form.situar_ciudad.id_for_label}}"> Este grupo estará localizado en la ciudad de {{perfil_ciudad}} &nbsp
+							</label>
 						{{form.situar_ciudad}}
 					{% endif %}
 				</fieldset>

@@ -121,7 +121,7 @@
 	<hr class="half-margins invisible" /><!-- divider 30px -->
 
 	{% if grupos_abiertos %}
-		<h4> Grupos en Quito </h4>
+		<h4> Grupos abiertos en Quito </h4>
 		{% for grupo in grupos_abiertos %}
 			<a href="{% url 'grupos:main_grupo' grupo.id %}">{{grupo.nombre}}</a>
 			<br>

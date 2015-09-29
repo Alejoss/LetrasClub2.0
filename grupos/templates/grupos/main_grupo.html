@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
 <!-- PAGE TOP -->
 <!-- parallax -->
 <div class="parallax parallax-1" style="background-image:url({{grupo.imagen}});">
@@ -12,14 +11,54 @@
 				<h3> {{grupo.nombre}} </h3>
 			</div>
 		</div>
+		{% if not usuario_es_miembro %}
+			{% if request_invitacion_enviada %}
+				<div class="col-md-3 col-md-offset-1"><!-- button -->
+					<a href="" class="btn btn-primary btn-lg disable">Solicitud Enviada</a>
+				</div>
+			{% else %}
+				<div class="col-md-3 col-md-offset-1"><!-- button -->
+					<a href="" class="request_entrar_grupo btn btn-primary btn-lg" data-url="{% url 'grupos:request_entrar_ajax' %}">Unirte al Grupo</a>
+				</div>
+			{% endif %}
+		{% endif %}
 	</div>
 </div>
 <!-- /parallax -->
 <!-- /PAGE TOP -->
 
+<!-- modal solicitar entra al grupo -->
+<div class="modal fade" id="modal_solicitud" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+
+			<div class="modal-header"><!-- modal header -->
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">{{grupo.nombre}}</h4>
+			</div><!-- /modal header -->
+
+			<!-- modal body -->
+			<div class="modal-body">
+				Has enviado una solicitud para entrar al grupo <strong> {{grupo.nombre}} </strong>. <br><br>
+				
+				{% if grupo.tipo == 2 or grupo.tipo == 4 %}
+					Un administrador debe aceptar la solicitud, cuando lo haga, te enviaremos un correo a <i>{{user.email}}</i>.
+				{% else %}
+					Un miembro del grupo debe aceptar la solicitud, cuando lo haga, te enviaremos un correo a <i>{{user.email}}</i>.
+				{% endif%}
+			</div>
+			<!-- /modal body -->
+		</div>
+	</div>
+</div>
+
 <div class = "col-md-8">
 	<hr class ="half-margins invisible">
 </div>
+
+{% if usuario_es_admin %}
+	<a class ="pull-right" href="{% url 'grupos:editar_grupo' grupo.id %}"><i class ="fa fa-edit"></i> Editar Grupo &nbsp</a> <!-- !!! Falta -->
+{% endif %}
 
 <div class ="col-md-4">
 	<hr class ="half-margins invisible">
@@ -27,38 +66,124 @@
 	<div class="alert callout alert-default">
 		<div class = "row">
 			{% for miembro in miembros %}
-				<div class="col-md-2 col-sm-2"><!-- right btn -->
-					<a title="{{miembro.usuario.username}}" href=""><img src="{{miembro.imagen_perfil}}" class="img-responsive img-circle"></a>
-				</div><!-- /right btn -->
+				{% if miembro.es_admin %}
+					<a title="{{miembro.usuario.usuario.username}}  -  Administrador" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}"><img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular_admin"></a>
+				{% endif %}
+			{% endfor %}
+
+			{% for miembro in miembros %}
+				{% if not miembro.es_admin %}
+					<a title="{{miembro.usuario.usuario.username}}" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}"><img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular"></a>
+				{% endif %}	
 			{% endfor %}
 		</div>
 	</div>
 
-	{% for r in requests_entrar_grupo %}
-		<div class ="alert callout alert-default">
+	{% if requests_entrar_grupo %}
+		<hr>
+		<h3> Solicitudes de Miembros </h3>
+	{% endif %}
+
+	{% for r in requests_entrar_grupo %} <!-- Poner solicitudes de miembros con imágenes de perfil y el Aceptar en la mitad del alert -->
+		<div class ="alert callout alert-warning">
 			{% if r.invitado_por %}
-				<p> 
-					<a target="_blank" href="{% url 'perfiles:perfil' r.invitado_por.usuario.username %}">{{r.invitado_por.usuario.username}}</a> invitó a 
-					<a target="_blank" href="{% url 'perfiles:perfil' r.invitado_por.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a>
+				<p>
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.invitado_por.usuario.username %}">{{r.invitado_por.usuario.username}}</a> invitó a 
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.invitado_por.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a>
 					al grupo
 				</p>
-
 			{% else %}
 				<p>
-					<a target="_blank" href="{% url 'perfiles:perfil' r.invitado_por.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a> ha solicitado unirse al grupo
-				</p>
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.usuario_invitado.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a> ha solicitado unirse al grupo
+				</p>				
 			{% endif %}
-			<btn data-request-id="{{r.id}}" class ="aceptar_invitacion btn success">
+				<p>
+				<a href="#" class="aceptar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:aceptar_ajax' %}">Aceptar 
+				<i class ="fa fa-check"></i></a> | <a class="negar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:negar_invitacion' %}" href="#">
+				<i class ="fa fa-close"></i></a>
+				</p>
 		</div>
 	{% endfor %}
 
-	<a href ="{% url 'grupos:invitar' grupo.id %}"> Invitar a alguien al grupo </a>
+	{% if usuario_es_miembro %}
+		<a href ="{% url 'grupos:invitar' grupo.id %}"> Invitar a alguien al grupo </a>
+	{% endif %}
 
 	<hr class ="half-margins invisible">
 	<h3> Información </h3>
 	<p>	
 		{{grupo.descripcion}}
 	</p>
+	<hr>
+	<p>
+		{% if grupo.tipo == 1 %}
+			Este grupo es abierto y cualquier miembro puede sumar a un usuario al grupo.
+		{% elif grupo.tipo == 2 %}
+			Este grupo es abierto y solo los administradores pueden sumar a un usuario al grupo.
+		{% elif grupo.tipo == 3 %}
+			Este grupo es cerrado y cualquier miembro puede sumar un usuario al grupo.
+		{% elif grupo.tipo == 4 %}
+			Este grupo es cerrado y solo los administradores pueden sumar a un usuario al grupo.
+		{% endif %}
+	</p>	
+	<hr class="invisible">
 </div>
-
 {% endblock content %}
+
+{% block extra_javascript %}
+<script>
+$(document).ready(function(){
+
+	$(".request_entrar_grupo").on("click", function(e){
+		e.preventDefault()
+		var grupo_id = "{{grupo.id}}";
+		var data = {'grupo_id': grupo_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'};
+		
+		$.ajax({
+			method: "POST",
+			url: $(".request_entrar_grupo").data("url"),
+			data: data,
+			success: function(){
+				$("#modal_solicitud").modal("show");
+				$(".request_entrar_grupo").text("Solicitud Enviada");
+				$(".request_entrar_grupo").removeClass("request_entrar_grupo");
+			}
+		});
+	});
+
+	$(".aceptar_invitacion").on("click", function(){
+		var requestId = $(this).data("request-id");
+		var data = {'requestId': requestId, 'csrfmiddlewaretoken': '{{ csrf_token }}'};
+
+		$.ajax({
+			method: "POST",
+			url: $(".aceptar_invitacion").data("url"),
+			data: data,
+			success: function(){
+				alert()
+			},
+			error: function(){
+				alert("Hubo un error al aceptar la invitación, disculpa las molestias");
+			}
+		});
+	});
+
+	$(".negar_invitacion").on("click", function(){
+		var requestId = $(this).data("request-id");
+		var data = {'requestId': requestId, 'csrfmiddlewaretoken': '{{ csrf_token }}'}
+
+		$.ajax({
+			method: "POST",
+			url: $(".negar_invitacion").data("url"),
+			data: data,
+			success: function(){
+				location.reload()
+			},
+			error: function(){
+				alert("Hubo un error al rechazar la invitación, disculpa las molestias");
+			}
+		});
+	});
+});
+</script>
+{% endblock extra_javascript %}

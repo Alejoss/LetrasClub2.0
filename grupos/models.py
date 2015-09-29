@@ -18,6 +18,20 @@ class Grupo(models.Model):
 	tipo = models.PositiveSmallIntegerField(default=1)
 	ciudad = models.ForeignKey(City, null=True)
 
+
+	# Esta funcion y obtener_tipo_invitaciones tienen que devolver lo mismo que utiliza el choice del FormCrearGrupo
+	def obtener_tipo_apertura(self):
+		if self.tipo == 1 or self.tipo == 2:
+			return "abierto"
+		else:
+			return "cerrado"
+
+	def obtener_tipo_invitaciones(self):
+		if self.tipo == 2 or self.tipo == 4:
+			return "admins"
+		else:
+			return "todos"
+
 	def __unicode__(self):
 		return self.nombre
 
@@ -40,3 +54,6 @@ class RequestInvitacion(models.Model):
 	aceptado = models.BooleanField(default=False)
 	fecha_invitacion = models.DateTimeField(auto_now_add=True)
 	eliminado = models.BooleanField(default=False)
+
+	def __unicode__(self):
+		return "Invitacion a %s para %s" % (self.grupo.nombre, self.usuario_invitado.usuario.username)

@@ -38,17 +38,15 @@ def notificaciones(request):
 		perfil_usuario = Perfil.objects.get(usuario=request.user)
 
 		# Notificacion si tiene pedidos de libros
-		requests_libros = 0
-		if LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).exists():
-			requests_libros = LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).count()
+		requests_libros = LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).count()
 
 		# Revisar si el usuario es admin de algun grupo, notificacion para los admins si existen requests no aceptados
 		requests_inv_grupos = 0
 		if UsuariosGrupo.objects.filter(usuario=perfil_usuario, es_admin=True).exists():
 			usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, es_admin=True).select_related('grupo')
 			grupos = [x.grupo for x in usuarios_grupo_obj]
-			if RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).exists():
-				requests_inv_grupos = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).count()				
+			
+			requests_inv_grupos = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).count()				
 
 		notificaciones = requests_libros + requests_inv_grupos
 

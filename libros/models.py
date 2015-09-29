@@ -4,6 +4,7 @@ from django.utils.text import slugify
 
 from cities_light.models import City
 from perfiles.models import Perfil
+from grupos.models import Grupo
 
 
 class Libro(models.Model):
@@ -33,9 +34,11 @@ class LibrosLeidos(models.Model):
 
 
 class LibrosDisponibles(models.Model):
+	# abierto_comunidad significa que estara disponible para todos en LetrasClub
 	libro = models.ForeignKey(Libro)
 	perfil = models.ForeignKey(Perfil)
 	disponible = models.BooleanField(default=True)
+	abierto_comunidad = models.BooleanField(default=True)
 	prestado = models.BooleanField(default=False)
 	ciudad = models.ForeignKey(City)
 
@@ -44,6 +47,17 @@ class LibrosDisponibles(models.Model):
 
 	class Meta:
 		ordering = ["libro__titulo"]
+
+
+class LibroDisponibleGrupo(models.Model):
+	# Guarda los Libros que estan disponibles solamente en un grupo especifico
+	libro_disponible = models.ForeignKey(LibrosDisponibles)
+	perfil = models.ForeignKey(Perfil)
+	grupo = models.ForeignKey(Grupo)
+	activo = models.BooleanField(default=True)
+
+	def __unicode__(self):
+		return "Libro - Grupo: %s - %s " % (self.libro_disponible.libro.titulo, self.perfil.usuario.username)
 
 
 class LibrosPrestados(models.Model):
@@ -75,6 +89,7 @@ class LibrosRequest(models.Model):
 		return "Libro Request object: %s - %s - %s" % (self.libro.titulo, self.perfil_envio.usuario, self.perfil_recepcion.usuario)
 
 
+# Lo siguiente no esta en uso, Bibliotecas Compartidas
 class BibliotecaCompartida(models.Model):
 	nombre = models.CharField(max_length=150, blank=True, unique=True)
 	slug = models.SlugField(blank=True)

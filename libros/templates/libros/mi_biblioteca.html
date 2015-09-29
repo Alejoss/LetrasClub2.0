@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.css' %} ">
+{% endblock extra_css %}
+
 {% block content %}
 
 <!-- PAGE TOP -->
@@ -21,7 +25,6 @@
 <div class = "col-md-10 col-md-offset-1">
 	<br>
 	<br>
-
 	<h3>Tus libros prestados a otros usuarios</h3>
 	{% for l in libros_prestados %}
 	<div class="alert callout alert-default">
@@ -67,19 +70,31 @@
 
 	<h3>Disponibles en tu biblioteca </h3>
 	{% for l in libros_disponibles %}
-	<div class="alert callout alert-default">
-		<div class="row">
-			<div class="col-md-9 col-sm-9"><!-- left text -->
-				<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
-			</div><!-- /left text -->			
-			<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-				<a href="" rel="nofollow" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}" title="Ya no estará disponible en tu Biblioteca">
-				Marcar No Disponible</a>
-			</div><!-- /right btn -->
+		<!-- ACCORDION -->
+		<div class="accordion panel-group" id="accordion">
+			<div class="panel panel-default panel_info_disponible">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a class = "mas_info_libro" data-id="{{l.id}}" data-url-target="{% url 'libros:info_grupos_libro' %}" data-click="0"
+							data-toggle="collapse" data-parent="#accordion" href="#acordion1">
+							<i class="fa fa-toggle-down pull-right"></i>
+							<h5><strong>{{l.libro.titulo}}</strong> &nbsp {{l.libro.autor}}</h5>
+						</a>
+					</h4>
+				</div>
+				<div id="acordion1" class="collapse">
+					<div class="panel-body">
+						<p class = "mensaje_grupos"></p>
+						<!--
+						<a href="" rel="nofollow" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}" title="Ya no estará disponible en tu Biblioteca">Marcar disponible para la comunidad</a>
+						-->
+						<div class = "grupos_prestado"> 
+						</div>
+					</div>					
+				</div>
+			</div>
 		</div>
-	</div>
 	{% endfor %}
-
 	<hr>
 
 	<h3> No Disponibles </h3>
@@ -90,7 +105,7 @@
 				<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
 			</div><!-- /left text -->			
 			<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-				<a href="" rel="nofollow" class="btn btn-success btn-lg marcar_disponible" data-id="{{l.id}}" title="Este libro estará disponible en tu Biblioteca">
+			<a href="" rel="nofollow" class="btn btn-success btn-lg marcar_disponible" data-id="{{l.id}}" title="Este libro estará disponible en tu Biblioteca">
 				Marcar como Disponible</a>
 			</div><!-- /right btn -->
 		</div>
@@ -99,46 +114,170 @@
 
 	<hr class = "invisible">
 </div>
+{% endblock content %}
 
+{% block extra_javascript %}
 <script>
-	$(document).ready(function(){
-		$(".marcar_no_disponible").on("click", function(e){
-			e.preventDefault();
-			var libro_disp_id = $(this).data("id");
-			$.ajax({
-				method: "POST",
-				url: "/libros/marcar_no_disponible/",
-				data: {'id_libro_disp': libro_disp_id, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
-				success: function(){
-					location.reload();
-				}
-			});
-		});
-		$(".marcar_disponible").on("click", function(e){
-			e.preventDefault();
-			var id_libro = $(this).data("id");
-			$.ajax({
-				method: "POST",
-				url: "/libros/marcar_disponible/",
-				data: {'id_libro': id_libro, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
-				success: function(){
-					location.reload();
-				}
-			});
-		});
-		$(".marcar_devuelto").on("click", function(e){
-			e.preventDefault();
-			var id_libro = $(this).data("id");
-			$.ajax({
-				method: "POST",
-				url: "/libros/marcar_devuelto/",
-				data: {'id_libro': id_libro, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
-				success: function(){
-					location.reload();
-				}
-			});
+$(document).ready(function(){
+	// autocomplete grupos, compartir libros con grupos
+	$(".marcar_no_disponible").on("click", function(e){
+		e.preventDefault();
+		var libro_disp_id = $(this).data("id");
+		$.ajax({
+			method: "POST",
+			url: "/libros/marcar_no_disponible/",
+			data: {'id_libro_disp': libro_disp_id, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
+			success: function(){
+				location.reload();
+			}
 		});
 	});
-</script>
+	$(".marcar_disponible").on("click", function(e){
+		e.preventDefault();
+		var id_libro = $(this).data("id");
+		$.ajax({
+			method: "POST",
+			url: "/libros/marcar_disponible/",
+			data: {'id_libro': id_libro, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
+			success: function(){
+				location.reload();
+			}
+		});
+	});
+	$(".marcar_devuelto").on("click", function(e){
+		e.preventDefault();
+		var id_libro = $(this).data("id");
+		$.ajax({
+			method: "POST",
+			url: "/libros/marcar_devuelto/",
+			data: {'id_libro': id_libro, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': 'perfil'},
+			success: function(){
+				location.reload();
+			}
+		});
+	});
+	
+	// Funcion que procesa la respuesta ajax y cambia los grupos a renderearse cuando se da click en el libro
+	// dependiendo si está disponible el libro en ese grupo.
+	var procesar_respuesta_grupos = function(lista_grupos, respuesta_libros_grupos){
+		// lista_grupos es el grupos_json parseado. respuesta_libros_grupos es el ajax response
+		// devuelve una lista con el id, el nombre y el status, 0 o 1, dependiendo si está disponible
+		var lista_ids_respuesta = []
+		$.each(respuesta_libros_grupos, function(index, value){
+			lista_ids_respuesta.push(parseInt(index));
+		});
 
-{% endblock content %}
+		var grupos_render = []
+		$.each(lista_grupos, function(index, value){
+			if ($.inArray(value[0], lista_ids_respuesta)>=0){
+				grupos_render.push([value[0], value[1], 1]);
+			} else {
+				grupos_render.push([value[0], value[1], 0]);
+			}
+		});
+		return grupos_render
+	};
+
+	function obtenerTag(valor){
+		// Obtiene el tag que indica la accion que se puede hacer con el grupo, dejar de compartir o compartir
+		var tag_html = ""
+		console.log(valor);
+		if (valor>0){
+			tag_html = '<a title="Dejar de Compartir" class="no_compartir_grupo tag label label-default light" href=""><i class = "fa fa-close"></i></a> &nbsp'
+		} else {
+			tag_html = '<a title="Compartir con este Grupo" class="compartir_grupo tag label label-default light" href=""><i class = "fa fa-share"></i></a> &nbsp'
+		}
+		return tag_html
+	};
+	$(".mas_info_libro").on("click", function(e){
+		e.preventDefault();
+		if ($(this).data("click") == 0){
+			var id_libro_disp = $(this).data("id");
+			var url_ajax = $(this).data("url-target");
+			var objeto_this = $(this);
+
+			var grupos_usuario = JSON.parse('{{grupos_json|safe}}');
+			// Si el usuario pertenece a algún grupo, ajax pidiendo los grupos en los que está disponible el libro
+			if ((grupos_usuario.length)>0){
+				$.ajax({
+					method: "GET",
+					url: url_ajax,
+					data: {'id_libro_disponible': id_libro_disp},
+					success: function(response){
+						var respuesta = JSON.parse(response);
+						if (respuesta !== null){
+							var mensaje_grupos = (objeto_this).closest(".panel_info_disponible").find(".mensaje_grupos");
+							var grupos_prestado = (objeto_this).closest(".panel_info_disponible").find(".grupos_prestado");
+							mensaje_grupos.html("<i class = 'fa fa-group'></i>  Comparte este libro con tus grupos:");
+							var grupos_render = procesar_respuesta_grupos(grupos_usuario , respuesta);
+							
+							$.each(grupos_render, function(index, value){
+								grupos_prestado.append('<a class="tag_grupo tag label label-default light" target="_blank"'+
+								'data-id-grupo="'+ value[0] + '"'+
+								'data-id-libro="'+ id_libro_disp + '"'+
+								'href="/grupos/main/'+value[0]+'">'+value[1]+'</a>'+ obtenerTag(value[2]));
+							});
+						} else {
+							var mensaje_grupos = (objeto_this).closest(".panel_info_disponible").find(".mensaje_grupos");
+							mensaje_grupos.html("<i class = 'fa fa-group'></i>  No has compartido este libro con ningún grupo");
+						}
+					}
+				});
+			} else {
+				var mensaje_grupos = (objeto_this).closest(".panel_info_disponible").find(".mensaje_grupos");
+				mensaje_grupos.html("</small> <i class = 'fa fa-info-circle'></i> Únete a un grupo y comparte este libro exclusivamente con los miembros de ese grupo</small>");
+			}
+			
+			// evitar que ocurra lo mismo si vuelve a dar click, si no se hacen append varios grupos, etc.
+			$(this).data("click", "1");
+		}
+	});
+
+	$(".grupos_prestado").on("click", ".compartir_grupo", function(e){
+		e.preventDefault();
+		var grupo_id = $(this).prev(".tag_grupo").data("id-grupo");
+		var libro_disp_id = $(this).prev(".tag_grupo").data("id-libro");
+		var data = {'grupo_id': grupo_id, 'libro_disp_id': libro_disp_id, 'csrfmiddlewaretoken': '{{csrf_token}}'};	
+		var objeto_click = $(this);		
+
+		$.ajax({
+			method: "POST",
+			url: '/libros/compartir_con_grupo_ajax/',
+			data: data,
+			success: function(){
+				console.log("yea!");
+				var icono = objeto_click.find(".fa");
+				icono.removeClass("fa-share");
+				icono.addClass("fa-close");
+			},
+			error: function(response){
+				console.log(response);
+			}
+		});
+	});
+
+	$(".grupos_prestado").on("click", ".no_compartir_grupo", function(e){
+		e.preventDefault();
+		var grupo_id = $(this).prev(".tag_grupo").data("id-grupo");
+		var libro_disp_id = $(this).prev(".tag_grupo").data("id-libro");
+		var data = {'grupo_id': grupo_id, 'libro_disp_id': libro_disp_id, 'csrfmiddlewaretoken': '{{csrf_token}}'};
+		var objeto_click = $(this);
+
+		$.ajax({
+			method: "POST",
+			url: "/libros/no_compartir_grupo_ajax/",
+			data: data,
+			success: function(){
+				console.log("ya nadaf, dejo de compartir");
+				var icono = objeto_click.find(".fa");
+				icono.removeClass("fa-close");
+				icono.addClass("fa-share");
+			},
+			error: function(response){
+				console.log("error");
+			}
+		});
+	});
+});
+</script>
+{% endblock extra_javascript %}

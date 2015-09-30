@@ -54,6 +54,9 @@
 
 <div class = "col-md-8">
 	<hr class ="half-margins invisible">
+	{% for l_d_g in libros_disponibles_grupo %}
+		<p> {{l_d_g.libro_disponible.libro.nombre}} ~ {{l_d_g.libro_disponible.libro.titulo}}</p>
+	{% endfor %}
 </div>
 
 {% if usuario_es_admin %}

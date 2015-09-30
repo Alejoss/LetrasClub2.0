@@ -698,13 +698,12 @@ def info_libro_grupos_ajax(request):
         if request.is_ajax():
             id_libro_disponible = request.GET.get('id_libro_disponible')
             libro_disponible = LibrosDisponibles.objects.get(id=id_libro_disponible)
-            perfil_usuario = Perfil.objects.get(usuario=request.user)
 
             grupos = {}
             grupos_libro = None
-            if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, perfil=perfil_usuario).exists():
+            if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible).exists():
                 # Revisa si el libro esta prestado en algun Grupo en especifico
-                grupos_libro = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, perfil=perfil_usuario, activo=True).select_related('grupo')
+                grupos_libro = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, activo=True).select_related('grupo')
                 for g in grupos_libro:
                     grupos[g.grupo.id] = [g.grupo.nombre]     
             
@@ -722,8 +721,7 @@ def compartir_con_grupo_ajax(request):
 
         grupo = Grupo.objects.get(id=grupo_id)
         libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
-        perfil_usuario = Perfil.objects.get(usuario=request.user)
-        libro_grupo, creado = LibroDisponibleGrupo.objects.get_or_create(grupo=grupo, libro_disponible=libro_disponible, perfil=perfil_usuario)
+        libro_grupo, creado = LibroDisponibleGrupo.objects.get_or_create(grupo=grupo, libro_disponible=libro_disponible)
         if not creado:
             # Si no se creo el obj, asegurarse que este activo
             libro_grupo.activo = True
@@ -743,9 +741,8 @@ def no_compartir_grupo_ajax(request):
 
         grupo = Grupo.objects.get(id=grupo_id)
         libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
-        perfil_usuario = Perfil.objects.get(usuario=request.user)
 
-        update = LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible, perfil=perfil_usuario).update(activo=False)
+        update = LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible).update(activo=False)
         # libros grupo guarda el numero de fields que fueron hechos update, posiblemente mandar una señal 
         # o un loggin si es mayor a 1, significa que hay datos duplicados
 

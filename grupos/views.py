@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from letrasclub.utils import obtener_perfil
 from forms import FormCrearGrupo
 from models import UsuariosGrupo, Grupo, RequestInvitacion
+from libros.models import LibroDisponibleGrupo
 from perfiles.models import Perfil
 
 
@@ -98,6 +99,7 @@ def main_grupo(request, id_grupo):
 	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('usuario')
 	miembros = [usuario_grupo_obj for usuario_grupo_obj in usuarios_grupo_obj]
 
+	# Enviar invitacion al grupo
 	usuario_es_admin = False
 	request_invitacion_enviada = False
 	if usuario_es_miembro:
@@ -109,8 +111,8 @@ def main_grupo(request, id_grupo):
 		if RequestInvitacion.objects.filter(grupo=grupo, usuario_invitado=perfil_usuario, aceptado=False, eliminado=False).exists():
 			request_invitacion_enviada = True
 
+	# Requests pendientes de aceptacion al grupo
 	requests_entrar_grupo = None
-
 	if usuario_es_miembro:
 		if grupo.tipo in [2, 4]:
 			# Si solo los admins pueden aceptar !!!
@@ -120,8 +122,11 @@ def main_grupo(request, id_grupo):
 		else:
 			requests_entrar_grupo = RequestInvitacion.objects.filter(grupo=grupo, aceptado=False, eliminado=False)
 
+	# Libros disponibles en el Grupo
+	libros_disponibles_grupo = LibroDisponibleGrupo.objects.filter(grupo=grupo, activo=True).select_related("libro_disponible")
+
 	context = {'grupo': grupo, 'miembros': miembros, 'requests_entrar_grupo': requests_entrar_grupo, 'usuario_es_admin': usuario_es_admin,
-	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada
+	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'libros_disponibles_grupo': libros_disponibles_grupo
 	}
 
 	return render(request, template, context)

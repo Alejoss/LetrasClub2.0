@@ -245,11 +245,10 @@ $(document).ready(function(){
 			url: '/libros/compartir_con_grupo_ajax/',
 			data: data,
 			success: function(){
-				console.log(objeto_click);
 				objeto_click.replaceWith('<a title="Dejar de Compartir" class="no_compartir_grupo tag label label-default light" href=""><i class = "fa fa-close"></i></a> &nbsp');				
 			},
 			error: function(response){
-				console.log(response);
+				console.log("error");
 			}
 		});
 	});
@@ -266,7 +265,6 @@ $(document).ready(function(){
 			url: "/libros/no_compartir_grupo_ajax/",
 			data: data,
 			success: function(){
-				console.log("ya nadaf, dejo de compartir");
 				objeto_click.replaceWith('<a title="Compartir con este Grupo" class="compartir_grupo tag label label-default light" href=""><i class = "fa fa-share"></i></a> &nbsp');
 			},
 			error: function(response){

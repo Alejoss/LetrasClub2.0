@@ -52,12 +52,11 @@ class LibrosDisponibles(models.Model):
 class LibroDisponibleGrupo(models.Model):
 	# Guarda los Libros que estan disponibles solamente en un grupo especifico
 	libro_disponible = models.ForeignKey(LibrosDisponibles)
-	perfil = models.ForeignKey(Perfil)
 	grupo = models.ForeignKey(Grupo)
 	activo = models.BooleanField(default=True)
 
 	def __unicode__(self):
-		return "Libro - Grupo: %s - %s " % (self.libro_disponible.libro.titulo, self.perfil.usuario.username)
+		return "Libro Disponible Grupo: %s - %s: %s " % (self.libro_disponible.libro.titulo, self.perfil.usuario.username, self.grupo.nombre)
 
 
 class LibrosPrestados(models.Model):

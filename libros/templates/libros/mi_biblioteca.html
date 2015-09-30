@@ -245,10 +245,8 @@ $(document).ready(function(){
 			url: '/libros/compartir_con_grupo_ajax/',
 			data: data,
 			success: function(){
-				console.log("yea!");
-				var icono = objeto_click.find(".fa");
-				icono.removeClass("fa-share");
-				icono.addClass("fa-close");
+				console.log(objeto_click);
+				objeto_click.replaceWith('<a title="Dejar de Compartir" class="no_compartir_grupo tag label label-default light" href=""><i class = "fa fa-close"></i></a> &nbsp');				
 			},
 			error: function(response){
 				console.log(response);
@@ -269,9 +267,7 @@ $(document).ready(function(){
 			data: data,
 			success: function(){
 				console.log("ya nadaf, dejo de compartir");
-				var icono = objeto_click.find(".fa");
-				icono.removeClass("fa-close");
-				icono.addClass("fa-share");
+				objeto_click.replaceWith('<a title="Compartir con este Grupo" class="compartir_grupo tag label label-default light" href=""><i class = "fa fa-share"></i></a> &nbsp');
 			},
 			error: function(response){
 				console.log("error");

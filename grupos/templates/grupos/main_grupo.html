@@ -11,16 +11,24 @@
 				<h3> {{grupo.nombre}} </h3>
 			</div>
 		</div>
-		{% if not usuario_es_miembro %}
-			{% if request_invitacion_enviada %}
-				<div class="col-md-3 col-md-offset-1"><!-- button -->
-					<a href="" class="btn btn-primary btn-lg disable">Solicitud Enviada</a>
-				</div>
-			{% else %}
-				<div class="col-md-3 col-md-offset-1"><!-- button -->
-					<a href="" class="request_entrar_grupo btn btn-primary btn-lg" data-url="{% url 'grupos:request_entrar_ajax' %}">Unirte al Grupo</a>
-				</div>
+		{% if user.is_authenticated %}
+			{% if not usuario_es_miembro %}
+				{% if request_invitacion_enviada %}
+					<div class="col-md-3 col-md-offset-1"><!-- button -->
+						<a href="" class="btn btn-primary btn-lg disable">Solicitud Enviada</a>
+					</div>
+				{% else %}
+					<div class="col-md-3 col-md-offset-1"><!-- button -->
+						<a href="" class="request_entrar_grupo btn btn-primary btn-lg" data-url="{% url 'grupos:request_entrar_ajax' %}">Unirte al Grupo</a>
+					</div>
+				{% endif %}
 			{% endif %}
+
+		{% else %}
+			<div class="col-md-3 col-md-offset-1"><!-- button -->
+				<a href="" class="request_entrar_grupo btn btn-primary btn-lg" data-url="{% url 'libros:main' %}">Has login para ser parte de los grupos de Letras.Club
+				</a>
+			</div>
 		{% endif %}
 	</div>
 </div>
@@ -34,7 +42,7 @@
 
 			<div class="modal-header"><!-- modal header -->
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-				<h4 class="modal-title" id="myModalLabel">{{grupo.nombre}}</h4>
+				<h4 class="modal-title" id="103">{{grupo.nombre}}</h4>
 			</div><!-- /modal header -->
 
 			<!-- modal body -->
@@ -45,45 +53,102 @@
 					Un administrador debe aceptar la solicitud, cuando lo haga, te enviaremos un correo a <i>{{user.email}}</i>.
 				{% else %}
 					Un miembro del grupo debe aceptar la solicitud, cuando lo haga, te enviaremos un correo a <i>{{user.email}}</i>.
-				{% endif%}
+				{% endif %}
 			</div>
 			<!-- /modal body -->
 		</div>
 	</div>
 </div>
 
+<!-- centro -->
 <div class = "col-md-8">
 	<hr class ="half-margins invisible">
-	{% for l_d_g in libros_disponibles_grupo %}
-		<p> {{l_d_g.libro_disponible.libro.nombre}} ~ {{l_d_g.libro_disponible.libro.titulo}}</p>
+
+	<button class = "btn btn-primary">Actividad</button>
+	<button class = "btn btn-primary">Libros</button>
+	<hr class = "half-margins invisible">
+
+
+	{% for l in libros_disponibles %}
+		<div class="alert callout alert-default">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}} </h4>
+					<a href="{% url 'perfiles:perfil_usuario' l.perfil.usuario.username %}">
+						<i class = "fa fa-user"></i>{{l.perfil.usuario.username}}
+					</a>
+				</div><!-- /left text -->
+				
+				{% if l.perfil != perfil_usuario and user.is_authenticated %}
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-default btn-lg">Pedir Libro</a>
+				</div><!-- /right btn -->
+				{% endif %}
+			</div>
+		</div>
 	{% endfor %}
 </div>
+<!-- centro -->
 
 {% if usuario_es_admin %}
 	<a class ="pull-right" href="{% url 'grupos:editar_grupo' grupo.id %}"><i class ="fa fa-edit"></i> Editar Grupo &nbsp</a> <!-- !!! Falta -->
 {% endif %}
 
+<!-- sidebar -->
 <div class ="col-md-4">
+
 	<hr class ="half-margins invisible">
-	<h3> Miembros </h3>
+	
+	<div>
+		<button id="" onclick="location.href='{% url 'grupos:compartir_libro_grupo' grupo.id %}'" class = "btn btn-warning" >
+		&nbsp Compartir un libro con este grupo &nbsp 
+		<i class="fa fa-share"></i></button>		
+	</div>
+
+	<div class="divider"><!-- divider -->
+		<i class="fa fa-chevron-down"></i>
+	</div>
+
+	<p>	
+		{{grupo.descripcion}}
+	</p>
+	<p class = "pull-right">
+		{% if grupo.tipo == 1 %}
+			<a class="info_abierto_cerrado" data-toggle="tooltip" data-placement="left" data-original-title="Este grupo es abierto y cualquier miembro puede sumar a un usuario al grupo." href=""> Abierto </a>
+		{% elif grupo.tipo == 2 %}
+			<a class="info_abierto_cerrado" data-toggle="tooltip" data-placement="left" data-original-title="Este grupo es abierto y solo los administradores pueden sumar a un usuario al grupo." href=""> Abierto - Admins </a>
+		{% elif grupo.tipo == 3 %}
+			<a class="info_abierto_cerrado" data-toggle="tooltip" data-placement="left" data-original-title="Este grupo es cerrado y cualquier miembro puede sumar un usuario al grupo." href=""> Cerrado </a>
+		{% elif grupo.tipo == 4 %}
+			<a class="info_abierto_cerrado" data-toggle="tooltip" data-placement="left" data-original-title="Este grupo es cerrado y solo los administradores pueden sumar a un usuario al grupo." href=""> Cerrado - Admins </a>
+		{% endif %}
+	</p>
+	<hr class ="half-margins invisible">
+
+	<h5> Miembros </h5>
 	<div class="alert callout alert-default">
 		<div class = "row">
 			{% for miembro in miembros %}
 				{% if miembro.es_admin %}
-					<a title="{{miembro.usuario.usuario.username}}  -  Administrador" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}"><img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular_admin"></a>
+					<a title="{{miembro.usuario.usuario.username}}  -  Administrador" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}">
+					<img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular_admin"></a>
 				{% endif %}
 			{% endfor %}
 
 			{% for miembro in miembros %}
 				{% if not miembro.es_admin %}
-					<a title="{{miembro.usuario.usuario.username}}" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}"><img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular"></a>
+					<a title="{{miembro.usuario.usuario.username}}" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}">
+					<img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular"></a>
 				{% endif %}	
 			{% endfor %}
 		</div>
 	</div>
 
+	{% if usuario_es_miembro %}
+		<a href ="{% url 'grupos:invitar' grupo.id %}"> Invitar a alguien al grupo </a>
+	{% endif %}
+
 	{% if requests_entrar_grupo %}
-		<hr>
 		<h3> Solicitudes de Miembros </h3>
 	{% endif %}
 
@@ -102,35 +167,15 @@
 			{% endif %}
 				<p>
 				<a href="#" class="aceptar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:aceptar_ajax' %}">Aceptar 
-				<i class ="fa fa-check"></i></a> | <a class="negar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:negar_invitacion' %}" href="#">
+				<i class ="fa fa-check"></i></a> | <a class="negar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:negar_invitacion_ajax' %}" href="#">
 				<i class ="fa fa-close"></i></a>
 				</p>
 		</div>
 	{% endfor %}
 
-	{% if usuario_es_miembro %}
-		<a href ="{% url 'grupos:invitar' grupo.id %}"> Invitar a alguien al grupo </a>
-	{% endif %}
-
-	<hr class ="half-margins invisible">
-	<h3> Información </h3>
-	<p>	
-		{{grupo.descripcion}}
-	</p>
 	<hr>
-	<p>
-		{% if grupo.tipo == 1 %}
-			Este grupo es abierto y cualquier miembro puede sumar a un usuario al grupo.
-		{% elif grupo.tipo == 2 %}
-			Este grupo es abierto y solo los administradores pueden sumar a un usuario al grupo.
-		{% elif grupo.tipo == 3 %}
-			Este grupo es cerrado y cualquier miembro puede sumar un usuario al grupo.
-		{% elif grupo.tipo == 4 %}
-			Este grupo es cerrado y solo los administradores pueden sumar a un usuario al grupo.
-		{% endif %}
-	</p>	
-	<hr class="invisible">
 </div>
+<!-- sidebar -->
 {% endblock content %}
 
 {% block extra_javascript %}
@@ -186,6 +231,10 @@ $(document).ready(function(){
 				alert("Hubo un error al rechazar la invitación, disculpa las molestias");
 			}
 		});
+	});
+
+	$(".info_abierto_cerrado").on("click", function(e){
+		e.preventDefault();
 	});
 });
 </script>

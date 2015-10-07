@@ -26,14 +26,14 @@ class FormCrearGrupo(forms.ModelForm):
 
 		if tipo_apertura == "abierto":
 			if tipo_invitaciones == "todos":
-				tipo_grupo = 1  #  Abierto, cualquier miembro puede aceptar a otro miembro
+				tipo_grupo = 1  # Abierto, cualquier miembro puede aceptar a otro miembro
 			elif tipo_invitaciones == "admins":
-				tipo_grupo = 2  #  Tipo 2: Abierto, solo los admins puede aceptar a otro miembro
+				tipo_grupo = 2  # Tipo 2: Abierto, solo los admins puede aceptar a otro miembro
 		elif tipo_apertura == "cerrado":
 			if tipo_invitaciones == "todos":
-				tipo_grupo = 3  #  Tipo 3: Cerrado, cualquier miembro puede aceptar a otro miembro
+				tipo_grupo = 3  # Tipo 3: Cerrado, cualquier miembro puede aceptar a otro miembro
 			elif tipo_invitaciones == "admins":
-				tipo_grupo = 4  #  Tipo 4: Cerrado, solo los admins pueden aceptar a otro miembro.
+				tipo_grupo = 4  # Tipo 4: Cerrado, solo los admins pueden aceptar a otro miembro.
 
 		return tipo_grupo
 

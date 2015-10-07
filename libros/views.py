@@ -118,7 +118,10 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
     
     template = "libros/libros_ciudad.html"
     ciudad = City.objects.get(pk=id_ciudad)
-    perfil_usuario = obtener_perfil(request.user)
+    
+    perfil_usuario = None
+    if request.user.is_authenticated():
+        perfil_usuario = obtener_perfil(request.user)
 
     if filtro == "autor":
         lista_libros_disponibles = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True, prestado=False).order_by("libro__autor")
@@ -144,8 +147,9 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
         grupos_abiertos = Grupo.objects.filter(ciudad=ciudad, tipo__in=[1, 2])
 
     grupos_usuario = None
-    if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
-        grupos_usuario = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True)
+    if perfil_usuario:
+        if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
+            grupos_usuario = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True)
 
     context = {
         'filtro': filtro,
@@ -694,30 +698,36 @@ def cambiar_dueno_libros(request):
 
 
 def info_libro_grupos_ajax(request):
-        
+        # Responde con los grupos en que está compartido el libro y si está compartido con todos
         if request.is_ajax():
             id_libro_disponible = request.GET.get('id_libro_disponible')
             libro_disponible = LibrosDisponibles.objects.get(id=id_libro_disponible)
 
+            data_response = [libro_disponible.abierto_comunidad]
+            
             grupos = {}
             grupos_libro = None
             if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible).exists():
                 # Revisa si el libro esta prestado en algun Grupo en especifico
                 grupos_libro = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, activo=True).select_related('grupo')
                 for g in grupos_libro:
-                    grupos[g.grupo.id] = [g.grupo.nombre]     
+                    grupos[g.grupo.id] = [g.grupo.nombre]
             
-            return HttpResponse(json.dumps(grupos), status=200)
+            data_response.append(grupos)
+            print data_response
+
+            return HttpResponse(json.dumps(data_response), status=200)
 
         else:
             return HttpResponse(status=400)
 
 
 def compartir_con_grupo_ajax(request):
+    # Ajax para compartir libro con grupo desde Mi Biblioteca
 
     if request.is_ajax():
         grupo_id = request.POST.get('grupo_id')
-        libro_disp_id = request.POST.get('libro_disp_id')
+        libro_disp_id = request.POST.get('libro_disp_id', "")
 
         grupo = Grupo.objects.get(id=grupo_id)
         libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
@@ -731,6 +741,11 @@ def compartir_con_grupo_ajax(request):
 
     else:
         return HttpResponse(status=400)
+
+"""
+def compartir_con_grupo_form(request):
+    # Form para compartir libro desde grupo
+"""
 
 
 def no_compartir_grupo_ajax(request):
@@ -750,4 +765,19 @@ def no_compartir_grupo_ajax(request):
 
     else:
 
+        return HttpResponse(status=400)
+
+
+def compartir_todos_ajax(request):
+
+    if request.is_ajax():
+        libro_disp_id = request.POST.get('libro_disp_id', "")
+        print libro_disp_id
+        libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
+
+        nuevo_estado = libro_disponible.cambiar_abierto_comunidad()
+
+        return HttpResponse(nuevo_estado, status=200)
+
+    else:
         return HttpResponse(status=400)

@@ -90,6 +90,18 @@
 						-->
 						<div class = "grupos_prestado"> 
 						</div>
+					</div>
+					<div>
+						<div class="checkbox">
+						   <label for="checkboxes-0">
+						     &nbsp
+						     <input class ="compartir_todos" type="checkbox" name="checkboxes" id="checkboxes-0" value="1" checked="false" 
+						     	data-id="{{l.id}}" data-url-target="{% url 'libros:compartir_todos_ajax' %}">
+							     <small>Compartir este libro con toda la comunidad de Letras.Club de {{perfil_usuario.ciudad.name}}
+							    	 <i class = "fa fa-smile-o"></i>
+						     	</small>
+						   </label>
+						</div>
 					</div>					
 				</div>
 			</div>
@@ -180,8 +192,7 @@ $(document).ready(function(){
 
 	function obtenerTag(valor){
 		// Obtiene el tag que indica la accion que se puede hacer con el grupo, dejar de compartir o compartir
-		var tag_html = ""
-		console.log(valor);
+		var tag_html = ""		
 		if (valor>0){
 			tag_html = '<a title="Dejar de Compartir" class="no_compartir_grupo tag label label-default light" href=""><i class = "fa fa-close"></i></a> &nbsp'
 		} else {
@@ -205,21 +216,28 @@ $(document).ready(function(){
 					data: {'id_libro_disponible': id_libro_disp},
 					success: function(response){
 						var respuesta = JSON.parse(response);
-						if (respuesta !== null){
+						respuesta_grupos = respuesta[1]
+						if (respuesta_grupos !== null){
 							var mensaje_grupos = (objeto_this).closest(".panel_info_disponible").find(".mensaje_grupos");
 							var grupos_prestado = (objeto_this).closest(".panel_info_disponible").find(".grupos_prestado");
 							mensaje_grupos.html("<i class = 'fa fa-group'></i>  Comparte este libro con tus grupos:");
-							var grupos_render = procesar_respuesta_grupos(grupos_usuario , respuesta);
+							var grupos_render = procesar_respuesta_grupos(grupos_usuario , respuesta_grupos);
 							
 							$.each(grupos_render, function(index, value){
 								grupos_prestado.append('<a class="tag_grupo tag label label-default light" target="_blank"'+
 								'data-id-grupo="'+ value[0] + '"'+
 								'data-id-libro="'+ id_libro_disp + '"'+
-								'href="/grupos/main/'+value[0]+'">'+value[1]+'</a>'+ obtenerTag(value[2]));
+								'href="/grupos/main/'+value[0]+'/actividad">'+value[1]+'</a>'+ obtenerTag(value[2]));
 							});
 						} else {
 							var mensaje_grupos = (objeto_this).closest(".panel_info_disponible").find(".mensaje_grupos");
 							mensaje_grupos.html("<i class = 'fa fa-group'></i>  No has compartido este libro con ningún grupo");
+						}
+
+						if (respuesta[0]){
+							var checkbox_compartir = (objeto_this).find(".compartir_todos");
+							console.log(checkbox_compartir);
+							checkbox_compartir.prop("checked", true);
 						}
 					}
 				});
@@ -257,6 +275,7 @@ $(document).ready(function(){
 		e.preventDefault();
 		var grupo_id = $(this).prev(".tag_grupo").data("id-grupo");
 		var libro_disp_id = $(this).prev(".tag_grupo").data("id-libro");
+		console.log(libro_disp_id);
 		var data = {'grupo_id': grupo_id, 'libro_disp_id': libro_disp_id, 'csrfmiddlewaretoken': '{{csrf_token}}'};
 		var objeto_click = $(this);
 
@@ -268,6 +287,26 @@ $(document).ready(function(){
 				objeto_click.replaceWith('<a title="Compartir con este Grupo" class="compartir_grupo tag label label-default light" href=""><i class = "fa fa-share"></i></a> &nbsp');
 			},
 			error: function(response){
+				console.log("error");
+			}
+		});
+	});
+
+	$(".compartir_todos").on("change", function(){
+		var libro_disp_id = $(this).data("id");
+		var url_ajax = $(this).data("url-target");
+		var data = {'libro_disp_id': libro_disp_id, 'csrfmiddlewaretoken': '{{csrf_token}}'}
+		console.log(libro_disp_id);
+		console.log(data)
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(response){
+				console.log("se cambio el estado de abierto_comunidad a: " + response);				
+			},
+			error: function(){
 				console.log("error");
 			}
 		});

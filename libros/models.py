@@ -42,6 +42,16 @@ class LibrosDisponibles(models.Model):
 	prestado = models.BooleanField(default=False)
 	ciudad = models.ForeignKey(City)
 
+	def cambiar_abierto_comunidad(self):
+		if self.abierto_comunidad:
+			self.abierto_comunidad = False
+		else:
+			self.abierto_comunidad = True
+		
+		self.save()
+
+		return self.abierto_comunidad
+
 	def __unicode__(self):
 		return "Libro Disponible object: %s - %s" % (self.libro.titulo, self.perfil.usuario)
 

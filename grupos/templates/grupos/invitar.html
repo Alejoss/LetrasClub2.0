@@ -13,7 +13,7 @@
 	<div class="container parallax-content">
 		<div class="row">
 			<div class="col-md-5 col-sm-5 col-md-offset-1">
-				<h3 id="grupo" data-grupo-id="{{grupo.id}}"> <a href="{% url 'grupos:main_grupo' grupo.id %}">{{grupo.nombre}}</a></h3>
+				<h3 id="grupo" data-grupo-id="{{grupo.id}}"> <a href="{% url 'grupos:main_grupo_actividad' grupo.id 'titulo' %}">{{grupo.nombre}}</a></h3>
 			</div>
 		</div>
 	</div>
@@ -63,6 +63,7 @@
 
 		var usernames_autocomplete = [];
 		$.each(usernames_dict, function(key, value){
+			console.log(key, value);
 			usernames_autocomplete.push({'label': key+" - "+value.ciudad, 'value': key});
 		});
 
@@ -117,7 +118,7 @@
 				success: function(){
 					$("#submit").val("Invitaciones Enviadas");
 					// Depende de la respuesta, miembro sumado al grupo o invitación enviada
-					setTimeout(function() {window.location.href = "{% url 'grupos:main_grupo' grupo.id %}"}, 2000);
+					setTimeout(function() {window.location.href = "{% url 'grupos:main_grupo_actividad' grupo.id 'titulo' %}"}, 2000);
 				},
 				error: function(){
 					$("#submit").val("Hubo un error enviando las invitaciones");

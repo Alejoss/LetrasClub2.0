@@ -40,6 +40,8 @@ INSTALLED_APPS = (
     'grupos',
     'libros',
     'perfiles',
+    'comentarios',
+    'notificaciones',
     'storages',
     'cities_light'
 )

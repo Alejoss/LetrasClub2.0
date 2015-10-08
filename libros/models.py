@@ -66,7 +66,7 @@ class LibroDisponibleGrupo(models.Model):
 	activo = models.BooleanField(default=True)
 
 	def __unicode__(self):
-		return "Libro Disponible Grupo: %s - %s: %s " % (self.libro_disponible.libro.titulo, self.perfil.usuario.username, self.grupo.nombre)
+		return "Libro Disponible Grupo: %s - %s" % (self.libro_disponible.libro.titulo, self.grupo.nombre)
 
 
 class LibrosPrestados(models.Model):

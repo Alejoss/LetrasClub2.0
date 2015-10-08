@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import bleach
+from itertools import chain
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -10,6 +11,8 @@ from forms import FormCrearGrupo
 from models import UsuariosGrupo, Grupo, RequestInvitacion
 from libros.models import LibroDisponibleGrupo, LibrosDisponibles, Libro
 from perfiles.models import Perfil
+from comentarios.models import CommentGrupo
+from notificaciones.models import Notificacion
 
 
 def crear_grupo(request):
@@ -89,7 +92,7 @@ def editar_grupo(request, id_grupo):
 	return render(request, template, context)
 
 
-def main_grupo_libros(request, id_grupo):
+def main_grupo_libros(request, id_grupo, queryset):
 
 	template = "grupos/main_grupo.html"
 
@@ -132,17 +135,23 @@ def main_grupo_libros(request, id_grupo):
 			requests_entrar_grupo = RequestInvitacion.objects.filter(grupo=grupo, aceptado=False, eliminado=False)
 
 	# Libros disponibles en el Grupo
-	libros_disponibles_grupo = LibroDisponibleGrupo.objects.filter(grupo=grupo, activo=True).select_related("libro_disponible")
-	libros_disponibles = [ldg.libro_disponible for ldg in libros_disponibles_grupo]
+	if queryset == "autor":
+		libros_disponibles = LibroDisponibleGrupo.objects.filter(grupo=grupo, 
+			activo=True).select_related("libro_disponible").order_by("libro_disponible__libro__autor")
+	else:
+		libros_disponibles = LibroDisponibleGrupo.objects.filter(grupo=grupo, activo=True).select_related("libro_disponible")
+
+	libros_disponibles = [ldg.libro_disponible for ldg in libros_disponibles]
 
 	context = {'grupo': grupo, 'miembros': miembros, 'requests_entrar_grupo': requests_entrar_grupo, 'usuario_es_admin': usuario_es_admin,
-	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'libros_disponibles': libros_disponibles
+	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'libros_disponibles': libros_disponibles,
+	'filtro': 'libros', 'ordenar_por': queryset
 	}
 
 	return render(request, template, context)
 
 
-def main_grupo_actividad(request, id_grupo):
+def main_grupo_actividad(request, id_grupo, queryset):
 
 	template = "grupos/main_grupo.html"
 
@@ -183,9 +192,22 @@ def main_grupo_actividad(request, id_grupo):
 				requests_entrar_grupo = RequestInvitacion.objects.filter(grupo=grupo, aceptado=False, eliminado=False)
 		else:
 			requests_entrar_grupo = RequestInvitacion.objects.filter(grupo=grupo, aceptado=False, eliminado=False)
-	# !!! actividad
+		
+	comentarios = CommentGrupo.objects.filter(grupo=grupo, eliminado=False)
+	notificaciones = Notificacion.objects.filter(grupo=grupo)
+	
+	actividad_0 = list(chain(comentarios, notificaciones))
+	actividad_0.sort(key=lambda x: x.date)
+
+	actividad = []
+	for act in actividad_0:
+		if act.__class__.__name__ == "CommentGrupo":
+			actividad.append((act, "comment"))
+		else:
+			actividad.append((act, "notificacion"))
+
 	context = {'grupo': grupo, 'miembros': miembros, 'requests_entrar_grupo': requests_entrar_grupo, 'usuario_es_admin': usuario_es_admin,
-	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada
+	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'actividad': actividad
 	}
 
 	return render(request, template, context)
@@ -204,6 +226,7 @@ def invitar(request, id_grupo):
 			ciudad = perfil.ciudad.name
 		lista_usuarios[perfil.usuario.username] = {'imagen_perfil': perfil.imagen_perfil, 'ciudad': ciudad, 'username': perfil.usuario.username}
 
+	print lista_usuarios
 	usernames_dict = json.dumps(lista_usuarios)
 
 	context = {'grupo': grupo, 'usernames_dict': usernames_dict}
@@ -222,43 +245,42 @@ def compartir_libro_grupo(request, id_grupo):
 		
 		tipo = request.POST.get("tipo_libro", "")
 
-		if tipo == "c_existente":
+		if tipo == "existente":
 			# el form envia el id de un libro disponible existente
-			id_libro_disp = request.POST.get("titulo_id", "")
-			print ("id_libro_disp: %s" % (id_libro_disp))
+			id_libro_disp = request.POST.get("libro_disp_id", "")
 
-			if LibrosDisponibles.objects.get(id=int(id_libro_disp)).exists():
-				print "libro disponible object existe"
+			if LibrosDisponibles.objects.filter(id=int(id_libro_disp)).exists():
 				libro_disponible = LibrosDisponibles.objects.get(id=int(id_libro_disp))
 			else:
-				print "libro disponible obj no existe"
 				# !! Llamar a una función que cree un nuevo libro como si fuera c_nuevo
-				pass
+				return HttpResponse(staus=400)
 
 			# revisa si existe un LibroDisponibleGrupo object con ese libro disponible y el grupo
 			if LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible).exists():
-				print "libro disponible grupo existe"
 				libro_disponible_obj = LibroDisponibleGrupo.objects.get(grupo=grupo, libro_disponible=libro_disponible)
 				if not libro_disponible_obj.activo:
-					print "libro disponible grupo no está activo, cambiado a activo"
 					libro_disponible_obj.activo = True
 					libro_disponible_obj.save()
+
+					# Crear notificacion libro compartido con grupo
+					Notificacion.objects.create(tipo="compartio_libro_grupo", grupo=grupo, perfil_actor=perfil_obj)
+
+					return HttpResponse("Libro disponible para ese grupo cambiado a activo")
 				else:
-					print "Ya existe ese libro disponible para ese grupo"
 					return HttpResponse("Ya existe ese libro disponible para ese grupo")
 			else:
-				print "libro disponible grupo creado"
 				LibroDisponibleGrupo.objects.create(grupo=grupo, libro_disponible=libro_disponible)
+
+				# Crear notificacion libro compartido con grupo
+				Notificacion.objects.create(tipo="compartio_libro_grupo", grupo=grupo, perfil_actor=perfil_obj)
+
 				return HttpResponse("Libro compartido con grupo", status=201)
 
-		elif tipo == "c_nuevo":
+		elif tipo == "nuevo":
 			# el form envia el titulo y el autor para crear un nuevo libro
-			titulo = bleach.clean(request.POST.get("titulo_id", ""))
+			titulo = bleach.clean(request.POST.get("titulo", ""))
 			autor = bleach.clean(request.POST.get("autor", ""))
 			descripcion = bleach.clean(request.POST.get("descripcion", ""))
-			print ("titulo: %s" % (titulo))
-			print ("autor: %s" % (autor))
-			print ("descripcion: %s" % (descripcion))			
 
 			if titulo and autor:
 				# crea un nuevo libro
@@ -269,12 +291,13 @@ def compartir_libro_grupo(request, id_grupo):
 
 				# crea un LibroDisponibleGrupo object
 				LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_obj, grupo=grupo)
-				print "nuevos objetos creados: libro, libro disponible, libro disponible grupo"
+
+				# crear notificacion libro compartido con grupo
+				Notificacion.objects.create(tipo="compartio_libro_grupo", grupo=grupo, perfil_actor=perfil_obj)
 
 				return HttpResponse("Libro compartido con grupo", status=201)  # Redirect a Grupo
 
 			else:
-				print "No encontro titulo o autor"
 				return HttpResponse("Falta titulo o autor", status=400)
 
 		else:			
@@ -284,13 +307,44 @@ def compartir_libro_grupo(request, id_grupo):
 		
 	else:
 		libros_disponibles_obj = LibrosDisponibles.objects.filter(perfil=perfil_obj).select_related("libro")
-		titulos_autocomplete = [(l_d.id, l_d.libro.titulo) for l_d in libros_disponibles_obj]
-		autores_autocomplete = [(l_d.id, l_d.libro.autor) for l_d in libros_disponibles_obj]
-		print titulos_autocomplete
+		titulos_autocomplete = {}
+		autores_autocomplete = {}
+		for l in libros_disponibles_obj:
+			titulos_autocomplete[l.libro.titulo] = (l.id, l.libro.autor)
+
+		for l in libros_disponibles_obj:
+			autores_autocomplete[l.libro.autor] = l.id
 
 	context = {'grupo': grupo, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete)}
 
 	return render(request, template, context)
+
+
+def buscar_libro_grupo(request, id_grupo, filtro):
+    """
+    busca un libro disponible en un grupo
+    """
+    template = 'grupos/busqueda_grupo.html'
+    
+    query_string = ""
+    libros_disponibles = None
+    grupo = Grupo.objects.get(id=id_grupo)
+
+    if ('q' in request.GET) and request.GET['q'].strip():
+        query_string = request.GET['q']
+        if query_string:
+            if filtro == "autor":
+                libros_disponibles = LibrosDisponibles.objects.filter(libro__autor__icontains=query_string, disponible=True)
+            else:
+                libros_disponibles = LibrosDisponibles.objects.filter(libro__titulo__icontains=query_string, disponible=True)
+
+        context = {'query_string': query_string,
+                   'libros_disponibles': libros_disponibles,
+                   'filtro': filtro,
+                   'grupo': grupo}
+        return render(request, template, context)
+    else:
+        return redirect('libros:libros_ciudad', slug_ciudad='quito', id_ciudad=18, filtro='titulo')
 
 
 # Ajax Calls

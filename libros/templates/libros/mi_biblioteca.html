@@ -76,19 +76,19 @@
 				<div class="panel-heading">
 					<h4 class="panel-title">
 						<a class = "mas_info_libro" data-id="{{l.id}}" data-url-target="{% url 'libros:info_grupos_libro' %}" data-click="0"
-							data-toggle="collapse" data-parent="#accordion" href="#acordion1">
+							data-toggle="collapse" data-parent="#accordion" href="#acordion{{forloop.counter}}">
 							<i class="fa fa-toggle-down pull-right"></i>
 							<h5><strong>{{l.libro.titulo}}</strong> &nbsp {{l.libro.autor}}</h5>
 						</a>
 					</h4>
 				</div>
-				<div id="acordion1" class="collapse">
+				<div id="acordion{{forloop.counter}}" class="collapse">
 					<div class="panel-body">
 						<p class = "mensaje_grupos"></p>
 						<!--
 						<a href="" rel="nofollow" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}" title="Ya no estará disponible en tu Biblioteca">Marcar disponible para la comunidad</a>
 						-->
-						<div class = "grupos_prestado"> 
+						<div class = "grupos_prestado">
 						</div>
 					</div>
 					<div>

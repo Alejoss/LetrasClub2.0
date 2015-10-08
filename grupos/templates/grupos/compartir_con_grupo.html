@@ -12,7 +12,7 @@
 		<fieldset>
 			{% csrf_token %}
 			<!-- Form Name -->
-			<legend>Compartir un libro con <a target="_blank" href="{% url 'grupos:main_grupo_actividad' grupo.id %}">{{grupo.nombre}}</a></legend>
+			<legend>Compartir un libro con <a target="_blank" href="{% url 'grupos:main_grupo_actividad' grupo.id 'titulo' %}">{{grupo.nombre}}</a></legend>
 
 			<!-- Multiple Radios -->
 			<div class="form-group">			  
@@ -39,9 +39,10 @@
 			<!-- Text input-->
 			<div class="form-group">
 			  <div class="col-md-12">
-				  <input id="titulo" name="titulo_id" placeholder="Título" class="form-control input-md" type="text">
-				  <span id="help_titulo" class="help-block">El título de un libro de tu Biblioteca.</span>
+				  <input id="titulo" name="titulo" placeholder="Título" class="form-control input-md" type="text">
+				  <span id="help_titulo" class="help-block">El título de un libro de tu Biblioteca.</span>				  
 			  </div>
+			  	  <input type="hidden" id="libro_disp_id" name="libro_disp_id" value="">
 			</div>
 
 			<!-- Text input-->
@@ -125,27 +126,40 @@ $(document).ready(function(){
 
 	// autocomplete titulos / autores
 	var titulos_autocomplete = []
-	var titulos_list = JSON.parse('{{titulos_autocomplete|safe}}');	
-	$.each(titulos_list, function(index, value){
-		console.log(value);
-		titulos_autocomplete.push({'label': value[0], 'value': value[1]});
-	});
-
-	$("#titulo").autocomplete({
-		source: titulos_autocomplete,
-		minLength: 2
+	var titulos_list = JSON.parse('{{titulos_autocomplete|safe}}');
+	console.log(titulos_list);
+	$.each(titulos_list, function(key, value){	
+		titulos_autocomplete.push(key);
 	});
 
 	var autores_autocomplete = []
 	var autores_list = JSON.parse('{{autores_autocomplete|safe}}');
-	$.each(autores_list, function(index, value){
-		autores_autocomplete.push({'label': value[1], 'value': value[0]});
+	$.each(autores_list, function(key, value){
+		autores_autocomplete.push(key);
+	});
+
+	$("#titulo").autocomplete({
+		source: titulos_autocomplete,
+		minLength: 2,
+		select: function(event, ui){
+			var titulo_seleccionado = ui.item.value
+
+			// Poner libro disponible id en el hidden input
+			var id_libro_disp = titulos_list[titulo_seleccionado][0];
+			$("#libro_disp_id").val(id_libro_disp);
+
+			// Poner sugerencia de autor como placeholder en el input de autor
+			var nombre_autor = titulos_list[titulo_seleccionado][1];
+			$("#autor").attr("placeholder", nombre_autor+"?");
+		}
 	});
 
 	$("#autor").autocomplete({
 		source: autores_autocomplete,
-		minLength: 2
+		minLength: 2,
 	});
+
+	// validate !!
 });
 </script>
 {% endblock extra_javascript %}

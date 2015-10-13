@@ -96,17 +96,16 @@ def main_grupo_libros(request, id_grupo, queryset):
 
 	template = "grupos/main_grupo.html"
 
+	grupo = Grupo.objects.get(id=id_grupo)
 	perfil_usuario = None
 	if request.user.is_authenticated():
 		perfil_usuario = obtener_perfil(request.user)
-
-	grupo = Grupo.objects.get(id=id_grupo)
 
 	usuario_es_miembro = False
 	if request.user.is_authenticated():
 		usuario_es_miembro = UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo).exists()
 
-	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('usuario')
+	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('usuario')  # !! cambiar a "perfil"
 	miembros = [usuario_grupo_obj for usuario_grupo_obj in usuarios_grupo_obj]
 
 	# Invitar a un usuario al grupo
@@ -116,7 +115,7 @@ def main_grupo_libros(request, id_grupo, queryset):
 	if request.user.is_authenticated():
 		if usuario_es_miembro:
 			# Si el usuario es miembro, revisar si es admin
-			if UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo, es_admin=True):
+			if UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo, es_admin=True).exists():
 				usuario_es_admin = True
 		else:
 			# Si el usuario no es miembro, revisar si ya envió solicitud
@@ -151,7 +150,7 @@ def main_grupo_libros(request, id_grupo, queryset):
 	return render(request, template, context)
 
 
-def main_grupo_actividad(request, id_grupo, queryset):
+def main_grupo_actividad(request, id_grupo):
 
 	template = "grupos/main_grupo.html"
 
@@ -195,9 +194,9 @@ def main_grupo_actividad(request, id_grupo, queryset):
 		
 	comentarios = CommentGrupo.objects.filter(grupo=grupo, eliminado=False)
 	notificaciones = Notificacion.objects.filter(grupo=grupo)
-	
+
 	actividad_0 = list(chain(comentarios, notificaciones))
-	actividad_0.sort(key=lambda x: x.date)
+	actividad_0.sort(key=lambda x: x.fecha)
 
 	actividad = []
 	for act in actividad_0:
@@ -205,6 +204,8 @@ def main_grupo_actividad(request, id_grupo, queryset):
 			actividad.append((act, "comment"))
 		else:
 			actividad.append((act, "notificacion"))
+
+	print actividad
 
 	context = {'grupo': grupo, 'miembros': miembros, 'requests_entrar_grupo': requests_entrar_grupo, 'usuario_es_admin': usuario_es_admin,
 	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'actividad': actividad
@@ -257,13 +258,13 @@ def compartir_libro_grupo(request, id_grupo):
 
 			# revisa si existe un LibroDisponibleGrupo object con ese libro disponible y el grupo
 			if LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible).exists():
-				libro_disponible_obj = LibroDisponibleGrupo.objects.get(grupo=grupo, libro_disponible=libro_disponible)
-				if not libro_disponible_obj.activo:
-					libro_disponible_obj.activo = True
-					libro_disponible_obj.save()
+				libro_disponible_grupo_obj = LibroDisponibleGrupo.objects.get(grupo=grupo, libro_disponible=libro_disponible)
+				if not libro_disponible_grupo_obj.activo:
+					libro_disponible_grupo_obj.activo = True
+					libro_disponible_grupo_obj.save()
 
-					# Crear notificacion libro compartido con grupo
-					Notificacion.objects.create(tipo="compartio_libro_grupo", grupo=grupo, perfil_actor=perfil_obj)
+					# Crear notificacion libro compartido con grupo !! usar nueva funcion
+					Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible.libro, grupo)
 
 					return HttpResponse("Libro disponible para ese grupo cambiado a activo")
 				else:
@@ -271,8 +272,8 @@ def compartir_libro_grupo(request, id_grupo):
 			else:
 				LibroDisponibleGrupo.objects.create(grupo=grupo, libro_disponible=libro_disponible)
 
-				# Crear notificacion libro compartido con grupo
-				Notificacion.objects.create(tipo="compartio_libro_grupo", grupo=grupo, perfil_actor=perfil_obj)
+				# Crear notificacion libro compartido con grupo !! usar nueva funcion
+				Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible.libro, grupo)
 
 				return HttpResponse("Libro compartido con grupo", status=201)
 
@@ -287,13 +288,14 @@ def compartir_libro_grupo(request, id_grupo):
 				nuevo_libro = Libro.objects.create(titulo=titulo, autor=autor, descripcion=descripcion)
 
 				# crea un Libro Disponible object
-				libro_disponible_obj = LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_obj, abierto_comunidad=False, ciudad=perfil_obj.ciudad)
+				libro_disponible_grupo_obj = LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_obj, 
+					abierto_comunidad=False, ciudad=perfil_obj.ciudad)
 
 				# crea un LibroDisponibleGrupo object
-				LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_obj, grupo=grupo)
+				LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_grupo_obj, grupo=grupo)
 
 				# crear notificacion libro compartido con grupo
-				Notificacion.objects.create(tipo="compartio_libro_grupo", grupo=grupo, perfil_actor=perfil_obj)
+				Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible.libro, grupo)				
 
 				return HttpResponse("Libro compartido con grupo", status=201)  # Redirect a Grupo
 

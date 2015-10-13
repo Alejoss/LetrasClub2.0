@@ -12,3 +12,6 @@ class CommentGrupo(models.Model):
 	texto = models.CharField(max_length=1000)
 	eliminado = models.BooleanField(default=False)
 	fecha = models.DateTimeField(auto_now_add=True)
+
+	def __unicode__(self):
+		return "Comment en grupo: %s - %s" % (self.grupo, self.perfil)

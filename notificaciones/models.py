@@ -3,6 +3,23 @@ from django.db import models
 
 from grupos.models import Grupo
 from perfiles.models import Perfil
+from libros.models import Libro
+
+
+class NManager(models.Manager):
+	"""
+	Manager para el modelo Notificacion. Suma funciones para crear notificaciones
+	"""
+
+	def compartio_libro_abierto(self, perfil_actor, libro):
+		notificacion = self.create(perfil_actor=perfil_actor, libro=libro, tipo="compartio_libro_abierto")
+
+		return notificacion
+
+	def compartio_libro_grupo(self, perfil_actor, libro, grupo):
+		notificacion = self.create(perfil_actor=perfil_actor, libro=libro, grupo=grupo, tipo="compartio_libro_grupo")
+
+		return notificacion	
 
 
 class Notificacion(models.Model):
@@ -15,7 +32,11 @@ class Notificacion(models.Model):
 	perfil_actor = models.ForeignKey(Perfil, related_name="actor")  # El perfil de la persona que ocasiono la notificación
 	perfil_target = models.ForeignKey(Perfil, null=True, related_name="target")  # Perfil opcional de segunda persona que debe recibir notificación
 	grupo = models.ForeignKey(Grupo, null=True)  # Si le compete la notificacion a algun grupo
+	libro = models.ForeignKey(Libro, null=True)
 	leida = models.BooleanField(default=False)
+
+	# model manager con metodos para crear notificaciones
+	objects = NManager()
 
 	def __unicode__(self):
 		return "Notificacion: %s - %s" % (self.perfil_actor, self.tipo)

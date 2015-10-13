@@ -177,7 +177,7 @@
 		<hr class ="half-margins invisible">
 		<h3> Grupos </h3>		
 		{% for grupo in grupos %}
-			<a href="{% url 'grupos:main_grupo_actividad' grupo.id 'titulo' %}" class="">{{grupo.nombre}}</a>
+			<a href="{% url 'grupos:main_grupo_actividad' grupo.id %}" class="">{{grupo.nombre}}</a>
 			<br>
 		{% endfor %}
 	{% endif %}

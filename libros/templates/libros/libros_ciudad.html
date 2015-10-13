@@ -128,7 +128,7 @@
 	{% if grupos_abiertos %}
 		<h4> Grupos abiertos en Quito </h4>
 		{% for grupo in grupos_abiertos %}
-			<a href="{% url 'grupos:main_grupo_actividad' grupo.id 'titulo' %}">{{grupo.nombre}}</a>
+			<a href="{% url 'grupos:main_grupo_actividad' grupo.id %}">{{grupo.nombre}}</a>
 			<br>
 		{% endfor %}
 	{% endif %}
@@ -138,7 +138,7 @@
 	{% if grupos_usuario %}
 		<h4> Tus Grupos </h4>
 		{% for u_grupo in grupos_usuario %}
-			<a href="{% url 'grupos:main_grupo_actividad' u_grupo.grupo.id 'titulo' %}"> {{ u_grupo.grupo.nombre }} </a>
+			<a href="{% url 'grupos:main_grupo_actividad' u_grupo.grupo.id %}"> {{ u_grupo.grupo.nombre }} </a>
 			<br>
 		{% endfor %}
 	{% endif %}

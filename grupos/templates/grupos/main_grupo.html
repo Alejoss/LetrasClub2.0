@@ -68,7 +68,7 @@
 <div class = "col-md-8">
 	<hr class ="half-margins invisible">
 
-	<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_actividad' grupo.id 'titulo' %}'" >Actividad</button>
+	<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_actividad' grupo.id %}'" >Actividad</button>
 	<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}'" >Libros</button>
 	<hr class = "half-margins invisible">
 
@@ -127,11 +127,25 @@
 			</div>
 		{% endfor %}
 	{% else %}
+		<!-- Actividad -->
 		{% for act in actividad %}
 			{% if act.1 == "comment" %}				
 				<!-- es un comentario -->
 			{% else %}
-				<!-- es una actividad -->
+				<!-- es un objeto Notificacion -->
+				{% if act.0.tipo == "compartio_libro_grupo" %}	
+				<div class="alert callout alert-default">
+					<div class="row">
+						<a title="Ver libros disponibles en {{grupo.nombre}}" href="{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}">
+							<i class = "pull-right fa fa-book"></i>
+						</a>
+						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> compartió el libro 
+						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
+						con el grupo!
+						</p>
+					</div>
+				</div>
+				{% endif %}
 			{% endif %}
 		{% endfor %}
 	{% endif %}

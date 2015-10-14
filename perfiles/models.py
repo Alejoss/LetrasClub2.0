@@ -25,3 +25,14 @@ class Perfil(models.Model):
 
 	def __unicode__(self):
 		return "Perfil: %s" % (self.usuario.username)
+
+
+class UsuarioLeyendo(models.Model):
+	perfil = models.ForeignKey(Perfil)
+	libro = models.ForeignKey('libros.Libro')
+	inicio = models.DateTimeField(auto_now_add=True)
+	termino = models.DateTimeField(null=True)
+	eliminado = models.BooleanField(default=False)
+
+	def __unicode__(self):
+		return "Usuario Leyendo: %s - %s" % (self.perfil.usuario.username, self.libro.titulo)

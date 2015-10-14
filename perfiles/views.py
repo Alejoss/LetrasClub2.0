@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import logout
@@ -6,13 +8,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 
-from cities_light.models import City
 from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles
 from perfiles.models import Perfil
-from grupos.models import UsuariosGrupo, Grupo
+from grupos.models import UsuariosGrupo
 
 from forms import formRegistro, formEditarPerfil
-from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito
+from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, obtener_libros_perfil, obtener_usuario_leyendo
 
 
 def registro(request):
@@ -46,7 +47,6 @@ def perfil_propio(request):
 	perfil_usuario = obtener_perfil(request.user)
 	avatar = obtener_avatar_large(perfil_usuario)
 	
-
 	# Libros Perfil
 	libros_perfil = {
 		'tiene_requests_pendientes': False,
@@ -72,17 +72,30 @@ def perfil_propio(request):
 		libros_perfil['tiene_libros_prestados'] = True
 		libros_prestados_bcompartida = LibrosPrestadosBibliotecaCompartida.objects.filter(perfil_prestamo=perfil_usuario, fecha_devolucion=None)
 
-	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario, disponible=True, prestado=False)
-
 	# Grupos Perfil
 	grupos = None
 	if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
 		usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related('grupo')
 		grupos = [ug.grupo for ug in usuarios_grupo_obj]
 
+	# Usuario Leyendo
+	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
+
+	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario).select_related('libro')
+	# autocomplete Usuario Leyendo
+	titulos_autocomplete = {}
+	autores_autocomplete = {}
+	for l in libros_disponibles:
+		titulos_autocomplete[l.libro.titulo] = (l.id, l.libro.autor)
+
+	for l in libros_disponibles:
+		autores_autocomplete[l.libro.autor] = l.id
+
 	context = {'libros_perfil': libros_perfil, 'libros_requests': libros_requests, 'libros_prestados': libros_prestados,
 	           'libros_pedidos': libros_pedidos, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 
-	           'libros_disponibles': libros_disponibles, 'avatar': avatar, 'grupos': grupos}
+	           'libros_disponibles': libros_disponibles, 'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
+	           'libros_leidos_usuario': libros_leidos_usuario, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 
+	           'autores_autocomplete': json.dumps(autores_autocomplete)}
 	
 	return render(request, template, context)
 
@@ -160,3 +173,33 @@ def editar_perfil(request):
 	context = {'form': form}
 
 	return render(request, template, context)
+
+
+@login_required
+def libros_usuario_ajax(request):
+	"""
+	Crea un UsuarioLeyendo object y señala la fecha actual como inicio
+	"""
+	if request.is_ajax():
+		perfil_usuario = obtener_perfil(request.user)
+		titulos_autocomplete, autores_autocomplete = obtener_libros_perfil(perfil_usuario)
+		context = {'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete)}
+		return HttpResponse(context, status=200)
+	else:
+		return HttpResponse(status=400)
+
+
+@login_required
+def leyendo_libro_ajax(request):
+	"""
+	Recibe un libro id o un titulo y un autor. En el primer caso, crea un objeto UsuarioLeyendo, en el segundo,
+	crea un objeto Libro y luego un objeto UsuarioLeyendo
+	"""
+	if request.is_ajax():
+		libro_id = request.POST.get("libro_id", "")
+
+		if libro_id:
+			libro = Libro.objects.get(int(libro_id))
+
+	else:
+		return HttpResponse(status=400)

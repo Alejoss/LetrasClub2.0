@@ -4,8 +4,8 @@ import datetime
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
-from perfiles.models import Perfil
-from libros.models import LibrosPrestados, LibrosPrestadosBibliotecaCompartida
+from perfiles.models import Perfil, UsuarioLeyendo
+from libros.models import LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles
 from cities_light.models import City
 
 
@@ -166,3 +166,32 @@ def mail_invitar_grupo(email, invitado_por, usuario_invitado, grupo):
 	mensaje_texto = "%s te ha invitado a un grupo de literatura en el cual podrás compartir libros físicos y comentar sobre ellos\
 	en www.letras.club, una red social dedicada a los lectores que buscan compartir sus libros y formar grupos localizados de lectura"
 
+
+def obtener_libros_perfil(perfil_usuario):
+	"""
+	responde con dos diccionarios listos para el autocomplete de titulo / autor
+	"""
+	libros_disponibles_obj = LibrosDisponibles.objects.filter(perfil=perfil_usuario).select_related("libro")
+	titulos_autocomplete = {}
+	autores_autocomplete = {}
+	for l in libros_disponibles_obj:
+		titulos_autocomplete[l.libro.titulo] = (l.id, l.libro.autor)
+
+	for l in libros_disponibles_obj:
+		autores_autocomplete[l.libro.autor] = l.id
+
+	return titulos_autocomplete, autores_autocomplete
+
+
+def obtener_usuario_leyendo(perfil_usuario):
+	"""
+	responde con el libro que esta leyendo el usuario o con None
+	"""	
+	usuario_leyendo_obj = None
+	actualmente_leyendo = None
+	if UsuarioLeyendo.objects.filter(perfil=perfil_usuario).exists():
+		usuario_leyendo_obj = UsuarioLeyendo.objects.filter(perfil=perfil_usuario, eliminado=False)
+
+		actualmente_leyendo = usuario_leyendo_obj.filter(terminado__isnull=True).latest('inicio')	
+
+	return actualmente_leyendo, usuario_leyendo_obj

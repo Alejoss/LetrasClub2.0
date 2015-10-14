@@ -6,7 +6,7 @@ from itertools import chain
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from letrasclub.utils import obtener_perfil
+from letrasclub.utils import obtener_perfil, obtener_libros_perfil
 from forms import FormCrearGrupo
 from models import UsuariosGrupo, Grupo, RequestInvitacion
 from libros.models import LibroDisponibleGrupo, LibrosDisponibles, Libro
@@ -308,14 +308,7 @@ def compartir_libro_grupo(request, id_grupo):
 		return HttpResponse("prueba form")
 		
 	else:
-		libros_disponibles_obj = LibrosDisponibles.objects.filter(perfil=perfil_obj).select_related("libro")
-		titulos_autocomplete = {}
-		autores_autocomplete = {}
-		for l in libros_disponibles_obj:
-			titulos_autocomplete[l.libro.titulo] = (l.id, l.libro.autor)
-
-		for l in libros_disponibles_obj:
-			autores_autocomplete[l.libro.autor] = l.id
+		titulos_autocomplete, autores_autocomplete = obtener_libros_perfil(perfil_obj)
 
 	context = {'grupo': grupo, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete)}
 

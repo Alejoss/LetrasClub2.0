@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.css' %} ">
+{% endblock extra_css %}
+
 {% block content %}
 <div class = "col-md-8">
 	{% if libros_perfil.tiene_libros_pedidos %}
@@ -162,17 +166,69 @@
 	{% endif %}
 	<hr class="half-margins" /><!-- divider 30px -->
 </div>
-	
+
+<!-- sidebar -->	
 <div class = "col-md-4">
 	<br>
-	
 	<figure class="text-center margin-bottom8">		
 		<img class="img-responsive img-circle" src="{{avatar}}" width="260" height="260" alt="">
 	</figure>
-	
+
 	<h3 class="nomargin">{{perfil_usuario.usuario.username}}</h3>
 
-	
+	<hr class = "half-margins invisible">
+	<!-- Estoy Leyendo -->
+	<div class="accordion panel-group" id="accordion">
+		<div class="panel panel-default panel_info_disponible">
+			<div class="panel-heading">
+				<p class="panel-title">
+					<a class = "mas_info_libro" data-id="{{l.id}}" data-url-target="" data-click="0"
+						data-toggle="collapse" data-parent="#accordion" href="#acc_estoy_leyendo">
+						{% if actualmente_leyendo %}
+							Estoy leyendo &nbsps
+						{% else %}
+							¿Estás leyendo un libro?
+						{% endif %}
+					</a>
+				</p>
+			</div>
+			<div id="acc_estoy_leyendo" class="collapse">
+				<div class="panel-body">
+					{% if actualmente_leyendo %}
+						<p> {{ actualmente_leyendo.libro.titulo }} 
+							<small> {{ actualmente_leyendo.libro.autor }} </small>
+						</p>
+					{% else %}
+						<!-- Text input-->
+						<div class = "row">
+							<form class="form-horizontal" method="post" action="{% url 'perfiles:leyendo_libro_ajaxs' %}">
+								{% csrf_token %}
+								<div class="form-group">
+									<div class="col-md-12">
+									  <input id="titulo" name="titulo" placeholder="Título" class="form-control input-md" type="text">							  
+									</div>
+								</div>
+								<!-- Text input-->
+								<div class="form-group">
+								  <div class="col-md-12">
+									  <input id="autor" name="autor" placeholder="Autor" class="form-control input-md" type="text">						
+								  </div>
+								</div>
+								<input class = "btn btn-success pull-right" type="submit" value="Enviar">
+							</form>
+						</div>
+					{% endif %}
+					<hr class ="half-margins">
+					{% for libro_leido in libros_leidos_usuario %}
+						<p>
+							{{libro_leido.libro.titulo}}
+						</p>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+
 	{% if grupos %}
 		<hr class ="half-margins invisible">
 		<h3> Grupos </h3>		
@@ -230,8 +286,10 @@
 </div>
 {% endblock content %}
 
-
 {% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/js/jquery-ui-fold.js' %}"></script>
+<script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
+
 <script>
 	$(document).ready(function(){
 
@@ -269,5 +327,40 @@
 		});
 	});
 
+	// autocomplete titulos / autores
+	var titulos_autocomplete = []
+	var titulos_list = JSON.parse('{{titulos_autocomplete|safe}}');
+	console.log(titulos_list);
+	$.each(titulos_list, function(key, value){	
+		titulos_autocomplete.push(key);
+	});
+
+	var autores_autocomplete = []
+	var autores_list = JSON.parse('{{autores_autocomplete|safe}}');
+	$.each(autores_list, function(key, value){
+		autores_autocomplete.push(key);
+	});
+
+	$("#titulo").autocomplete({
+		source: titulos_autocomplete,
+		minLength: 2,
+		select: function(event, ui){
+			var titulo_seleccionado = ui.item.value
+
+			// Poner libro disponible id en el hidden input
+			var id_libro_disp = titulos_list[titulo_seleccionado][0];
+			$("#libro_disp_id").val(id_libro_disp);
+
+			// Poner sugerencia de autor como placeholder en el input de autor
+			var nombre_autor = titulos_list[titulo_seleccionado][1];
+			$("#autor").attr("placeholder", nombre_autor+"?");
+		}
+	});
+
+	$("#autor").autocomplete({
+		source: autores_autocomplete,
+		minLength: 2,
+	});
 </script>
 {% endblock extra_javascript %}
+

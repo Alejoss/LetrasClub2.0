@@ -37,13 +37,13 @@ class Grupo(models.Model):
 
 
 class UsuariosGrupo(models.Model):
-	usuario = models.ForeignKey(Perfil)
+	perfil = models.ForeignKey(Perfil)
 	grupo = models.ForeignKey(Grupo)
 	es_admin = models.BooleanField(default=False)
 	activo = models.BooleanField(default=True)
 
 	def __unicode__(self):
-		return self.usuario.usuario.username + "-" + self.grupo.nombre
+		return self.perfil.usuario.username + "-" + self.grupo.nombre
 
 
 class RequestInvitacion(models.Model):

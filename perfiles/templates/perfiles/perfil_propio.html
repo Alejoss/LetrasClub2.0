@@ -185,7 +185,7 @@
 					<a class = "mas_info_libro" data-id="{{l.id}}" data-url-target="" data-click="0"
 						data-toggle="collapse" data-parent="#accordion" href="#acc_estoy_leyendo">
 						{% if actualmente_leyendo %}
-							Estoy leyendo &nbsps
+							Estoy leyendo &nbsp <strong>{{ actualmente_leyendo.libro.titulo }}</strong>
 						{% else %}
 							¿Estás leyendo un libro?
 						{% endif %}
@@ -195,35 +195,63 @@
 			<div id="acc_estoy_leyendo" class="collapse">
 				<div class="panel-body">
 					{% if actualmente_leyendo %}
-						<p> {{ actualmente_leyendo.libro.titulo }} 
-							<small> {{ actualmente_leyendo.libro.autor }} </small>
-						</p>
+					<div class = "row">
+						<a id="comenzo_otro_libro" class="pull-right">Comencé a leer otro libro</a>
+						<div id="hidden_leyendo" class = "hidden">
+							<div class = "row">
+								<form class="form-horizontal" method="post" action="">
+									{% csrf_token %}
+									<div class="form-group">
+										<div class="col-md-12">
+										  <input id="titulo" name="titulo" placeholder="Título" class="form-control input-md" type="text">
+										</div>
+									</div>
+				  	  				<input type="hidden" id="libro_id" name="libro_id" value="">
+									<!-- Text input-->
+									<div class="form-group">
+									  <div class="col-md-12">
+										  <input id="autor" name="autor" placeholder="Autor" class="form-control input-md" type="text">						
+									  </div>
+									</div>
+									<input data-url="{% url 'perfiles:leyendo_libro_ajax' %}" id="submit_leyendo" class = "btn btn-success pull-right" 
+									type="submit" value="Enviar">
+								</form>
+							</div>
+							<hr class ="half-margins">
+						</div>
+					</div>
 					{% else %}
-						<!-- Text input-->
 						<div class = "row">
-							<form class="form-horizontal" method="post" action="{% url 'perfiles:leyendo_libro_ajaxs' %}">
+							<form class="form-horizontal" method="post" action="">
 								{% csrf_token %}
 								<div class="form-group">
 									<div class="col-md-12">
 									  <input id="titulo" name="titulo" placeholder="Título" class="form-control input-md" type="text">							  
 									</div>
 								</div>
+			  	  				<input type="hidden" id="libro_id" name="libro_id" value="">			
 								<!-- Text input-->
 								<div class="form-group">
 								  <div class="col-md-12">
 									  <input id="autor" name="autor" placeholder="Autor" class="form-control input-md" type="text">						
 								  </div>
 								</div>
-								<input class = "btn btn-success pull-right" type="submit" value="Enviar">
+								<input data-url="{% url 'perfiles:leyendo_libro_ajax' %}" id="submit_leyendo" class = "btn btn-success pull-right" type="submit" value="Enviar">
 							</form>
 						</div>
+						<hr class ="half-margins">
 					{% endif %}
-					<hr class ="half-margins">
+					<br>
+					<div id="libros_leidos">
 					{% for libro_leido in libros_leidos_usuario %}
 						<p>
-							{{libro_leido.libro.titulo}}
+						{{ libro_leido.libro.titulo }} 
+						<small> {{ libro_leido.libro.autor }} </small>
+						<a title="Terminé de leerlo" class="pull-right" href=""> <i class="fa fa-calendar-check-o"></i> </a><br>
+						<i class="fa fa-calendar"></i> &nbsp {{ libro_leido.inicio|date:"F/y" }}
 						</p>
 					{% endfor %}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -346,10 +374,11 @@
 		minLength: 2,
 		select: function(event, ui){
 			var titulo_seleccionado = ui.item.value
+			console.log(titulo_seleccionado);
 
 			// Poner libro disponible id en el hidden input
-			var id_libro_disp = titulos_list[titulo_seleccionado][0];
-			$("#libro_disp_id").val(id_libro_disp);
+			var id_libro = titulos_list[titulo_seleccionado][0];
+			$("#libro_id").val(id_libro);
 
 			// Poner sugerencia de autor como placeholder en el input de autor
 			var nombre_autor = titulos_list[titulo_seleccionado][1];
@@ -361,6 +390,37 @@
 		source: autores_autocomplete,
 		minLength: 2,
 	});
+
+	$("#submit_leyendo").on("click", function(e){
+		e.preventDefault()
+		var libro_id = $("#libro_id").val();
+		var autor = $("#autor").val();
+		var titulo = $("#titulo").val();
+		var data = {'autor': autor, 'titulo': titulo, 'libro_id': libro_id, 'csrfmiddlewaretoken': '{{csrf_token}}'}
+
+		var url_ajax = $(this).data("url")
+		console.log(libro_id + autor + titulo);
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(){
+				console.log("comenzo a leer nuevo libro!");
+				location.reload();
+			},
+			error: function(){
+				console.log('error');
+			}
+		});
+	});
+
+	$("#comenzo_otro_libro").on("click", function(e){
+		e.preventDefault();
+		$("#hidden_leyendo").removeClass("hidden");
+		$(this).addClass("hidden");
+	});
+
 </script>
 {% endblock extra_javascript %}
 

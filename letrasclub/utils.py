@@ -7,6 +7,8 @@ from django.template.loader import render_to_string
 from perfiles.models import Perfil, UsuarioLeyendo
 from libros.models import LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles
 from cities_light.models import City
+from notificaciones.models import Notificacion
+from grupos.models import UsuariosGrupo
 
 
 # Devuelve el modelo de Quito
@@ -190,8 +192,18 @@ def obtener_usuario_leyendo(perfil_usuario):
 	usuario_leyendo_obj = None
 	actualmente_leyendo = None
 	if UsuarioLeyendo.objects.filter(perfil=perfil_usuario).exists():
-		usuario_leyendo_obj = UsuarioLeyendo.objects.filter(perfil=perfil_usuario, eliminado=False)
+		usuario_leyendo_obj = UsuarioLeyendo.objects.filter(perfil=perfil_usuario, eliminado=False).order_by('-inicio')
 
-		actualmente_leyendo = usuario_leyendo_obj.filter(terminado__isnull=True).latest('inicio')	
+		actualmente_leyendo = usuario_leyendo_obj.filter(termino__isnull=True).latest('inicio')	
 
 	return actualmente_leyendo, usuario_leyendo_obj
+
+
+def notif_grupos_comenzo_leer(perfil_usuario, libro):
+	"""
+	crea una notificacion usuario_leyendo con fk a cada grupo al que pertenece el usuario
+	"""
+	grupos_usuario = UsuariosGrupo.objects.filter(perfil=perfil_usuario)
+
+	for grupo in grupos_usuario:		
+		Notificacion.objects.comenzo_leer(perfil=perfil_usuario, libro=libro, grupo=grupo)

@@ -37,7 +37,7 @@ def crear_grupo(request):
 			nuevo_grupo.save()
 
 			# Crear usuario administrador
-			usuario_admin = UsuariosGrupo(usuario=perfil_admin, grupo=nuevo_grupo, es_admin=True)
+			usuario_admin = UsuariosGrupo(perfil=perfil_admin, grupo=nuevo_grupo, es_admin=True)
 			usuario_admin.save()
 
 			return redirect('grupos:main_grupo', id_grupo=nuevo_grupo.id)		
@@ -103,9 +103,9 @@ def main_grupo_libros(request, id_grupo, queryset):
 
 	usuario_es_miembro = False
 	if request.user.is_authenticated():
-		usuario_es_miembro = UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo).exists()
+		usuario_es_miembro = UsuariosGrupo.objects.filter(perfil=perfil_usuario, grupo=grupo).exists()
 
-	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('usuario')  # !! cambiar a "perfil"
+	usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=grupo, activo=True).select_related('perfil')
 	miembros = [usuario_grupo_obj for usuario_grupo_obj in usuarios_grupo_obj]
 
 	# Invitar a un usuario al grupo
@@ -115,7 +115,7 @@ def main_grupo_libros(request, id_grupo, queryset):
 	if request.user.is_authenticated():
 		if usuario_es_miembro:
 			# Si el usuario es miembro, revisar si es admin
-			if UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo, es_admin=True).exists():
+			if UsuariosGrupo.objects.filter(perfil=perfil_usuario, grupo=grupo, es_admin=True).exists():
 				usuario_es_admin = True
 		else:
 			# Si el usuario no es miembro, revisar si ya envió solicitud
@@ -162,7 +162,7 @@ def main_grupo_actividad(request, id_grupo):
 
 	usuario_es_miembro = False
 	if request.user.is_authenticated():
-		usuario_es_miembro = UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo).exists()
+		usuario_es_miembro = UsuariosGrupo.objects.filter(perfil=perfil_usuario, grupo=grupo).exists()
 
 	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('usuario')
 	miembros = [usuario_grupo_obj for usuario_grupo_obj in usuarios_grupo_obj]
@@ -174,7 +174,7 @@ def main_grupo_actividad(request, id_grupo):
 	if request.user.is_authenticated():
 		if usuario_es_miembro:
 			# Si el usuario es miembro, revisar si es admin
-			if UsuariosGrupo.objects.filter(usuario=perfil_usuario, grupo=grupo, es_admin=True):
+			if UsuariosGrupo.objects.filter(perfil=perfil_usuario, grupo=grupo, es_admin=True):
 				usuario_es_admin = True
 		else:
 			# Si el usuario no es miembro, revisar si ya envió solicitud
@@ -357,7 +357,7 @@ def invitar_ajax(request):
 				usuario_invitado = Perfil.objects.get(usuario__username=invitacion['nombre_usuario'])
 				
 				# Si el usuario ya es miembro del grupo
-				if UsuariosGrupo.objects.filter(usuario=usuario_invitado, grupo=grupo).exists():
+				if UsuariosGrupo.objects.filter(perfil=usuario_invitado, grupo=grupo).exists():
 					pass					
 
 				# Si cualquier persona puede sumar miembros al grupo
@@ -366,14 +366,14 @@ def invitar_ajax(request):
 
 					RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=usuario_invitado, invitado_por=invitado_por,
 					aceptado_por=invitado_por, aceptado=True)  # crea un objecto de RequestInvitacion con aceptado True					
-					UsuariosGrupo.objects.create(usuario=usuario_invitado, grupo=grupo)  # Crea un UsuariosGrupo object
+					UsuariosGrupo.objects.create(perfil=usuario_invitado, grupo=grupo)  # Crea un UsuariosGrupo object
 
 				# Si el usuario que invita es admin del grupo
-				elif UsuariosGrupo.objects.filter(usuario=invitado_por, grupo=grupo, es_admin=True, activo=True).exists():
+				elif UsuariosGrupo.objects.filter(perfil=invitado_por, grupo=grupo, es_admin=True, activo=True).exists():
 					print "tipo 2 o 4"
 					RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=usuario_invitado, invitado_por=invitado_por,
 					aceptado_por=invitado_por, aceptado=True)  # crea un objecto de RequestInvitacion con aceptado True
-					UsuariosGrupo.objects.create(usuario=usuario_invitado, grupo=grupo)  # Crea un UsuariosGrupo object
+					UsuariosGrupo.objects.create(perfil=usuario_invitado, grupo=grupo)  # Crea un UsuariosGrupo object
 
 				else:
 					# No es abierto ni es admin, crear RequestInvitacion sin aceptado=True
@@ -402,10 +402,10 @@ def aceptar_ajax(request):
 		request_invitacion.save()
 
 		# Crear UsuarioGrupo
-		if UsuariosGrupo.objects.filter(usuario=request_invitacion.usuario_invitado, grupo=request_invitacion.grupo, activo=True).exists():
+		if UsuariosGrupo.objects.filter(perfil=request_invitacion.usuario_invitado, grupo=request_invitacion.grupo, activo=True).exists():
 			return HttpResponse("el usuario ya es miembro", status=200)
 		else:
-			UsuariosGrupo.objects.create(usuario=request_invitacion.usuario_invitado, grupo=request_invitacion.grupo)
+			UsuariosGrupo.objects.create(perfil=request_invitacion.usuario_invitado, grupo=request_invitacion.grupo)
 			return HttpResponse("nuevo usuario de grupo creado", status=201)
 
 	else:

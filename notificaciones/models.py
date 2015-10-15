@@ -19,7 +19,12 @@ class NManager(models.Manager):
 	def compartio_libro_grupo(self, perfil_actor, libro, grupo):
 		notificacion = self.create(perfil_actor=perfil_actor, libro=libro, grupo=grupo, tipo="compartio_libro_grupo")
 
-		return notificacion	
+		return notificacion
+
+	def comenzo_leer(self, perfil_actor, libro, grupo):
+		notificacion = self.create(perfil_actor=perfil_actor, libro=libro, grupo=grupo, tipo="comenzo_leer")
+
+		return notificacion
 
 
 class Notificacion(models.Model):

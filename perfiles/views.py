@@ -8,9 +8,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 
-from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles
-from perfiles.models import Perfil
+from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles, Libro
+from perfiles.models import Perfil, UsuarioLeyendo
 from grupos.models import UsuariosGrupo
+from notificaciones.models import Notificacion
 
 from forms import formRegistro, formEditarPerfil
 from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, obtener_libros_perfil, obtener_usuario_leyendo
@@ -74,8 +75,8 @@ def perfil_propio(request):
 
 	# Grupos Perfil
 	grupos = None
-	if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
-		usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related('grupo')
+	if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related('grupo')
 		grupos = [ug.grupo for ug in usuarios_grupo_obj]
 
 	# Usuario Leyendo
@@ -86,10 +87,10 @@ def perfil_propio(request):
 	titulos_autocomplete = {}
 	autores_autocomplete = {}
 	for l in libros_disponibles:
-		titulos_autocomplete[l.libro.titulo] = (l.id, l.libro.autor)
+		titulos_autocomplete[l.libro.titulo] = (l.libro.id, l.libro.autor)
 
 	for l in libros_disponibles:
-		autores_autocomplete[l.libro.autor] = l.id
+		autores_autocomplete[l.libro.autor] = l.libro.id
 
 	context = {'libros_perfil': libros_perfil, 'libros_requests': libros_requests, 'libros_prestados': libros_prestados,
 	           'libros_pedidos': libros_pedidos, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 
@@ -103,7 +104,7 @@ def perfil_propio(request):
 def perfil_usuario(request, username):
 	"""
 	Muestra el perfil de un usuario tercero
-	"""
+	"""	
 	template = "perfiles/perfil_usuario.html"
 	libros_perfil = {'tiene_libros_prestados': False, 'tiene_libros_disponibles': False}
 
@@ -189,7 +190,6 @@ def libros_usuario_ajax(request):
 		return HttpResponse(status=400)
 
 
-@login_required
 def leyendo_libro_ajax(request):
 	"""
 	Recibe un libro id o un titulo y un autor. En el primer caso, crea un objeto UsuarioLeyendo, en el segundo,
@@ -197,9 +197,63 @@ def leyendo_libro_ajax(request):
 	"""
 	if request.is_ajax():
 		libro_id = request.POST.get("libro_id", "")
+		titulo = request.POST.get("titulo", "")
+		autor = request.POST.get("autor", "")
+		perfil_usuario = obtener_perfil(request.user)
 
 		if libro_id:
-			libro = Libro.objects.get(int(libro_id))
+			# Significa que el libro está en su biblioteca
+			libro = Libro.objects.get(id=int(libro_id))
+
+			# Revisar si el último UsuarioLeyendo object no es el mismo que declaro estar leyendo, para evitar repeticiones
+			ultimo_libro = UsuarioLeyendo.objects.filter(perfil=perfil_usuario).latest('inicio')
+			if ultimo_libro.libro.titulo == titulo:
+				return HttpResponse("es el mismo libro que ya está leyendo", status=400)
+
+			# Revisar si no borro el nombre y puso otro que no está en su biblioteca (nuevo)
+			# El autocomplete pudiera haber llenado el id del hidden input y luego se pudo haber quedado así,
+			# a pesar de que el usuario borro el nombre del autocomplete e insertó otro título.
+			if libro.titulo == titulo and libro.autor == autor:
+				print "recibio libro id y coincide el libro obtenido con el titulo y el autor"
+				UsuarioLeyendo.objects.create(perfil=perfil_usuario, libro=libro)
+				
+			else:
+				# crear nuevo libro
+				print "recibio libro id pero no coincide el libro obtenido con el titulo y el autor"
+				nuevo_libro = Libro.objects.create(titulo=titulo, autor=autor)
+
+				# crear objeto UsuarioLeyendo
+				UsuarioLeyendo.objects.create(libro=nuevo_libro, perfil=perfil_usuario)
+
+			# crear notificaciones para cada grupo			
+
+		else:
+			# Significa que el libro no está en su biblioteca
+			# Revisar si el último UsuarioLeyendo object no es el mismo que declaro estar leyendo, para evitar repeticiones
+			ultimo_libro = UsuarioLeyendo.objects.filter(perfil=perfil_usuario).latest('inicio')
+			if ultimo_libro.libro.titulo == titulo:
+				return HttpResponse("es el mismo libro que ya está leyendo", status=400)
+
+			# Revisar si no existe ya un libro con ese titulo, para evitar repeticiones
+			if Libro.objects.filter(titulo=titulo, autor=autor).exists():
+				libro = Libro.objects.get(titulo=titulo, autor=autor)
+				print "ya existe un libro con ese titulo y autor"
+			else:
+				# crear nuevo libro
+				print "no existe un libro así, crear objeto nuevo"
+				libro = Libro.objects.create(titulo=titulo, autor=autor)
+
+			# crear objeto LibroDisponible, suma libro a su biblioteca, solo si no existe ya en la biblioteca
+			if not LibrosDisponibles.objects.filter(libro=libro, perfil=perfil_usuario).exists():
+				print "no existe ese libro en su biblioteca, crear nuevo"
+				LibrosDisponibles.objects.create(libro=libro, perfil=perfil_usuario, disponible=False, ciudad=perfil_usuario.ciudad)
+
+			# crear objeto UsuarioLeyendo
+			UsuarioLeyendo.objects.create(libro=libro, perfil=perfil_usuario)
+
+			# !!! crear notificacion
+
+		return HttpResponse(status=200)
 
 	else:
 		return HttpResponse(status=400)

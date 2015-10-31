@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 
 {% block content %}
 	<div class = "col-md-6 col-md-offset-1">
 		<br>
-		<form class="form-horizontal" action="{% url 'grupos:crear_grupo' %}" method="post">
+		<form id="form_crear_grupo" class="form-horizontal" action="{% url 'grupos:crear_grupo' %}" method="post">
 			{% csrf_token %}		
 				<fieldset>
 					{{form.non_field_errors}}
@@ -16,10 +17,6 @@
 					{{form.descripcion.label}}
 					{{form.descripcion}}
 
-					{{form.imagen.errors}}
-					{{form.imagen.label}}
-					{{form.imagen}}
-					{{form.imagen.help_text}}
 					<br>
 					<br>
 
@@ -47,10 +44,44 @@
 		<hr class="invisible half-margins">
 		<p class ="well">
 			<i class = "fa fa-info-circle"></i>
-			 Información sobre creación de Grupo
+			 Un grupo es un sitio donde encuentras gente con la que podrás compartir libros, recomendarlos y conversar. <br>
+			 Los grupos están <strong>localizados en una ciudad</strong> y son visibles solamente en esa ciudad. <br><br>
+			 Los <strong>grupos abiertos</strong> son visibles para todos los usuarios que visitan el perfil de la ciudad en la que está registrado el grupo. 
+			 Los <strong>grupos cerrados</strong> son invisibles. Cuando alguien pide entrar al grupo, o si alguien invita a un amigo suyo al grupo, se envía un 
+			 email a los administradores para recordarles aceptar al nuevo miembro <i class="fa fa-thumbs-up"></i>. <br>
+			 La opción <strong>"Quién podrá aceptar nuevos miembros en el grupo"</strong> define si un usuario que no es administrador puede ver las solicitudes
+			 para entrar al grupo y aceptarlas.
 		</p>
 	</div>
-
-	<script type="text/javascript">
-	</script>
 {% endblock content %}
+
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+
+<script>
+$(document).ready(function(){
+	$("#form_crear_grupo").validate({
+		rules: {
+			nombre: {
+				required: true,
+				maxlength: 250
+			},
+
+			descripcion: {
+				required: true
+			}
+		},
+
+		messages: {
+			nombre: {
+				required: "Es importante que le des un nombre al grupo.",
+			},
+			descripcion: {
+				required: "Describe el grupo, una pequeña descripción es suficiente."
+			}
+		}
+	});	
+});
+</script>
+{% endblock extra_javascript %}

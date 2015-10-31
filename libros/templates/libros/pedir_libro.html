@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 
 {% block content %}
 <br>
 <div class = "col-md-6 col-md-offset-1">
 	<h3> Pedir prestado '{{libro_disponible.libro.titulo}}'' de {{libro_disponible.libro.autor}} al usuario 
 	<a target="_blank" href="{% url 'perfiles:perfil_usuario' libro_disponible.perfil.usuario.username %}">{{libro_disponible.perfil.usuario.username}}</a></h3>
-	<form class="form-horizontal" action="{% url 'libros:pedir_libro' libro_disponible.id %}" method="post">
+	<form id="form_pedir_libro" class="form-horizontal" action="{% url 'libros:pedir_libro' libro_disponible.id %}" method="post">
 		{% csrf_token %}		
 			<fieldset>
 				{{form_pedir_libro}}
@@ -33,3 +34,26 @@
 	</p>
 </div>
 {% endblock content %}
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+
+<script>
+$(document).ready(function(){
+	$("#form_pedir_libro").validate({
+		rules: {
+			mensaje: {
+				required: true,
+				maxlength: 500
+			},
+		},
+
+		messages: {
+			mensaje: {
+				required: "Es importante que escribas un mensaje."
+			}
+		}
+	});	
+});
+</script>
+{% endblock extra_javascript %}

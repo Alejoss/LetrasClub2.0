@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 import json
+from datetime import datetime
+from itertools import chain
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.db.models import Count
 
 from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles, Libro
 from perfiles.models import Perfil, UsuarioLeyendo
-from grupos.models import UsuariosGrupo
+from grupos.models import UsuariosGrupo, RequestInvitacion
 from notificaciones.models import Notificacion
+from comentarios.models import CommentPerfil
 
 from forms import formRegistro, formEditarPerfil
-from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, obtener_libros_perfil, obtener_usuario_leyendo
+from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, obtener_libros_perfil, obtener_usuario_leyendo, \
+							 notif_grupos_comenzo_leer, notif_grupos_termino_leer
 
 
 def registro(request):
@@ -42,12 +47,62 @@ def registro(request):
 @login_required
 def perfil_propio(request):
 	"""
-	Muestra el perfil del usuario que está hecho login
+	Muestra el perfil del usuario que está hecho loginm enfocado en la actividad
 	"""
 	template = "perfiles/perfil_propio.html"
 	perfil_usuario = obtener_perfil(request.user)
 	avatar = obtener_avatar_large(perfil_usuario)
+
+	# Grupos Perfil
+	grupos = None
+	if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related('grupo')
+		grupos = [ug.grupo for ug in usuarios_grupo_obj]
+
+	# Usuario Leyendo
+	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
+	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario).select_related('libro')
+
+	# autocomplete Usuario Leyendo
+	titulos_autocomplete = {}
+	autores_autocomplete = {}
+	for l in libros_disponibles:
+		titulos_autocomplete[l.libro.titulo] = (l.libro.id, l.libro.autor)
+
+	# Muro, comentarios y actividades
+	comentarios = CommentPerfil.objects.filter(muro=perfil_usuario, eliminado=False).annotate(num_respuestas=Count("respuestas"))
+	notificaciones_perfil = Notificacion.objects.filter(perfil_actor=perfil_usuario).annotate(num_respuestas=Count("respuestas"))
+
+	actividad_0 = list(chain(comentarios, notificaciones_perfil))
+	actividad_0.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
+	actividad_0.reverse()  # Ordena desde el más reciente.
+
+	actividad = []
+	for act in actividad_0:
+		if act.__class__.__name__ == "CommentPerfil":
+			actividad.append((act, "comment"))
+		else:
+			actividad.append((act, "notificacion"))
+
+	for l in libros_disponibles:
+		autores_autocomplete[l.libro.autor] = l.libro.id
+
+	context = {'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
+	           'libros_leidos_usuario': libros_leidos_usuario, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 
+	           'autores_autocomplete': json.dumps(autores_autocomplete), 'actividad': actividad}
 	
+	return render(request, template, context)
+
+
+@login_required
+def perfil_propio_libros(request):
+	"""
+	Muestra el perfil del usuario loggeado. enfocado en los libros y notificaciones
+	"""
+	template = "perfiles/perfil_propio_libros.html"
+	perfil_usuario = obtener_perfil(request.user)
+	avatar = obtener_avatar_large(perfil_usuario)
+
 	# Libros Perfil
 	libros_perfil = {
 		'tiene_requests_pendientes': False,
@@ -81,31 +136,83 @@ def perfil_propio(request):
 
 	# Usuario Leyendo
 	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
-
 	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario).select_related('libro')
+
 	# autocomplete Usuario Leyendo
 	titulos_autocomplete = {}
 	autores_autocomplete = {}
 	for l in libros_disponibles:
-		titulos_autocomplete[l.libro.titulo] = (l.libro.id, l.libro.autor)
+		titulos_autocomplete[l.libro.titulo] = (l.libro.id, l.libro.autor)	
 
 	for l in libros_disponibles:
 		autores_autocomplete[l.libro.autor] = l.libro.id
 
+	# Request de entrar a grupos a los que el usuario es admin
+	requests_entrar_grupo = None
+	if UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).exists():
+			usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).select_related('grupo')
+			grupos = [x.grupo for x in usuarios_grupo_obj]
+			
+			requests_entrar_grupo = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos)
+
 	context = {'libros_perfil': libros_perfil, 'libros_requests': libros_requests, 'libros_prestados': libros_prestados,
 	           'libros_pedidos': libros_pedidos, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 
 	           'libros_disponibles': libros_disponibles, 'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
-	           'libros_leidos_usuario': libros_leidos_usuario, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 
-	           'autores_autocomplete': json.dumps(autores_autocomplete)}
+	           'libros_leidos_usuario': libros_leidos_usuario, 'requests_entrar_grupo': requests_entrar_grupo, 
+	           'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete)}
 	
 	return render(request, template, context)
 
 
 def perfil_usuario(request, username):
 	"""
-	Muestra el perfil de un usuario tercero
+	Muestra el perfil de un usuario tercero, enfocado en las actividades
 	"""	
 	template = "perfiles/perfil_usuario.html"
+	perfil = Perfil.objects.get(usuario__username=username)
+
+	# redirigir a la pagina perfil_propio si es el caso
+	user_obj = User.objects.get(username=username)
+	if user_obj == request.user:
+		return HttpResponseRedirect(reverse('perfiles:perfil_propio'))
+		
+	comentarios = CommentPerfil.objects.filter(muro=perfil, eliminado=False).annotate(num_respuestas=Count("respuestas"))
+	notificaciones_perfil = Notificacion.objects.filter(perfil_actor=perfil).annotate(num_respuestas=Count("respuestas"))
+
+	actividad_0 = list(chain(comentarios, notificaciones_perfil))
+	actividad_0.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
+	actividad_0.reverse()  # Ordena desde el más reciente.
+
+	actividad = []
+	for act in actividad_0:
+		if act.__class__.__name__ == "CommentPerfil":
+			actividad.append((act, "comment"))
+		else:
+			actividad.append((act, "notificacion"))
+
+	# Grupos Perfil
+	grupos = None
+	if UsuariosGrupo.objects.filter(perfil=perfil, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil, activo=True).select_related('grupo')
+		grupos = [ug.grupo for ug in usuarios_grupo_obj]
+
+	historial_libros = obtener_historial_libros(perfil)
+	
+	avatar = obtener_avatar_large(perfil)
+
+	context = {'historial_libros': historial_libros, 'perfil': perfil, 'avatar': avatar, 'actividad': actividad,
+	'grupos': grupos
+	}
+
+	return render(request, template, context)
+
+
+def perfil_usuario_libros(request, username):
+	"""
+	Muestra el perfil de un usuario tercero, enfocado en los libros disponibles
+	"""
+	template = "perfiles/perfil_usuario_libros.html"
+
 	libros_perfil = {'tiene_libros_prestados': False, 'tiene_libros_disponibles': False}
 
 	# redirigir a la pagina perfil_propio si es el caso
@@ -129,10 +236,16 @@ def perfil_usuario(request, username):
 		libros_perfil['tiene_libros_disponibles'] = True
 		libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil, disponible=True, prestado=False)
 
+	# Grupos Perfil
+	grupos = None
+	if UsuariosGrupo.objects.filter(perfil=perfil, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil, activo=True).select_related('grupo')
+		grupos = [ug.grupo for ug in usuarios_grupo_obj]
+
 	avatar = obtener_avatar_large(perfil)
 
 	context = {'libros_prestados': libros_prestados, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 'libros_disponibles': libros_disponibles,
-	           'historial_libros': historial_libros, 'libros_perfil': libros_perfil, 'perfil': perfil, 'avatar': avatar}
+	           'historial_libros': historial_libros, 'libros_perfil': libros_perfil, 'perfil': perfil, 'avatar': avatar, 'grupos': grupos}
 
 	return render(request, template, context)
 
@@ -201,6 +314,14 @@ def leyendo_libro_ajax(request):
 		autor = request.POST.get("autor", "")
 		perfil_usuario = obtener_perfil(request.user)
 
+		print "libro_id: %s" % (libro_id)
+		print "titulo: %s" % (titulo)
+		print "autor: %s" % (autor)
+		if not libro_id and (not titulo or not autor):
+			print "Reboto"
+			# Si envio valores vacíos
+			return HttpResponse(status=400)
+
 		if libro_id:
 			# Significa que el libro está en su biblioteca
 			libro = Libro.objects.get(id=int(libro_id))
@@ -213,19 +334,22 @@ def leyendo_libro_ajax(request):
 			# Revisar si no borro el nombre y puso otro que no está en su biblioteca (nuevo)
 			# El autocomplete pudiera haber llenado el id del hidden input y luego se pudo haber quedado así,
 			# a pesar de que el usuario borro el nombre del autocomplete e insertó otro título.
-			if libro.titulo == titulo and libro.autor == autor:
-				print "recibio libro id y coincide el libro obtenido con el titulo y el autor"
+			if libro.titulo == titulo and libro.autor == autor:				
 				UsuarioLeyendo.objects.create(perfil=perfil_usuario, libro=libro)
 				
 			else:
+				if not titulo or not autor:
+					# Si envio valores vacíos
+					return HttpResponse(status=400)
 				# crear nuevo libro
-				print "recibio libro id pero no coincide el libro obtenido con el titulo y el autor"
-				nuevo_libro = Libro.objects.create(titulo=titulo, autor=autor)
+				libro = Libro.objects.create(titulo=titulo, autor=autor)
 
 				# crear objeto UsuarioLeyendo
-				UsuarioLeyendo.objects.create(libro=nuevo_libro, perfil=perfil_usuario)
+				UsuarioLeyendo.objects.create(libro=libro, perfil=perfil_usuario)
 
-			# crear notificaciones para cada grupo			
+			# crear notificaciones para cada grupo
+			Notificacion.objects.comenzo_leer(perfil_usuario, libro)
+			notif_grupos_comenzo_leer(perfil_usuario, libro)
 
 		else:
 			# Significa que el libro no está en su biblioteca
@@ -236,24 +360,132 @@ def leyendo_libro_ajax(request):
 
 			# Revisar si no existe ya un libro con ese titulo, para evitar repeticiones
 			if Libro.objects.filter(titulo=titulo, autor=autor).exists():
-				libro = Libro.objects.get(titulo=titulo, autor=autor)
-				print "ya existe un libro con ese titulo y autor"
+				# Puede darse errores en que get returns more than 1 object. asi que mejor usar last()
+				libro = Libro.objects.filter(titulo=titulo, autor=autor).last()
 			else:
-				# crear nuevo libro
-				print "no existe un libro así, crear objeto nuevo"
+				# crear nuevo libro				
 				libro = Libro.objects.create(titulo=titulo, autor=autor)
 
 			# crear objeto LibroDisponible, suma libro a su biblioteca, solo si no existe ya en la biblioteca
-			if not LibrosDisponibles.objects.filter(libro=libro, perfil=perfil_usuario).exists():
-				print "no existe ese libro en su biblioteca, crear nuevo"
+			if not LibrosDisponibles.objects.filter(libro=libro, perfil=perfil_usuario).exists():				
 				LibrosDisponibles.objects.create(libro=libro, perfil=perfil_usuario, disponible=False, ciudad=perfil_usuario.ciudad)
 
 			# crear objeto UsuarioLeyendo
 			UsuarioLeyendo.objects.create(libro=libro, perfil=perfil_usuario)
-
-			# !!! crear notificacion
+			
+			# crear notificaciones para cada grupo
+			Notificacion.objects.comenzo_leer(perfil_usuario, libro)
+			notif_grupos_comenzo_leer(perfil_usuario, libro)
 
 		return HttpResponse(status=200)
 
+	else:
+		return HttpResponse(status=400)
+
+
+def termino_leer_ajax(request):
+
+	if request.is_ajax():
+
+		libro_leido_id = request.POST.get('libro_leido_id', '')
+
+		if not libro_leido_id:
+			return HttpResponse("No recibio libro id", status=400)
+		
+		libro_leyendo = UsuarioLeyendo.objects.get(id=libro_leido_id)
+
+		if libro_leyendo.termino is None:
+			libro_leyendo.termino = datetime.today()
+			libro_leyendo.save()
+
+			perfil_usuario = obtener_perfil(request.user)
+
+			# notificacion termino leer libro
+			Notificacion.objects.termino_leer(perfil_usuario, libro_leyendo.libro)
+
+			# notificaciones para cada grupo
+			notif_grupos_termino_leer(perfil_usuario, libro_leyendo.libro)
+			
+			return HttpResponse(status=201)
+
+		else:
+			return HttpResponse("Ya había terminado ese libro", status=200)
+	else:
+		return HttpResponse(status=400)
+
+
+@login_required
+def editar_libro_leido(request):
+
+	if request.method == "POST":
+		
+		autor = request.POST.get("autor", "")
+		titulo = request.POST.get("titulo", "")
+		libro_leido_id = request.POST.get("libro_leido_id", "")
+		termino = request.POST.get("termino", "")
+		
+		if libro_leido_id:
+			
+			usuario_leyendo_obj = UsuarioLeyendo.objects.get(id=int(libro_leido_id))
+			libro_leido = usuario_leyendo_obj.libro
+
+			print "termino: %s" % (termino)
+			print "usuario_leyendo_obj.termino: %s" % (usuario_leyendo_obj.termino)
+			
+			cambio_valores = False
+
+			# Valores del objeto Libro
+			if len(autor) and libro_leido.autor != autor:
+				print "cambio autor"
+				libro_leido.autor = autor
+				cambio_valores = True
+			if len(titulo) and libro_leido.titulo != titulo:
+				print "cambio titulo"
+				libro_leido.titulo = titulo
+				cambio_valores = True
+			if cambio_valores:
+				print "cambio valores, save"
+				libro_leido.save()
+
+			# Valores del objeto UsuarioLeyendo
+			if termino and not usuario_leyendo_obj.termino:
+				print "cambio a terminado"
+				usuario_leyendo_obj.termino = datetime.today()
+				usuario_leyendo_obj.save()
+
+			if not termino and usuario_leyendo_obj.termino:
+				print "cambio a no terminado"
+				usuario_leyendo_obj.termino = None
+				usuario_leyendo_obj.save()
+				
+			return redirect('perfiles:perfil_propio')
+
+		else:
+			return HttpResponse(status=400)  # Bad Request
+
+	else:
+		return HttpResponse(status=400) 
+
+
+def eliminar_libro_leido_ajax(request):
+
+	if request.is_ajax():
+
+		if request.method == "POST":
+
+			usuario_leyendo_id = request.POST("usuario_leyendo_id", "")
+
+			if usuario_leyendo_id:
+				obj = UsuarioLeyendo.objects.get(id=int(usuario_leyendo_id))
+				obj.eliminado = True
+				obj.save()
+
+				return HttpResponse("objeto marcado como eliminado", status=200)
+
+			else:
+				return HttpResponse(status=400)
+
+		else:
+			return HttpResponse(status=400)
 	else:
 		return HttpResponse(status=400)

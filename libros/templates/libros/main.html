@@ -41,43 +41,50 @@
 				<i class="fa fa-chevron-down"></i>
 			</div>
 
+			<img src="{{lcompartido.perfil.imagen_perfil}}" class="img-responsive img-circle">
+			
 			<div class ="col-md-10 col-md-offset-1">
-				{% for lcompartido in ultimos_libros_compartidos %}
+				{% for n in notificaciones_main %}
+					<!-- es un objeto n -->
+					{% if n.tipo == "compartio_libro_grupo" %}
 					<div class="alert callout alert-default">
 						<div class="row">
-							<div class="col-md-9 col-sm-9"><!-- left text -->
-								<h4>{{lcompartido.perfil.usuario.username}} compartió <strong>{{lcompartido.libro.titulo}}</strong> de {{lcompartido.libro.autor}}. </h4>
-							</div><!-- /left text -->
-													
-							<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-								<img src="{{lcompartido.perfil.imagen_perfil}}" class="img-responsive img-circle">
-							</div><!-- /right btn -->
-
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' n.perfil_actor.usuario.username %}">{{n.perfil_actor.usuario.username}}</a> compartió el libro 
+								<strong> {{n.libro.titulo}} </strong> de <strong> {{n.libro.autor}}</strong> 
+							con el grupo <a href="{% url 'grupos:main_grupo_actividad' n.grupo.id %}">{{n.grupo.nombre}}.</a>
+							</p>
 						</div>
 					</div>
-				{% endfor %}
+					
+					{% elif n.tipo == "compartio_libro_abierto" %}
 
-				<div class="divider"><!-- divider -->
-					<i class="fa fa-book"></i>
-				</div>				
-
-				{% for lprestado in ultimos_libros_prestados %}
 					<div class="alert callout alert-default">
 						<div class="row">
-							<div class="col-md-9 col-sm-9"><!-- left text -->
-								<h4>{{lprestado.perfil_dueno.usuario.username}} prestó <strong>{{lprestado.libro.titulo}}</strong> de {{lprestado.libro.autor}} a 
-								{{lprestado.perfil_receptor.usuario.username}}. </h4>
-							</div><!-- /left text -->
-													
-							<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-								<img src="{{lprestado.perfil_dueno.imagen_perfil}}" class="img-responsive img-circle">
-								<img src="{{lprestado.perfil_receptor.imagen_perfil}}" class="img-responsive img-circle">
-							</div><!-- /right btn -->
-
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' n.perfil_actor.usuario.username %}">{{n.perfil_actor.usuario.username}}</a> compartió el libro 
+								<strong> {{n.libro.titulo}} </strong> de <strong> {{n.libro.autor}}</strong> 
+							con la comunidad de {{n.perfil_actor.ciudad.name}}.
+							</p>
 						</div>
 					</div>
-				{% endfor %}
 
+					{% elif n.tipo == "comenzo_leer" %}
+					<div class="alert callout alert-default">
+						<div class="row">						
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' n.perfil_actor.usuario.username %}">{{n.perfil_actor.usuario.username}}</a> empezó a leer 
+								<strong> {{n.libro.titulo}} </strong> de <strong> {{n.libro.autor}}.</strong> 
+							</p>
+						</div>
+					</div>
+					{% elif n.tipo == "termino_leer" %}
+					<div class="alert callout alert-default">
+						<div class="row">						
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' n.perfil_actor.usuario.username %}">{{n.perfil_actor.usuario.username}}</a> terminó de leer
+								<strong> {{n.libro.titulo}} </strong> de <strong> {{n.libro.autor}}</strong>!
+							</p>
+						</div>
+					</div>
+					{% endif %}	
+				{% endfor %}
 			</div>
 
 		</div>

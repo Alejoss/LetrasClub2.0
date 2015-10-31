@@ -159,14 +159,52 @@ def mail_aceptar_prestamo(libro_prestado):
 	return None
 
 
-def mail_invitar_grupo(email, invitado_por, usuario_invitado, grupo):
+def mail_agregar_a_grupo(invitado_por, usuario_invitado, grupo):
 	"""
 	Envía un mail al usuario notificándole que se le ha invitado a formar parte de un grupo en LetrasClub
 	"""
 
-	titulo = "%s te ha invitado al grupo %s de LetrasClub" % (invitado_por, grupo)
-	mensaje_texto = "%s te ha invitado a un grupo de literatura en el cual podrás compartir libros físicos y comentar sobre ellos\
-	en www.letras.club, una red social dedicada a los lectores que buscan compartir sus libros y formar grupos localizados de lectura"
+	titulo = "%s te ha invitado al grupo %s de LetrasClub" % (invitado_por, grupo.nombre)
+	mensaje_texto = "Hola %s, %s te ha invitado al grupo %s de literatura en el cual podrás compartir libros físicos y comentar sobre ellos\
+	en www.letras.club, una red social dedicada a los lectores que buscan compartir sus libros y formar grupos  \
+	localizados de lectura" % (usuario_invitado.usuario.username, invitado_por.usuario.username, grupo.nombre)
+
+	html_message = render_to_string("invitar_grupo_mail.html", {'usuario_invitado': usuario_invitado.usuario.username, 'invitado_por': invitado_por.usuario.username, 
+		'nombre_grupo': grupo.nombre})
+
+	send_mail(
+			subject=titulo,
+			message=mensaje_texto,
+			from_email="letras.club@no-reply.com",
+			recipient_list=[usuario_invitado.usuario.email],
+			fail_silently=True,
+			html_message=html_message
+		)
+
+	return None
+
+
+def mail_request_entrar_grupo(usuario_request, admins, grupo):
+	"""
+	Envía un mail a los admins del grupo con el request de entrar del usuario_request
+	"""
+	titulo = "%s ha solicitado ser parte del grupo %s de LetrasClub" % (usuario_request.usuario.username, grupo.nombre)
+	mensaje_texto = "%s ha solicitado entrar al grupo %s de LetrasClub. Por favor, revisa el grupo en LetrasClub"
+
+	html_message = render_to_string("request_entrar_grupo_mail.html", {'usuario_request': usuario_request.usuario.username, 'grupo': grupo.nombre})
+
+	receptores = [admin.usuario.email for admin in admins]
+
+	send_mail(
+			subject=titulo,
+			message=mensaje_texto,
+			from_email="letras.club@no-reply.com",
+			recipient_list=receptores,
+			fail_silently=True,
+			html_message=html_message
+		)
+
+	return None
 
 
 def obtener_libros_perfil(perfil_usuario):
@@ -194,7 +232,8 @@ def obtener_usuario_leyendo(perfil_usuario):
 	if UsuarioLeyendo.objects.filter(perfil=perfil_usuario).exists():
 		usuario_leyendo_obj = UsuarioLeyendo.objects.filter(perfil=perfil_usuario, eliminado=False).order_by('-inicio')
 
-		actualmente_leyendo = usuario_leyendo_obj.filter(termino__isnull=True).latest('inicio')	
+		if usuario_leyendo_obj.filter(termino__isnull=True).exists():
+			actualmente_leyendo = usuario_leyendo_obj.filter(termino__isnull=True).latest('inicio')
 
 	return actualmente_leyendo, usuario_leyendo_obj
 
@@ -205,5 +244,15 @@ def notif_grupos_comenzo_leer(perfil_usuario, libro):
 	"""
 	grupos_usuario = UsuariosGrupo.objects.filter(perfil=perfil_usuario)
 
-	for grupo in grupos_usuario:		
-		Notificacion.objects.comenzo_leer(perfil=perfil_usuario, libro=libro, grupo=grupo)
+	for g_u in grupos_usuario:
+		Notificacion.objects.comenzo_leer(perfil_usuario, libro=libro, grupo=g_u.grupo)
+
+
+def notif_grupos_termino_leer(perfil_usuario, libro):
+	"""
+	crea una notificacion termino_leer con fk a cada grupo al que pertenece el usuario
+	"""
+	grupos_usuario = UsuariosGrupo.objects.filter(perfil=perfil_usuario)
+
+	for g_u in grupos_usuario:
+		Notificacion.objects.termino_leer(perfil_usuario, libro=libro, grupo=g_u.grupo)

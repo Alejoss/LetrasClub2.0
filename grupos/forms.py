@@ -13,10 +13,10 @@ class FormCrearGrupo(forms.ModelForm):
 	tipo_apertura = forms.ChoiceField(required=True, choices=choices_apertura, widget=forms.Select(attrs={'class': 'form-control'}),
 		label="Será un grupo Abierto o Cerrado?")
 	tipo_invitaciones = forms.ChoiceField(required=True, choices=choices_invitaciones, widget=forms.Select(attrs={'class': 'form-control'}),
-		label="Quién podrá aceptar a alguien en el grupo?")
+		label="Quién podrá aceptar nuevos miembros en el grupo?")
 	situar_ciudad = forms.BooleanField(required=False, initial=True, widget=forms.CheckboxInput(attrs={'class': 'form-control'}))
-	imagen = forms.URLField(required=False, label="Portada", help_text="Copia y pega la url a una imagen amplia, no muy alta. Luego podrás cambiarla si deseas.", 
-		widget=forms.URLInput(attrs={'class': 'form-control'}))
+	# imagen = forms.URLField(required=False, label="Portada", help_text="Copia y pega la url a una imagen amplia, no muy alta. Luego podrás cambiarla si deseas.", 
+	#	widget=forms.URLInput(attrs={'class': 'form-control'}))  -> Activar si se quiere imagen de portada en el grupo.
 
 	def obtener_tipo(self):
 

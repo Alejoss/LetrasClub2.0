@@ -32,10 +32,12 @@ def main(request):
     """
     template = "libros/main.html"
 
-    ultimos_libros_compartidos = LibrosDisponibles.objects.filter(disponible=True).order_by('-id')[:5]
-    ultimos_libros_prestados = LibrosPrestados.objects.filter().order_by('-id')
+    try:
+        notificaciones_main = Notificacion.objects.filter(leida=False)[:20]
+    except:
+        notificaciones_main = Notificacion.objects.filter(leida=False)  # Puede que no haya suficientes notificaciones
 
-    context = {'ultimos_libros_compartidos': ultimos_libros_compartidos, 'ultimos_libros_prestados': ultimos_libros_prestados}
+    context = {'notificaciones_main': notificaciones_main}
     return render(request, template, context)
 
 
@@ -60,20 +62,20 @@ def nuevo_libro(request, tipo_dueno, username):
             nuevo_libro = Libro(titulo=titulo, autor=autor, descripcion=descripcion)
             nuevo_libro.save()
             perfil_usuario = obtener_perfil(request.user)
+            quito = obtenerquito()
 
             if disponible:
                 if tipo_dueno == "perfil":
                     # !!! Falta opcionalidad para cambiar ciudad
                     # !!! Todos los libros son marcados disponibles en Quito !!!
-                    quito = obtenerquito()
                     libro_disponible_obj = LibrosDisponibles(libro=nuevo_libro, perfil=perfil_usuario, ciudad=quito)
                     libro_disponible_obj.save()
 
                     # !!! Crear notificaciones y libros compartidos con grupo
                     Notificacion.objects.compartio_libro_abierto(perfil_usuario, nuevo_libro)
 
-                    if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
-                        usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related("grupo")
+                    if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
+                        usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related("grupo")
                         for u_grupo in usuarios_grupo_obj:
                             Notificacion.objects.compartio_libro_grupo(perfil_usuario, nuevo_libro, u_grupo.grupo)
                     
@@ -89,7 +91,7 @@ def nuevo_libro(request, tipo_dueno, username):
 
             else:
                 # Si no lo marco disponible, crear el objeto LibrosDisponibles pero con abierto_comunidad=False
-                LibrosDisponibles.objects.create(libro=nuevo_libro, perifl=perfil_usuario, ciudad=quito, abierto_comunidad=False)
+                LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_usuario, ciudad=quito, abierto_comunidad=False, disponible=False)
 
                 return HttpResponseRedirect(reverse('libros:mi_biblioteca'))
 
@@ -107,7 +109,7 @@ def mi_biblioteca(request):
     """
     template = "libros/mi_biblioteca.html"
     perfil_usuario = obtener_perfil(request.user)
-    grupos_usuario = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related("grupo")
+    grupos_usuario = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related("grupo")
     libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario, disponible=True, prestado=False)
     libros_no_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario, disponible=False, prestado=False)
     libros_prestados = LibrosPrestados.objects.filter(perfil_dueno=perfil_usuario, fecha_devolucion=None)
@@ -163,8 +165,8 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
 
     grupos_usuario = None
     if perfil_usuario:
-        if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
-            grupos_usuario = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True)
+        if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
+            grupos_usuario = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True)
 
     context = {
         'filtro': filtro,
@@ -549,7 +551,6 @@ def marcar_disponible(request):
             return HttpResponse("libo marcado como disponible", status=200)
 
         elif tipo == "biblioteca":
-            print "marcar_disponible id_libro, tipo: %s, %s" % (id_libro, tipo)
             libro_bcompartida_obj = get_object_or_404(LibrosBibliotecaCompartida, id=id_libro)
             libro_bcompartida_obj.disponible = True
             libro_bcompartida_obj.save()
@@ -729,8 +730,7 @@ def info_libro_grupos_ajax(request):
                 for g in grupos_libro:
                     grupos[g.grupo.id] = [g.grupo.nombre]
             
-            data_response.append(grupos)
-            print data_response
+            data_response.append(grupos)            
 
             return HttpResponse(json.dumps(data_response), status=200)
 
@@ -796,8 +796,8 @@ def compartir_todos_ajax(request):
         # crear notificaciones
         Notificacion.compartio_libro_abierto(perfil_usuario, libro_disponible.libro)
 
-        if UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).exists():
-            usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, activo=True).select_related("grupo")
+        if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
+            usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related("grupo")
             for u_grupo in usuarios_grupo_obj:
                 Notificacion.objects.compartio_libro_grupo(perfil_usuario, nuevo_libro, u_grupo.grupo)
 

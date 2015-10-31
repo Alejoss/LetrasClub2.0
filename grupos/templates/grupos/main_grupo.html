@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 
 {% block content %}
 <!-- PAGE TOP -->
 <!-- parallax -->
-<div class="parallax parallax-1" style="background-image:url({{grupo.imagen}});">
+<div class="parallax parallax-1" style="background-image:url({% static 'assets/images/letrasclub/books_biblioteca.jpg' %});">
 	<span class="parallax-overlay"></span>
 	<div class="container parallax-content">
 		<div class="row">
@@ -23,10 +24,10 @@
 					</div>
 				{% endif %}
 			{% endif %}
-
 		{% else %}
 			<div class="col-md-3 col-md-offset-1"><!-- button -->
-				<a href="" class="request_entrar_grupo btn btn-primary btn-lg" data-url="{% url 'libros:main' %}">Has login para ser parte de los grupos de Letras.Club
+				<a href="{% url 'libros:main' %}" class="btn btn-primary btn-lg">
+					Entra a Letras.Club para ser parte de los grupos
 				</a>
 			</div>
 		{% endif %}
@@ -127,30 +128,127 @@
 			</div>
 		{% endfor %}
 	{% else %}
+		<!--queryset actividad-->
+
+		{% if usuario_es_miembro %}
+			<!-- Comment form -->	
+			<form action="{% url 'comments:comentar_grupo' grupo.id %}" method="post" class="sky-form boxed form_comentario">
+				{% csrf_token %}
+				<fieldset>							
+					<section>
+						<label class="textarea">
+							<i class="icon-append fa fa-comments"></i>
+							<textarea placeholder="Escribe un comentario para el grupo..." name = "comentario" rows="3"></textarea>
+						</label>
+					</section>
+				</fieldset>			
+				<footer>
+					<button type="submit" class="button">Publicar</button>
+				</footer>
+				<br>
+			</form>	
+		{% endif %}
+
 		<!-- Actividad -->
 		{% for act in actividad %}
-			{% if act.1 == "comment" %}				
-				<!-- es un comentario -->
-			{% else %}
-				<!-- es un objeto Notificacion -->
-				{% if act.0.tipo == "compartio_libro_grupo" %}	
+			{% if act.1 == "comment" %}
 				<div class="alert callout alert-default">
-					<div class="row">
-						<a title="Ver libros disponibles en {{grupo.nombre}}" href="{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}">
-							<i class = "pull-right fa fa-book"></i>
+					<div class="row parent_comment">
+						<a class="pull-left" href="{% url 'perfiles:perfil_usuario' act.0.perfil.usuario.username %}">
+							<img src="{{act.0.perfil.imagen_perfil}}" class="img-responsive circular">
 						</a>
-						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> compartió el libro 
-						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
-						con el grupo!
-						</p>
+						
+							&nbsp {{act.0.texto}}
+
+							<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_ajax' %}" data-clicked="0"
+							class="show_respuestas_comment cerrado pull-right" href="">
+								<i class = "fa fa-comment"></i>
+								{{act.0.num_respuestas|default:""}}							
+							</a>
+							<div class = "hidden comments">
+								<br>
+								<div class = "col-md-offset-1 div_respuestas">
+									<div class = "respuestas_comment">
+									</div>
+									{% if usuario_es_miembro %}
+									<!-- Comment form -->	
+									<form action="" method="post" class="sky-form">
+										{% csrf_token %}
+										<fieldset>
+											<section>
+												<label class="textarea">
+													<i class="icon-append fa fa-comment fa-flip-horizontal"></i>
+													<textarea class="texto_respuesta" placeholder="Escribe una respuesta para {{act.0.perfil.usuario.username}}" 
+													name = "comentario" rows="2"></textarea>
+												</label>
+											</section>
+											<button data-id="{{act.0.id}}" data-url="{% url 'comments:responder_comment_grupo_ajax' %}" type="submit" class="button enviar_respuesta">
+											Responder</button>
+										</fieldset>			
+									</form>
+									{% endif %}
+								</div>
+							</div>
 					</div>
 				</div>
-				{% endif %}
+			{% else %}
+				<!-- es un objeto Notificacion -->
+				<div class="alert callout alert-default">
+					<div class="row">
+						<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
+						class="show_comments_notificacion cerrado pull-right" href="">
+							<i class = "fa fa-comment"></i>
+							{{act.0.num_respuestas|default:""}}
+						</a>
+						{% if act.0.tipo == "compartio_libro_grupo" %}
+							<a title="Ver libros disponibles en {{grupo.nombre}}" href="{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}">
+								<i class = "pull-right fa fa-book"></i>
+							</a>
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> compartió el libro 
+							<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
+							con el grupo!
+							</p>
+						{% elif act.0.tipo == "comenzo_leer" %}
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> empezó a leer 
+							<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
+							</p>
+						{% elif act.0.tipo == "termino_leer" %}
+							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> terminó de leer
+							<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>!
+							</p>
+						{% endif %}
+						<div class = "hidden comments">
+							<br>
+							<div class = "col-md-offset-1 div_respuestas">
+								<div class = "respuestas_comment">
+								</div>
+								{% if usuario_es_miembro %}
+								<!-- Comment form -->	
+								<form action="" method="post" class="sky-form">
+									{% csrf_token %}
+									<fieldset>
+										<section>
+											<label class="textarea">
+												<i class="icon-append fa fa-comment fa-flip-horizontal"></i>
+												<textarea class="texto_comment" placeholder="Escribe tu comentario" 
+												name = "comentario" rows="2"></textarea>
+											</label>
+										</section>
+										<button data-id="{{act.0.id}}" data-url="{% url 'comments:comment_notificacion_ajax' %}" type="submit" class="button comment_notificacion">
+										Comentar
+										</button>
+									</fieldset>
+								</form>
+								{% else %}
+									<p class="pull-right" title="Necesitas estar registrado para poder comentar"><i class="fa fa-lock"></i></p>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+				</div>
 			{% endif %}
 		{% endfor %}
 	{% endif %}
-
-
 </div>
 <!-- centro -->
 
@@ -158,18 +256,95 @@
 <!-- sidebar -->
 <div class ="col-md-4">
 
+	{% if usuario_es_miembro %}
+	<hr class = "half-margins invisible">
+	<!-- Estoy Leyendo -->
+	<div class="accordion panel-group" id="accordion">
+		<div class="panel panel-default panel_info_disponible">
+			<div class="panel-heading">
+				<p class="panel-title">					
+					<a class = "mas_info_libro" data-id="{{l.id}}" data-url-target="" data-click="0"
+						data-toggle="collapse" data-parent="#accordion" href="#acc_estoy_leyendo">
+						{% if actualmente_leyendo %}
+							Estoy leyendo &nbsp <strong>{{ actualmente_leyendo.libro.titulo }}</strong>
+						{% else %}
+							¿Estás leyendo un libro?
+						{% endif %}
+					</a>
+				</p>
+			</div>
+			<div id="acc_estoy_leyendo" class="collapse">
+				<div class="panel-body">
+					{% if actualmente_leyendo %}
+					<div class = "row">
+						<a id="comenzo_otro_libro" class="pull-right">Comencé a leer otro libro</a>
+						<div id="hidden_leyendo" class = "hidden">
+							<div class = "row">
+								<form class="form-horizontal form_leyendo" method="post" action="">
+									{% csrf_token %}
+									<div class="form-group">
+										<div class="col-md-12">
+										  <input id="titulo" name="titulo" placeholder="Título" class="form-control input-md" type="text">
+										</div>
+									</div>
+				  	  				<input type="hidden" id="libro_id" name="libro_id" value="">
+									<!-- Text input-->
+									<div class="form-group">
+									  <div class="col-md-12">
+										  <input id="autor" name="autor" placeholder="Autor" class="form-control input-md" type="text">						
+									  </div>
+									</div>
+									<button data-url="{% url 'perfiles:leyendo_libro_ajax' %}" id="submit_leyendo" class = "btn btn-success pull-right" type="submit">
+									Enviar
+									</button>
+								</form>
+							</div>
+							<hr class ="half-margins">
+						</div>
+					</div>
+					{% else %}
+						<div class = "row">
+							<form class="form-horizontal form_leyendo" method="post" action="">
+								{% csrf_token %}
+								<div class="form-group">
+									<div class="col-md-12">
+									  <input id="titulo" name="titulo" placeholder="Título" class="form-control input-md" type="text">
+									</div>
+								</div>
+			  	  				<input type="hidden" id="libro_id" name="libro_id" value="">
+								<!-- Text input-->
+								<div class="form-group">
+								  <div class="col-md-12">
+									  <input id="autor" name="autor" placeholder="Autor" class="form-control input-md" type="text">						
+								  </div>
+								</div>
+								<button data-url="{% url 'perfiles:leyendo_libro_ajax' %}" id="submit_leyendo" class = "btn btn-success pull-right" type="submit">
+								Enviar
+								</button>
+							</form>
+						</div>	
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<hr class ="half-margins invisible">
 	
 	<div>
 		<button id="" onclick="location.href='{% url 'grupos:compartir_libro_grupo' grupo.id %}'" class = "btn btn-warning" >
 		&nbsp Compartir un libro con el grupo &nbsp 
-		<i class="fa fa-share"></i></button>		
+		<i class="fa fa-share"></i>
+		</button>
 	</div>
+
+	{% endif %} <!-- usuario_es_miembro -->
 
 	<div class="divider"><!-- divider -->
 		<i class="fa fa-chevron-down"></i>
 	</div>
 
+	
 	<p>	
 		{{grupo.descripcion}}
 	</p>
@@ -191,56 +366,70 @@
 		<div class = "row">
 			{% for miembro in miembros %}
 				{% if miembro.es_admin %}
-					<a title="{{miembro.usuario.usuario.username}}  -  Administrador" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}">
-					<img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular_admin"></a>
+					<a title="{{miembro.perfil.usuario.username}}  -  Administrador" href="{% url 'perfiles:perfil_usuario' miembro.perfil.usuario.username %}">
+					<img src="{{miembro.perfil.imagen_perfil}}" class="img-responsive circular_admin"></a>
 				{% endif %}
 			{% endfor %}
 
 			{% for miembro in miembros %}
 				{% if not miembro.es_admin %}
-					<a title="{{miembro.usuario.usuario.username}}" href="{% url 'perfiles:perfil_usuario' miembro.usuario.usuario.username %}">
-					<img src="{{miembro.usuario.imagen_perfil}}" class="img-responsive circular"></a>
+					<a title="{{miembro.perfil.usuario.username}}" href="{% url 'perfiles:perfil_usuario' miembro.perfil.usuario.username %}">
+					<img src="{{miembro.perfil.imagen_perfil}}" class="img-responsive circular"></a>
 				{% endif %}	
 			{% endfor %}
 		</div>
 	</div>
 
 	{% if usuario_es_miembro %}
-		<a class ="pull-right" href ="{% url 'grupos:invitar' grupo.id %}"> Invitar a alguien al grupo <i class= "fa fa-plus"></i></a>
+		<div class = "row">
+			<a class ="pull-right" href ="{% url 'grupos:invitar' grupo.id %}"> Agregar personas al grupo <i class= "fa fa-plus"></i> &nbsp</a>
+		</div>
 	{% endif %}
+	
+	<hr class="half-margins">
 
-	{% if requests_entrar_grupo %}
-		<h3> Solicitudes de Miembros </h3>
-	{% endif %}
-
-	{% for r in requests_entrar_grupo %} <!-- Poner solicitudes de miembros con imágenes de perfil y el Aceptar en la mitad del alert -->
-		<div class ="alert callout alert-warning">
+	{% for r in requests_entrar_grupo %}
+		<div class ="alert callout alert-default">
+			<div class = "row">
+				<p class ="pull-right">
+					<a href="#" class="aceptar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:aceptar_ajax' %}">Aceptar 
+					<i class ="fa fa-check"></i></a> | 
+					<a title="rechazar" class="negar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:negar_invitacion_ajax' %}" href="#">
+					<i class ="fa fa-close"></i></a>
+				</p>
+			</div>
+			<div class ="row">
 			{% if r.invitado_por %}
 				<p>
-					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.invitado_por.usuario.username %}">{{r.invitado_por.usuario.username}}</a> invitó a 
-					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.invitado_por.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a>
-					al grupo
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.invitado_por.usuario.username %}">
+						<img src="{{r.invitado_por.imagen_perfil}}" class="img-responsive circular">{{r.invitado_por.usuario.username}}
+					</a> invitó a 
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.usuario_invitado.usuario.username %}">
+						<img src="{{r.usuario_invitado.imagen_perfil}}" class="img-responsive circular">{{r.usuario_invitado.usuario.username}}
+					</a>
+					al grupo.
 				</p>
 			{% else %}
-				<p>
-					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.usuario_invitado.usuario.username %}">{{r.usuario_invitado.usuario.username}}</a> ha solicitado unirse al grupo
+				<p>					
+					<a title= "{{r.usuario_invitado.usuario.username}}" target="_blank" href="{% url 'perfiles:perfil_usuario' r.usuario_invitado.usuario.username %}">
+						<img src="{{r.usuario_invitado.imagen_perfil}}" class="img-responsive circular">
+						{{r.usuario_invitado.usuario.username}}
+					</a> a solicitado unirse al grupo.
 				</p>				
 			{% endif %}
-				<p>
-				<a href="#" class="aceptar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:aceptar_ajax' %}">Aceptar 
-				<i class ="fa fa-check"></i></a> | <a class="negar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:negar_invitacion_ajax' %}" href="#">
-				<i class ="fa fa-close"></i></a>
-				</p>
+			</div>
 		</div>
 	{% endfor %}
-
-	<hr>
 </div>
 <!-- sidebar -->
 {% endblock content %}
 
 {% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/js/jquery-ui-fold.js' %}"></script>
+<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+
 <script>
+
 $(document).ready(function(){
 
 	$(".request_entrar_grupo").on("click", function(e){
@@ -296,6 +485,221 @@ $(document).ready(function(){
 
 	$(".info_abierto_cerrado").on("click", function(e){
 		e.preventDefault();
+	});
+
+	// "Comencé a leer otro libro"
+	$("#comenzo_otro_libro").on("click", function(e){
+		e.preventDefault();
+		$("#hidden_leyendo").removeClass("hidden");
+		$(this).addClass("hidden");
+	});
+
+	// Submit nuevo libro leyendo.
+	$("#submit_leyendo").on("click", function(e){
+		e.preventDefault();
+		var libro_id = $("#libro_id").val();
+		var autor = $("#autor").val();
+		var titulo = $("#titulo").val();
+		var data = {'autor': autor, 'titulo': titulo, 'libro_id': libro_id, 'csrfmiddlewaretoken': '{{csrf_token}}'};
+		var submit_button = $(this);
+
+		var url_ajax = $(this).data("url")
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(){				
+				location.reload();
+			},
+			error: function(){				
+				CambiarTextoError(submit_button, "Enviar")
+			}
+		});
+	});	
+
+
+	// Funcionalidades de comentarios
+	
+	// Esconder comentarios
+	$(".comments").hide();
+	$(".comments").removeClass("hidden");
+
+	$(".show_respuestas_comment").on("click", function(e){
+		e.preventDefault();
+		var comments_div = $(this).parent().find(".comments")
+
+		if( $(this).hasClass("cerrado") ){
+			comments_div.show("fold");
+			$(this).removeClass("cerrado");
+		} else{
+			comments_div.hide("fold");
+			$(this).addClass("cerrado");
+		}
+
+		// revisar data-clicked para definir si es necesario hacer request por las respuestas o no		
+		if($(this).data("clicked")==0){			
+			// ajax pide respuestas al comment
+			var id_comment = $(this).data("id");
+			var url_ajax = $(this).data("url-ajax");
+			var icon_abrir_comments = $(this);
+
+			$.ajax({
+				method: "GET",
+				url: url_ajax,
+				data: {'id_comment': id_comment},
+				success: function(response){
+					respuestas = JSON.parse(response);
+					var respuestas_div = icon_abrir_comments.parent().find('.respuestas_comment');
+				
+					$.each(respuestas, function(index, value){
+					$(respuestas_div).append(
+						"<div class=well>"+
+						"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+value[2]+"'>"+
+						"<img class='img-responsive circular' src='"+value[3]+"'>"+"</a>"+"&nbsp"+
+						value[1]+
+						"</div>"
+						);
+					});
+
+					// cambiar data "clicked" a 1 para que no vuelva a cargar en caso de que cierre y abra los comments de nuevo
+					icon_abrir_comments.data("clicked", "1");
+				}
+			});
+		} 
+	});
+
+	$(".show_comments_notificacion").on("click", function(e){
+		e.preventDefault();
+		var comments_div = $(this).parent().find(".comments")
+
+		if( $(this).hasClass("cerrado") ){
+			comments_div.show("fold");
+			$(this).removeClass("cerrado");
+		} else{
+			comments_div.hide("fold");
+			$(this).addClass("cerrado");
+		}
+
+		// revisar data-clicked para definir si es necesario hacer request por las respuestas o no
+		
+		if($(this).data("clicked")==0){			
+			// ajax pide respuestas al comment
+			var id_notificacion = $(this).data("id");
+			var url_ajax = $(this).data("url-ajax");
+			var icon_abrir_comments = $(this);
+			
+
+			$.ajax({
+				method: "GET",
+				url: url_ajax,
+				data: {'id_notificacion': id_notificacion},
+				success: function(response){
+					respuestas = JSON.parse(response);
+					var respuestas_div = icon_abrir_comments.parent().find('.respuestas_comment');
+				
+					$.each(respuestas, function(index, value){
+					$(respuestas_div).append(
+						"<div class=well>"+
+						"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+value[2]+"'>"+
+						"<img class='img-responsive circular' src='"+value[3]+"'>"+"</a>"+"&nbsp"+
+						value[1]+
+						"</div>"
+						);
+					});
+
+					// cambiar data "clicked" a 1 para que no vuelva a cargar en caso de que cierre y abra los comments de nuevo
+					icon_abrir_comments.data("clicked", "1");
+				}
+			});
+		} 
+	});
+
+	var CambiarTextoError = function(objeto, texto_original){
+		objeto.text("Hubo un error");
+		setTimeout(function(){
+			objeto.text(texto_original);
+		}, 2000);
+	}
+
+	$(".enviar_respuesta").on("click", function(e){
+		e.preventDefault();
+
+		var texto_respuesta = $(this).parent().find(".texto_respuesta").val()
+		var comment_id = $(this).data("id");
+		var url_ajax = $(this).data("url")
+
+		var data = {'texto_respuesta': texto_respuesta, 'comment_id': comment_id, 'csrfmiddlewaretoken': "{{csrf_token}}"}
+		var submit_button = $(this);
+
+		var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(response){
+				respuesta = JSON.parse(response);
+				var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+							
+				$(respuestas_div).append(
+					"<div class=well>"+
+					"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+respuesta[2]+"'>"+
+					"<img class='img-responsive circular' src='"+respuesta[3]+"'>"+"</a>"+"&nbsp"+
+					respuesta[1]+
+					"</div>"
+					);								
+			},
+			error: function(){
+				CambiarTextoError(submit_button, "Responder");
+			}
+		})
+	});
+
+	$(".comment_notificacion").on("click", function(e){
+		e.preventDefault();
+
+		var texto_comment = $(this).parent().find(".texto_comment").val();
+		var id_notificacion = $(this).data("id");
+		var url_ajax = $(this).data("url");
+
+		var data = {'texto_comment': texto_comment, 'id_notificacion': id_notificacion, 'csrfmiddlewaretoken': "{{csrf_token}}"}
+		var submit_button = $(this);
+
+		var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(response){
+				respuesta = JSON.parse(response);
+				var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+							
+				$(respuestas_div).append(
+					"<div class=well>"+
+					"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+respuesta[2]+"'>"+
+					"<img class='img-responsive circular' src='"+respuesta[3]+"'>"+"</a>"+"&nbsp"+
+					respuesta[1]+
+					"</div>"
+					);		
+			},
+			error: function(){
+				CambiarTextoError(submit_button, "Comentar");
+			}
+		});
+	});
+	
+
+	$(".form_comentario").validate({
+		rules: {
+			comentario: {
+				required: true,
+			}
+		},
+		messages: {
+			comentario: "Escribe un comentario."
+		}
 	});
 });
 </script>

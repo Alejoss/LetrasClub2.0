@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 
 {% block content %}
 <div class = "col-md-8">
@@ -7,7 +8,7 @@
 	<div class="col-md-offset-1">
 		<h3> {{perfil_usuario.usuario.username}} - <small> {{perfil_usuario.usuario.email}} </small></h3>
 	</div>
-	<form class="form-horizontal" action="{% url 'perfiles:editar_perfil' %}" method="post">
+	<form id="form_editar_perfil" class="form-horizontal" action="{% url 'perfiles:editar_perfil' %}" method="post">
 		{% csrf_token %}		
 			<fieldset>
 				{{form.non_field_errors}}				
@@ -44,3 +45,29 @@
 	</form>
 </div>
 {% endblock content %}
+
+{% block extra_javascript %}
+
+<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+<script>
+$(document).ready(function(){
+	$("#form_editar_perfil").validate({
+		rules: {
+			descripcion: {
+				required: false,
+				maxlength: 250
+			},
+			numero_telefono_contacto: {
+				required: false,
+				maxlength: 15
+			}
+		},
+		messages: {
+			descripcion: "Escribe una corta descripción de máximo 250 caracteres.",
+			numero_telefono_contacto: "Escribe tu número de teléfono, máximo 15 caracteres."
+		}
+	});
+});
+</script>
+
+{% endblock extra_javascript %}

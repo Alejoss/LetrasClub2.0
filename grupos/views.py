@@ -5,13 +5,14 @@ from itertools import chain
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count
 
-from letrasclub.utils import obtener_perfil, obtener_libros_perfil
+from letrasclub.utils import obtener_perfil, obtener_libros_perfil, obtener_usuario_leyendo, mail_agregar_a_grupo, mail_request_entrar_grupo
 from forms import FormCrearGrupo
 from models import UsuariosGrupo, Grupo, RequestInvitacion
 from libros.models import LibroDisponibleGrupo, LibrosDisponibles, Libro
 from perfiles.models import Perfil
-from comentarios.models import CommentGrupo
+from comentarios.models import CommentGrupo, RespuestaCommentGrupo
 from notificaciones.models import Notificacion
 
 
@@ -140,11 +141,13 @@ def main_grupo_libros(request, id_grupo, queryset):
 	else:
 		libros_disponibles = LibroDisponibleGrupo.objects.filter(grupo=grupo, activo=True).select_related("libro_disponible")
 
+	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
+
 	libros_disponibles = [ldg.libro_disponible for ldg in libros_disponibles]
 
 	context = {'grupo': grupo, 'miembros': miembros, 'requests_entrar_grupo': requests_entrar_grupo, 'usuario_es_admin': usuario_es_admin,
 	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'libros_disponibles': libros_disponibles,
-	'filtro': 'libros', 'ordenar_por': queryset
+	'filtro': 'libros', 'ordenar_por': queryset, 'actualmente_leyendo': actualmente_leyendo
 	}
 
 	return render(request, template, context)
@@ -164,8 +167,8 @@ def main_grupo_actividad(request, id_grupo):
 	if request.user.is_authenticated():
 		usuario_es_miembro = UsuariosGrupo.objects.filter(perfil=perfil_usuario, grupo=grupo).exists()
 
-	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('usuario')
-	miembros = [usuario_grupo_obj for usuario_grupo_obj in usuarios_grupo_obj]
+	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('perfil')
+	miembros = [u_grupo for u_grupo in usuarios_grupo_obj]
 
 	# Invitar a un usuario al grupo
 	usuario_es_admin = False
@@ -192,11 +195,12 @@ def main_grupo_actividad(request, id_grupo):
 		else:
 			requests_entrar_grupo = RequestInvitacion.objects.filter(grupo=grupo, aceptado=False, eliminado=False)
 		
-	comentarios = CommentGrupo.objects.filter(grupo=grupo, eliminado=False)
-	notificaciones = Notificacion.objects.filter(grupo=grupo)
+	comentarios = CommentGrupo.objects.filter(grupo=grupo, eliminado=False).annotate(num_respuestas=Count("respuestas"))
+	notificaciones = Notificacion.objects.filter(grupo=grupo).annotate(num_respuestas=Count("respuestas"))
 
 	actividad_0 = list(chain(comentarios, notificaciones))
-	actividad_0.sort(key=lambda x: x.fecha)
+	actividad_0.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
+	actividad_0.reverse()  # Ordena desde el más reciente.
 
 	actividad = []
 	for act in actividad_0:
@@ -205,10 +209,11 @@ def main_grupo_actividad(request, id_grupo):
 		else:
 			actividad.append((act, "notificacion"))
 
-	print actividad
+	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
 
 	context = {'grupo': grupo, 'miembros': miembros, 'requests_entrar_grupo': requests_entrar_grupo, 'usuario_es_admin': usuario_es_admin,
-	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'actividad': actividad
+	'usuario_es_miembro': usuario_es_miembro, 'request_invitacion_enviada': request_invitacion_enviada, 'actividad': actividad, 
+	'actualmente_leyendo': actualmente_leyendo
 	}
 
 	return render(request, template, context)
@@ -227,7 +232,6 @@ def invitar(request, id_grupo):
 			ciudad = perfil.ciudad.name
 		lista_usuarios[perfil.usuario.username] = {'imagen_perfil': perfil.imagen_perfil, 'ciudad': ciudad, 'username': perfil.usuario.username}
 
-	print lista_usuarios
 	usernames_dict = json.dumps(lista_usuarios)
 
 	context = {'grupo': grupo, 'usernames_dict': usernames_dict}
@@ -342,7 +346,8 @@ def buscar_libro_grupo(request, id_grupo, filtro):
         return redirect('libros:libros_ciudad', slug_ciudad='quito', id_ciudad=18, filtro='titulo')
 
 
-# Ajax Calls
+
+# Ajax
 def invitar_ajax(request):
 	
 	if request.is_ajax():
@@ -362,7 +367,6 @@ def invitar_ajax(request):
 
 				# Si cualquier persona puede sumar miembros al grupo
 				elif grupo.tipo == 1 or grupo.tipo == 3:
-					print "tipo 1 o 3"
 
 					RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=usuario_invitado, invitado_por=invitado_por,
 					aceptado_por=invitado_por, aceptado=True)  # crea un objecto de RequestInvitacion con aceptado True					
@@ -370,14 +374,12 @@ def invitar_ajax(request):
 
 				# Si el usuario que invita es admin del grupo
 				elif UsuariosGrupo.objects.filter(perfil=invitado_por, grupo=grupo, es_admin=True, activo=True).exists():
-					print "tipo 2 o 4"
 					RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=usuario_invitado, invitado_por=invitado_por,
 					aceptado_por=invitado_por, aceptado=True)  # crea un objecto de RequestInvitacion con aceptado True
 					UsuariosGrupo.objects.create(perfil=usuario_invitado, grupo=grupo)  # Crea un UsuariosGrupo object
 
 				else:
 					# No es abierto ni es admin, crear RequestInvitacion sin aceptado=True
-					print "no es abierto ni es admin"
 					RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=usuario_invitado, invitado_por=invitado_por)
 
 			return HttpResponse("Invitaciones Creadas", status=201)
@@ -406,6 +408,15 @@ def aceptar_ajax(request):
 			return HttpResponse("el usuario ya es miembro", status=200)
 		else:
 			UsuariosGrupo.objects.create(perfil=request_invitacion.usuario_invitado, grupo=request_invitacion.grupo)
+
+			# Enviar mail aceptación
+			if request_invitacion.invitado_por:
+				inv_por = request_invitacion.invitado_por
+			else:
+				inv_por = request_invitacion.aceptado_por
+
+			mail_agregar_a_grupo(inv_por, request_invitacion.usuario_invitado, request_invitacion.grupo)
+			
 			return HttpResponse("nuevo usuario de grupo creado", status=201)
 
 	else:
@@ -436,7 +447,15 @@ def request_entrar_ajax(request):
 		grupo = Grupo.objects.get(id=grupo_id)
 		perfil_usuario_invitado = Perfil.objects.get(usuario=request.user)
 
-		RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=perfil_usuario_invitado)
+		if RequestInvitacion.objects.filter(grupo=grupo, usuario_invitado=perfil_usuario_invitado, aceptado=False, eliminado=False).exists():
+			return HttpResponse("request ya existente", status=200)
+		else:
+			request_entrar = RequestInvitacion.objects.create(grupo=grupo, usuario_invitado=perfil_usuario_invitado)
+
+		# Enviar email a los admins		
+		admins_base = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related("perfil")
+		admins_perfiles = [usuario_grupo_obj.perfil for usuario_grupo_obj in admins_base]
+		mail_request_entrar_grupo(request_entrar.usuario_invitado, admins_perfiles, grupo)
 
 		return HttpResponse("request_invitacion creada", status=201)
 

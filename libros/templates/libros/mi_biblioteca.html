@@ -68,7 +68,7 @@
 
 	<hr>
 
-	<h3>Disponibles en tu biblioteca </h3>
+	<h3>Libros en tu biblioteca </h3>
 	{% for l in libros_disponibles %}
 		<!-- ACCORDION -->
 		<div class="accordion panel-group" id="accordion">
@@ -107,23 +107,27 @@
 			</div>
 		</div>
 	{% endfor %}
-	<hr>
 
-	<h3> No Disponibles </h3>
 	{% for l in libros_no_disponibles %}
-	<div class="alert callout alert-default">
-		<div class="row">
-			<div class="col-md-9 col-sm-9"><!-- left text -->
-				<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
-			</div><!-- /left text -->			
-			<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-			<a href="" rel="nofollow" class="btn btn-success btn-lg marcar_disponible" data-id="{{l.id}}" title="Este libro estará disponible en tu Biblioteca">
-				Marcar como Disponible</a>
-			</div><!-- /right btn -->
+	<div class="accordion panel-group" id="accordion">
+		<div class="panel panel-default panel_info_disponible">
+			<div class="panel-heading">
+				<h4 class="panel-title">
+					<a  data-toggle="collapse" data-parent="#accordion" href="#acordion2{{forloop.counter}}">
+						<i style="color:red" class="fa fa-flag fa-flip-horizontal pull-left"></i>						
+						<i class="fa fa-toggle-down pull-right"></i>
+						<strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
+					</a>					
+				</h4>
+			</div>
+			<div id="acordion2{{forloop.counter}}" class="collapse">
+				<div class="panel-body">
+					<a href="" rel="nofollow" class="btn btn-success btn-lg marcar_disponible pull-right" data-id="{{l.id}}" title="Este libro estará disponible en tu Biblioteca">Marcar como Disponible</a>
+				</div>
+			</div>
 		</div>
-	</div>
+	</div>	
 	{% endfor %}
-
 	<hr class = "invisible">
 </div>
 {% endblock content %}

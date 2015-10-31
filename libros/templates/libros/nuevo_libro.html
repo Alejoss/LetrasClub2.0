@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 
 {% block content %}
 
 <div class = "col-md-6 col-md-offset-1">
 	<br>
-	<form class="form-horizontal" action="{% url 'libros:nuevo_libro' tipo_dueno username %}" method="post">
+	<form id="form_compartir_libro" class="form-horizontal" action="{% url 'libros:nuevo_libro' tipo_dueno username %}" method="post">
 		{% csrf_token %}		
 			<fieldset>
 				{{form}}
@@ -48,3 +49,42 @@
 </div>
 
 {% endblock content %}
+
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+
+<script>
+$(document).ready(function(){
+	$("#form_compartir_libro").validate({
+		rules: {
+			autor: {
+				required: true,
+				maxlength: 250
+			},
+			titulo: {
+				required: true,
+				maxlength: 250
+			},
+
+			descripcion: {
+				required: false,
+				maxlength: 2500
+			}			
+		},
+
+		messages: {
+			autor: {
+				required: "Escribe el nombre del autor.",
+				maxlength: "Escribe un autor de máximo 250 caracteres"
+			},
+			titulo: {
+				required: "Escribe el título del libro",
+				maxlength: "Escribe un título de máximo de 250 caracteres"
+			},
+			descripcion: "Escribe una descripcion de máximo 2500 caracteres.",			
+		}
+	});	
+});
+</script>
+{% endblock extra_javascript %}

@@ -21,8 +21,20 @@ class NManager(models.Manager):
 
 		return notificacion
 
-	def comenzo_leer(self, perfil_actor, libro, grupo):
-		notificacion = self.create(perfil_actor=perfil_actor, libro=libro, grupo=grupo, tipo="comenzo_leer")
+	def comenzo_leer(self, perfil_actor, libro, grupo=None):
+		# comenzo_leer y termino_leer recibe grupo opcional, para enviar notificacion específica al grupo
+		if grupo:
+			notificacion = self.create(perfil_actor=perfil_actor, libro=libro, grupo=grupo, tipo="comenzo_leer")
+		else:
+			notificacion = self.create(perfil_actor=perfil_actor, libro=libro, tipo="comenzo_leer")
+
+		return notificacion
+
+	def termino_leer(self, perfil_actor, libro, grupo=None):
+		if grupo:
+			notificacion = self.create(perfil_actor=perfil_actor, libro=libro, grupo=grupo, tipo="termino_leer")
+		else:
+			notificacion = self.create(perfil_actor=perfil_actor, libro=libro, tipo="termino_leer")
 
 		return notificacion
 
@@ -43,5 +55,8 @@ class Notificacion(models.Model):
 	# model manager con metodos para crear notificaciones
 	objects = NManager()
 
+	class Meta:
+		ordering = ["-fecha"]
+
 	def __unicode__(self):
-		return "Notificacion: %s - %s" % (self.perfil_actor, self.tipo)
+		return "Notificacion: %s - %s - %s" % (self.perfil_actor, self.tipo, self.libro.titulo)

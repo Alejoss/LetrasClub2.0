@@ -18,7 +18,6 @@ class Grupo(models.Model):
 	tipo = models.PositiveSmallIntegerField(default=1)
 	ciudad = models.ForeignKey(City, null=True)
 
-
 	# Esta funcion y obtener_tipo_invitaciones tienen que devolver lo mismo que utiliza el choice del FormCrearGrupo
 	def obtener_tipo_apertura(self):
 		if self.tipo == 1 or self.tipo == 2:

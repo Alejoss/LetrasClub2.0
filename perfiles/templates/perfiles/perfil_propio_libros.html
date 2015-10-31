@@ -9,133 +9,206 @@
 <div class = "col-md-8">
 	<hr class ="half-margins invisible">
 
-	<button class = "btn btn-primary active">Muro</button>
-	<button class = "btn btn-primary" onclick="location.href='{% url 'perfiles:perfil_propio_libros' %}'">Libros
+	<button class = "btn btn-primary" onclick="location.href='{% url 'perfiles:perfil_propio' %}'">Muro
+	</button>
+	<button class = "btn btn-primary active">Libros
 		{% if notificaciones %}
-			<span class="badge">{{notificaciones}}</span>
+			<span class="badge notificaciones">{{notificaciones}}</span>
 		{% endif %}
 	</button>
 	<hr class = "half-margins invisible">
+		
+	{% if libros_perfil.tiene_libros_pedidos %}
+		<h4> Has pedido prestado estos libros </h4>
 
-	<!-- Comment form -->	
-	<form action="{% url 'comments:comentar_perfil' perfil_usuario.usuario.username %}" method="post" class="sky-form boxed form_comentario">
-		{% csrf_token %}
-		<fieldset>							
-			<section>
-				<label class="textarea">
-					<i class="icon-append fa fa-comments"></i>
-					<textarea placeholder="Escribe un comentario" name = "comentario" rows="3"></textarea>
-				</label>
-			</section>
-		</fieldset>			
-		<footer>
-			<button type="submit" class="button">Publicar</button>
-		</footer>
-		<br>
-	</form>	
+		{% for r in libros_pedidos %}
+		<!-- CALLOUT -->
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{r.libro.titulo}}</strong> {{r.libro.autor}}</h4>
+					<p>
+						Jul-5-2015 | pediste este libro a <a href="{% url 'perfiles:perfil_usuario' r.perfil_recepcion.usuario.username %}">{{r.perfil_recepcion.usuario.username}}.
+						</a>
+					</p>
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a class="cancelar_pedido" data-id="{{r.id}}" href="" rel="nofollow">Cancelar</a>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		<hr class="half-margins" /><!-- divider 30px -->
+		<!-- /CALLOUT -->
+		{% endfor %}
+	
+	{% endif %}
 
-	<!-- Actividad -->
-	{% for act in actividad %}
-		{% if act.1 == "comment" %}
-			<div class="alert callout alert-default">
-				<div class="row parent_comment">
-					<a class="pull-left" href="{% url 'perfiles:perfil_usuario' act.0.perfil.usuario.username %}">							
-						<img src="{{act.0.perfil.imagen_perfil}}" class="img-responsive circular">
-					</a>
-				
-					&nbsp {{act.0.texto}}
+	{% if libros_perfil.tiene_libros_prestados %}
+		<h4> Tienes libros prestados </h4>
 
-					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_perfil_ajax' %}" data-clicked="0"
-					class="show_respuestas_comment cerrado pull-right" href="">
-						<i class = "fa fa-comment"></i>
-						{{act.0.num_respuestas|default:""}}							
-					</a>
-					<div class = "hidden comments">
-						<br>
-						<div class = "col-md-offset-1 div_respuestas">
-							<div class = "respuestas_comment">
+		{% for l in libros_prestados %}
+		<!-- CALLOUT -->
+		<div class="alert callout alert-default">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>					
+					<div class="toggle transparent">
+						<div class="toggle">
+							<label><h6>
+							Tienes este libro de <a target="_blank" href="{% url 'perfiles:perfil_usuario' l.perfil_dueno.usuario.username %}">
+							{{l.perfil_dueno.usuario.username}}</a>
+							</h6></label>
+							<div class="toggle-content">
+								<p> 
+									<small>
+									{% if l.fecha_max_devolucion %}
+										Fecha máxima de devolución: {{l.fecha_max_devolucion|date}}. <br>
+									{% endif %}
+									Mensaje: '{{l.mensaje_aceptacion}}' <br>
+									Teléfono de contacto: {{l.perfil_dueno.numero_telefono_contacto}}. <br>
+									Email: {{l.perfil_dueno.usuario.email}}.
+									</small>
+								</p>
 							</div>
-							{% if user.is_authenticated %}
-							<!-- Comment form -->	
-							<form action="" method="post" class="sky-form">
-								{% csrf_token %}
-								<fieldset>
-									<section>
-										<label class="textarea">
-											<i class="icon-append fa fa-comment fa-flip-horizontal"></i>
-											<textarea class="texto_respuesta" placeholder="Escribe una respuesta para {{act.0.perfil.usuario.username}}" 
-											name = "comentario" rows="2"></textarea>
-										</label>
-									</section>
-									<button data-id="{{act.0.id}}" data-url="{% url 'comments:responder_comment_perfil_ajax' %}" type="submit" class="button enviar_respuesta">
-									Responder</button>
-								</fieldset>			
-							</form>
-							{% endif %}
 						</div>
 					</div>
-				</div>
-			</div>
-		{% else %}
-			<!-- es un objeto Notificacion -->
-			<div class="alert callout alert-default">
-				<div class="row">
-					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
-					class="show_comments_notificacion cerrado pull-right" href="">
-						<i class = "fa fa-comment"></i>
-						{{act.0.num_respuestas|default:""}}
-					</a>
-					{% if act.0.tipo == "compartio_libro_grupo" %}
-						<p> <a target="_blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> compartió el libro 
-						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
-						con el grupo <a target="_blank" href="{% url 'grupos:main_grupo_actividad' act.0.grupo.id %}">{{act.0.grupo.nombre}}</a>
-						</p>
-					{% elif act.0.tipo == "comenzo_leer" %}
-						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> empezó a leer 
-						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
-						</p>
-					{% elif act.0.tipo == "termino_leer" %}
-						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> terminó de leer
-						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>!
-						</p>
-					{% elif act.0.tipo == "compartio_libro_abierto" %}
-						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> compartió el libro 
-						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
-						con la comunidad de {{act.0.perfil_actor.ciudad.name}}.
-						</p>
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					{% if l.receptor_anuncio_devolucion %}
+						<p> <small> marcaste este libro como devuelto </small></p>
+					{% else %}
+						<button class="btn btn-info anunciar_devuelto" data-toggle="modal" data-target=".bs-example-modal-sm" data-id="{{l.id}}" >Ya lo devolví</button>
 					{% endif %}
-					<div class = "hidden comments">
-						<br>
-						<div class = "col-md-offset-1 div_respuestas">
-							<div class = "respuestas_comment">
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		<!-- /CALLOUT -->
+		{% endfor %}
+
+		{% for l in libros_prestados_bcompartida %}
+		<!-- CALLOUT -->
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
+					<div class="toggle transparent">
+						<div class="toggle">
+							<label><h6>
+							Tienes este libro de <a target="_blank" href="{% url 'libros:biblioteca_compartida' l.biblioteca_compartida.slug %}">
+							{{l.biblioteca_compartida.nombre}}</a>
+							</h6></label>
+							<div class="toggle-content">
+								<p>
+									<small>
+									Fecha máxima de devolución: {{l.fecha_max_devolucion|date}}. <br>
+									Dirección: {{l.biblioteca_compartida.direccion}}
+									</small>
+								</p>
 							</div>
-							{% if user.is_authenticated %}
-							<!-- Comment form -->	
-							<form action="" method="post" class="sky-form">
-								{% csrf_token %}
-								<fieldset>
-									<section>
-										<label class="textarea">
-											<i class="icon-append fa fa-comment fa-flip-horizontal"></i>
-											<textarea class="texto_comment" placeholder="Escribe tu comentario" 
-											name = "comentario" rows="2"></textarea>
-										</label>
-									</section>
-									<button data-id="{{act.0.id}}" data-url="{% url 'comments:comment_notificacion_ajax' %}" type="submit" class="button comment_notificacion">
-									Comentar
-									</button>
-								</fieldset>
-							</form>
-							{% else %}
-								<p class="pull-right" title="Necesitas estar registrado para poder comentar"><i class="fa fa-lock"></i></p>
-							{% endif %}
 						</div>
 					</div>
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->					
+					<button class="btn btn-info" data-toggle="modal" data-target="#modal_anunciar_devolucion">Ya lo devolví</button>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		<!-- /CALLOUT -->
+		{% endfor %}
+
+		<!--Modal Anunciar Devolucion -->
+		<div id="modal_anunciar_devolucion" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+
+					<div class="modal-header"><!-- modal header -->
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="myModalLabel">Anunciar devolución</h4>
+					</div><!-- /modal header -->
+
+					<!-- modal body -->
+					<div class="modal-body">
+						Se enviará un mensaje al dueño recordándole que marque el libro como devuelto.
+					</div>
+					<!-- /modal body -->
+
+					<div class="modal-footer"><!-- modal footer -->
+						<button class="btn btn-default" data-dismiss="modal">Cancelar</button> <button id="modal_devolucion" class="btn btn-primary" data-id="">Ya lo devolví</button>
+					</div><!-- /modal footer -->
+
 				</div>
 			</div>
+		</div>
+
+		<hr class="half-margins" /><!-- divider 30px -->	
+	{% endif %}
+
+		{% if not libros_perfil.tiene_libros_pedidos and not libros_perfil.tiene_libros_prestados %}
+			<hr class ="invisible">
+			<div class="alert alert-default"><!-- INFO -->
+				<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">X</span></button>
+				<strong>No has pedido ningún libro ni tienes un libro prestado.</strong>
+				Si deseas, busca un <a href="{% url 'libros:libros_ciudad' 'quito' '18' 'titulo' %}">libro disponible</a> en Quito
+			</div>
+
 		{% endif %}
+
+	{% if libros_perfil.tiene_requests_pendientes %}
+		<h4> Tienes pedidos pendientes</h4>
+		<!-- CALLOUT -->
+		{% for r in libros_requests %}
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{r.libro.titulo}}</strong> {{r.libro.autor}}</h4>
+					<p>
+						{{r.fecha_request|date}} | <a href="{% url 'perfiles:perfil_usuario' r.perfil_envio.usuario.username %} ">{{r.perfil_envio.usuario.username}} </a> desea leer este libro.
+					</p>
+				</div><!-- /left text -->				
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a href="{% url 'libros:libro_request' r.id %}" rel="nofollow" target="_blank" class="btn btn-warning btn-lg">Ver mensaje</a>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		{% endfor %}
+		<!-- /CALLOUT -->
+		<hr class="half-margins" /><!-- divider 30px -->
+	{% endif %}
+
+	{% for r in requests_entrar_grupo %}
+		<div class ="alert callout alert-default">
+			<div class = "row">
+				<p class ="pull-right">
+					<a href="#" class="aceptar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:aceptar_ajax' %}">Aceptar 
+					<i class ="fa fa-check"></i></a> | 
+					<a title="rechazar" class="negar_invitacion" data-request-id="{{r.id}}" data-url="{% url 'grupos:negar_invitacion_ajax' %}" href="#">
+					<i class ="fa fa-close"></i></a>
+				</p>
+			</div>
+			<div class ="row">
+			{% if r.invitado_por %}
+				<p>
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.invitado_por.usuario.username %}">
+						<img src="{{r.invitado_por.imagen_perfil}}" class="img-responsive circular">{{r.invitado_por.usuario.username}}
+					</a> invitó a 
+					<a target="_blank" href="{% url 'perfiles:perfil_usuario' r.usuario_invitado.usuario.username %}">
+						<img src="{{r.usuario_invitado.imagen_perfil}}" class="img-responsive circular">{{r.usuario_invitado.usuario.username}}
+					</a>
+					al grupo.
+				</p>
+			{% else %}
+				<p>					
+					<a title= "{{r.usuario_invitado.usuario.username}}" target="_blank" href="{% url 'perfiles:perfil_usuario' r.usuario_invitado.usuario.username %}">
+						<img src="{{r.usuario_invitado.imagen_perfil}}" class="img-responsive circular">
+						{{r.usuario_invitado.usuario.username}}
+					</a> a solicitado unirse al grupo.
+				</p>				
+			{% endif %}
+			</div>
+		</div>
 	{% endfor %}
-</div>
+
+	</div>
 
 <!-- sidebar -->	
 <div class = "col-md-4">
@@ -300,7 +373,7 @@
 
 	{% if grupos %}
 		<hr class ="half-margins invisible">
-		<h4> Grupos </h4>		
+		<h3> Grupos </h3>		
 		{% for grupo in grupos %}
 			<a href="{% url 'grupos:main_grupo_actividad' grupo.id %}" class="">{{grupo.nombre}}</a>
 			<br>
@@ -357,15 +430,55 @@
 {% block extra_javascript %}
 <script type="text/javascript" src="{% static 'assets/js/jquery-ui-fold.js' %}"></script>
 <script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
 
 <script>
 	$(document).ready(function(){
 
+		/*
+		setTimeout(function(){
+			$(".notificaciones").hide();
+		},1000)
+		*/
+
+		$(".cancelar_pedido").on("click", function(e){
+			e.preventDefault();
+			var request_id = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/cancelar_pedido/",
+				data: {'request_id': request_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+
+		$(".anunciar_devuelto").on("click", function(e){
+			e.preventDefault();
+			var lprestado_id = $(this).data("id");
+			console.log(lprestado_id);
+			$("#modal_devolucion").data("id", lprestado_id);			
+		});
+
+		$("#modal_devolucion").on("click", function(e){
+			e.preventDefault();
+			var libro_id = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/anunciar_devolucion/",
+				data: {'id_libro_prestado': libro_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
+	});
+
 	// autocomplete titulos / autores
 	var titulos_autocomplete = []
-	var titulos_list = JSON.parse('{{titulos_autocomplete|safe}}');	
-	$.each(titulos_list, function(key, value){
+	var titulos_list = JSON.parse('{{titulos_autocomplete|safe}}');
+	console.log(titulos_list);
+	$.each(titulos_list, function(key, value){	
 		titulos_autocomplete.push(key);
 	});
 
@@ -379,7 +492,8 @@
 		source: titulos_autocomplete,
 		minLength: 2,
 		select: function(event, ui){
-			var titulo_seleccionado = ui.item.value			
+			var titulo_seleccionado = ui.item.value
+			console.log(titulo_seleccionado);
 
 			// Poner libro disponible id en el hidden input
 			var id_libro = titulos_list[titulo_seleccionado][0];
@@ -409,10 +523,12 @@
 			method: "POST",
 			url: url_ajax,
 			data: data,
-			success: function(){				
+			success: function(){
+				console.log("comenzo a leer nuevo libro!");
 				location.reload();
 			},
-			error: function(){				
+			error: function(){
+				console.log('error');
 			}
 		});
 	});
@@ -482,190 +598,40 @@
 		});
 	});
 
-
-	// Funcionalidades de comentarios
-	
-	// Esconder comentarios
-	$(".comments").hide();
-	$(".comments").removeClass("hidden");
-
-	$(".show_respuestas_comment").on("click", function(e){
-		e.preventDefault();
-		var comments_div = $(this).parent().find(".comments")
-
-		if( $(this).hasClass("cerrado") ){
-			comments_div.show("fold");
-			$(this).removeClass("cerrado");
-		} else{
-			comments_div.hide("fold");
-			$(this).addClass("cerrado");
-		}
-
-		// revisar data-clicked para definir si es necesario hacer request por las respuestas o no		
-		if($(this).data("clicked")==0){			
-			// ajax pide respuestas al comment
-			var id_comment = $(this).data("id");
-			var url_ajax = $(this).data("url-ajax");
-			var icon_abrir_comments = $(this);
-
-			$.ajax({
-				method: "GET",
-				url: url_ajax,
-				data: {'id_comment': id_comment},
-				success: function(response){
-					respuestas = JSON.parse(response);
-					var respuestas_div = icon_abrir_comments.parent().find('.respuestas_comment');
-				
-					$.each(respuestas, function(index, value){
-					$(respuestas_div).append(
-						"<div class=well>"+
-						"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+value[2]+"'>"+
-						"<img class='img-responsive circular' src='"+value[3]+"'>"+"</a>"+"&nbsp"+
-						value[1]+
-						"</div>"
-						);
-					});
-
-					// cambiar data "clicked" a 1 para que no vuelva a cargar en caso de que cierre y abra los comments de nuevo
-					icon_abrir_comments.data("clicked", "1");
-				}
-			});
-		} 
-	});
-
-	$(".show_comments_notificacion").on("click", function(e){
-		e.preventDefault();
-		var comments_div = $(this).parent().find(".comments")
-
-		if( $(this).hasClass("cerrado") ){
-			comments_div.show("fold");
-			$(this).removeClass("cerrado");
-		} else{
-			comments_div.hide("fold");
-			$(this).addClass("cerrado");
-		}
-
-		// revisar data-clicked para definir si es necesario hacer request por las respuestas o no
-		
-		if($(this).data("clicked")==0){			
-			// ajax pide respuestas al comment
-			var id_notificacion = $(this).data("id");
-			var url_ajax = $(this).data("url-ajax");
-			var icon_abrir_comments = $(this);
-			
-
-			$.ajax({
-				method: "GET",
-				url: url_ajax,
-				data: {'id_notificacion': id_notificacion},
-				success: function(response){
-					respuestas = JSON.parse(response);
-					var respuestas_div = icon_abrir_comments.parent().find('.respuestas_comment');
-				
-					$.each(respuestas, function(index, value){
-					$(respuestas_div).append(
-						"<div class=well>"+
-						"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+value[2]+"'>"+
-						"<img class='img-responsive circular' src='"+value[3]+"'>"+"</a>"+"&nbsp"+
-						value[1]+
-						"</div>"
-						);
-					});
-
-					// cambiar data "clicked" a 1 para que no vuelva a cargar en caso de que cierre y abra los comments de nuevo
-					icon_abrir_comments.data("clicked", "1");
-				}
-			});
-		} 
-	});
-
-	var CambiarTextoError = function(objeto, texto_original){
-		objeto.text("Hubo un error");
-		setTimeout(function(){
-			objeto.text(texto_original);
-		}, 2000);
-	}
-
-	$(".enviar_respuesta").on("click", function(e){
-		e.preventDefault();
-
-		var texto_respuesta = $(this).parent().find(".texto_respuesta").val()
-		var comment_id = $(this).data("id");
-		var url_ajax = $(this).data("url")
-
-		var data = {'texto_respuesta': texto_respuesta, 'comment_id': comment_id, 'csrfmiddlewaretoken': "{{csrf_token}}"}
-		var submit_button = $(this);
-
-		var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+	// Aceptar negar entrar a grupo si es admin
+	$(".aceptar_invitacion").on("click", function(){
+		var requestId = $(this).data("request-id");
+		var data = {'requestId': requestId, 'csrfmiddlewaretoken': '{{ csrf_token }}'};
 
 		$.ajax({
 			method: "POST",
-			url: url_ajax,
+			url: $(".aceptar_invitacion").data("url"),
 			data: data,
-			success: function(response){
-				respuesta = JSON.parse(response);
-				var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
-							
-				$(respuestas_div).append(
-					"<div class=well>"+
-					"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+respuesta[2]+"'>"+
-					"<img class='img-responsive circular' src='"+respuesta[3]+"'>"+"</a>"+"&nbsp"+
-					respuesta[1]+
-					"</div>"
-					);								
+			success: function(){
+				alert()
 			},
 			error: function(){
-				CambiarTextoError(submit_button, "Responder");
-			}
-		})
-	});
-
-	$(".comment_notificacion").on("click", function(e){
-		e.preventDefault();
-
-		var texto_comment = $(this).parent().find(".texto_comment").val();
-		var id_notificacion = $(this).data("id");
-		var url_ajax = $(this).data("url");
-
-		var data = {'texto_comment': texto_comment, 'id_notificacion': id_notificacion, 'csrfmiddlewaretoken': "{{csrf_token}}"}
-		var submit_button = $(this);
-
-		var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
-
-		$.ajax({
-			method: "POST",
-			url: url_ajax,
-			data: data,
-			success: function(response){
-				respuesta = JSON.parse(response);
-				var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
-							
-				$(respuestas_div).append(
-					"<div class=well>"+
-					"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+respuesta[2]+"'>"+
-					"<img class='img-responsive circular' src='"+respuesta[3]+"'>"+"</a>"+"&nbsp"+
-					respuesta[1]+
-					"</div>"
-					);		
-			},
-			error: function(){
-				CambiarTextoError(submit_button, "Comentar");
+				alert("Hubo un error al aceptar la invitación, disculpa las molestias");
 			}
 		});
 	});
-	
 
-	$(".form_comentario").validate({
-		rules: {
-			comentario: {
-				required: true,
+	$(".negar_invitacion").on("click", function(){
+		var requestId = $(this).data("request-id");
+		var data = {'requestId': requestId, 'csrfmiddlewaretoken': '{{ csrf_token }}'}
+
+		$.ajax({
+			method: "POST",
+			url: $(".negar_invitacion").data("url"),
+			data: data,
+			success: function(){
+				location.reload()
+			},
+			error: function(){
+				alert("Hubo un error al rechazar la invitación, disculpa las molestias");
 			}
-		},
-		messages: {
-			comentario: "Escribe un comentario."
-		}
+		});
 	});
-});
 
 </script>
 {% endblock extra_javascript %}

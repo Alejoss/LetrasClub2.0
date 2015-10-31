@@ -42,8 +42,8 @@ def notificaciones(request):
 
 		# Revisar si el usuario es admin de algun grupo, notificacion para los admins si existen requests no aceptados
 		requests_inv_grupos = 0
-		if UsuariosGrupo.objects.filter(usuario=perfil_usuario, es_admin=True).exists():
-			usuarios_grupo_obj = UsuariosGrupo.objects.filter(usuario=perfil_usuario, es_admin=True).select_related('grupo')
+		if UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).exists():
+			usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).select_related('grupo')
 			grupos = [x.grupo for x in usuarios_grupo_obj]
 			
 			requests_inv_grupos = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).count()				

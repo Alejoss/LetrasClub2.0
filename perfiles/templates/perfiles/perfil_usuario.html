@@ -191,41 +191,51 @@
 			
 			<h4>Libros prestados: </h4>
 			{% for libro_prestado in historial_libros.libros_prestados_por_usuario %}
-					<div class="alert alert-default">
-						<div class="row">
-							<div class="col-md-9 col-sm-9"><!-- left text -->
-								<p>Prestó {{libro_prestado.libro.titulo}} <br> <small> {{libro_prestado.libro.autor}} </small> de<br>
-									{{libro_prestado.fecha_prestamo|date}} a <a href="{% url 'perfiles:perfil_usuario' libro_prestado.perfil_receptor.usuario.username %}">
-									{{libro_prestado.perfil_receptor.usuario.username}}</a>
-								</p>
-							</div><!-- /left text -->
-						</div>
+				<div class="alert alert-default">
+					<div class="row">
+						<div class="col-md-9 col-sm-9"><!-- left text -->
+							<p>Prestó {{libro_prestado.libro.titulo}} <br> <small> {{libro_prestado.libro.autor}} </small> de<br>
+								{{libro_prestado.fecha_prestamo|date}} a <a href="{% url 'perfiles:perfil_usuario' libro_prestado.perfil_receptor.usuario.username %}">
+								{{libro_prestado.perfil_receptor.usuario.username}}</a>
+							</p>
+						</div><!-- /left text -->
 					</div>
+				</div>
 
-				{% empty %}
-					<div class="alert alert-default">
-						<div class="row">
-							<div class="col-md-9 col-sm-9"><!-- left text -->												
-								<p>{{perfil.usuario.username}} no ha prestado un libro todavía.
-								</p>
-							</div>
+			{% empty %}
+				<div class="alert alert-default">
+					<div class="row">
+						<div class="col-md-9 col-sm-9"><!-- left text -->												
+							<p>{{perfil.usuario.username}} no ha prestado un libro todavía.
+							</p>
 						</div>
 					</div>
+				</div>
 			{% endfor %}
 		</div>
 	</div>
 
 	{% if grupos %}
 		<hr class ="half-margins invisible">
-		<h4> Grupos </h4>		
+		<h4> Grupos </h4>
 		{% for grupo in grupos %}
 			<a href="{% url 'grupos:main_grupo_actividad' grupo.id %}" class="">{{grupo.nombre}}</a>
 			<br>
 		{% endfor %}
 	{% endif %}
 
-	<!-- /activity list -->
-	<hr class = "invisible">
+	{% if bibliotecas_compartidas %}
+		{% for biblioteca in bibliotecas_compartidas %}
+		<div class = "well">
+			<img src="{{biblioteca.imagen}}" class="img-responsive circular pull-right">
+			<br>
+			<h3>
+				<a href="{% url 'libros:biblioteca_compartida' biblioteca.slug  %}" class="">{{biblioteca.nombre}}</a>
+			</h3>
+		</div>
+		{% endfor %}
+		<hr class = "half-margins invisible">
+	{% endif %}
 </div>
 {% endblock content %}
 
@@ -235,7 +245,6 @@
 <script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
 
 <script>
-
 $(document).ready(function(){
 
 	// Esconder comentarios
@@ -421,6 +430,5 @@ $(document).ready(function(){
 	});
 });
 </script>
-
 {% endblock extra_javascript %}
 

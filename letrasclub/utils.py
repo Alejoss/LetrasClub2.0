@@ -4,6 +4,7 @@ import datetime
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
+from django.conf import settings
 from perfiles.models import Perfil, UsuarioLeyendo
 from libros.models import LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles
 from cities_light.models import City
@@ -94,7 +95,7 @@ def mail_pedir_libro(request_libro, mensaje):
 
 	titulo = "%s te ha pedido un libro" % (request_libro.perfil_envio.usuario.username)
 	mensaje_texto = ("%s te ha pedido que le prestes el libro %s, por favor visita tu perfil en Letras.Club" 
-		% (request_libro.perfil_recepcion.usuario.username, request_libro.libro.titulo))
+		% (request_libro.perfil_envio.usuario.username, request_libro.libro.titulo))
 	html_message = render_to_string("pedir_libro_mail.html", {'usuario_receptor_mail': request_libro.perfil_recepcion.usuario.username, 
 				'nombre_usuario_envio': request_libro.perfil_envio.usuario.username, 'mensaje': mensaje,
 				'titulo_libro': request_libro.libro.titulo, 'autor_libro': request_libro.libro.autor, 'telefono': request_libro.telefono})
@@ -109,6 +110,30 @@ def mail_pedir_libro(request_libro, mensaje):
 		)
 
 	return None
+
+
+def mail_pedir_libro_bcompartida(request_libro, biblioteca_compartida):
+	"""
+	Envía un mail al admin de la biblioteca compartida cuando alguien pide un libro. No envía un mensaje
+	escrito por el usuario
+	"""
+
+	titulo = "%s ha pedido un libro a %s" % (request_libro.perfil_envio.usuario.username, biblioteca_compartida.nombre)
+	mensaje_texto = ("%s te ha pedido que le prestes el libro %s, por favor visita la biblioteca compartida %s en Letras.Club" 
+		% (request_libro.perfil_envio, request_libro.libro_disponible.libro.titulo, biblioteca_compartida.nombre))
+	html_message = render_to_string("pedir_libro_bcompartida_mail.html", {'usuario_receptor_mail': biblioteca_compartida.perfil_admin.usuario.username, 
+				'nombre_usuario_envio': request_libro.perfil_envio.usuario.username, 'biblioteca_compartida_nombre': biblioteca_compartida.nombre,
+				'titulo_libro': request_libro.libro_disponible.libro.titulo, 'autor_libro': request_libro.libro_disponible.libro.autor, 
+				'telefono': request_libro.telefono})
+
+	send_mail(
+			subject=titulo,
+			message=mensaje_texto,
+			from_email="letras.club@no-reply.com",
+			recipient_list=[request_libro.perfil_recepcion.usuario.email],
+			fail_silently=True,
+			html_message=html_message
+		)	
 
 
 def mail_anunciar_devolucion(libro_prestado):
@@ -207,6 +232,28 @@ def mail_request_entrar_grupo(usuario_request, admins, grupo):
 	return None
 
 
+def enviar_mail_contactanos(nombre, correo, tema, mensaje):
+	"""
+	Envía un mail a los admins de la pagina con el mensaje de contacto y el correo de respuesta
+	"""
+	titulo = "%s ha contactado a LetrasClub" % (nombre)
+	mensaje_texto = "Mensaje: %s" % (mensaje)
+	html_message = render_to_string("contactanos_mail.html", {'nombre': nombre, 'correo': correo, 'tema': tema, 'mensaje': mensaje})
+
+	receptores = [admin[1] for admin in settings.ADMINS]
+
+	send_mail(
+			subject=titulo,
+			message=mensaje_texto,
+			from_email="letras.club@no-reply.com",
+			recipient_list=receptores,
+			fail_silently=True,
+			html_message=html_message
+		)
+
+	return None
+
+
 def obtener_libros_perfil(perfil_usuario):
 	"""
 	responde con dos diccionarios listos para el autocomplete de titulo / autor
@@ -256,3 +303,4 @@ def notif_grupos_termino_leer(perfil_usuario, libro):
 
 	for g_u in grupos_usuario:
 		Notificacion.objects.termino_leer(perfil_usuario, libro=libro, grupo=g_u.grupo)
+

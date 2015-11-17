@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.css' %} ">
+{% endblock extra_css %}
+
+{% block content %}
+<div class = "col-md-6 col-md-offset-1">
+	<br>
+	{% if libro_disponible %}
+		<form id="form_compartir_libro" class="form-horizontal" action="{% url 'libros:cambiar_libro_bcompartida' biblioteca_compartida.id libro_disponible.id %}" method="post">
+	{% else %}
+		<form id="form_compartir_libro" class="form-horizontal" action="{% url 'libros:cambiar_libro_bcompartida_g' biblioteca_compartida.id %}" method="post">
+	{% endif %}
+		{% csrf_token %}
+			<fieldset>
+				{{form.non_field_errors}}
+
+				<select class="form-control" id="tipo_de_cambio" name="tipo_cambio">
+					<option value="0">Cambiar con una persona que no es miembro de Letras.Club</option>
+					<option value="1">Cambiar con un usuario de Letras.Club</option>
+				</select>
+
+				{{form.titulo_inicial.errors}}
+				{{form.titulo_inicial.label}}
+				{{form.titulo_inicial}}
+
+				{{form.id_libro_cambiado}}
+
+				{{form.titulo_recibido.errors}}
+				{{form.titulo_recibido.label}}
+				{{form.titulo_recibido}}
+
+				{{form.autor_recibido.errors}}
+				{{form.autor_recibido.label}}
+				{{form.autor_recibido}}
+
+				<div id = "div_usuario_cambiar hidden">
+				{{form.usuario_cambiar.errors}}
+				{{form.usuario_cambiar.label}}
+				{{form.usuario_cambiar}}
+				</div>
+			<br>
+			<input class = "btn btn-success pull-right" type="submit" value="Cambiar">
+		</form>
+	<hr class = "invisible">
+</div>
+{% endblock content %}
+
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
+<script>
+$(document).ready(function(){
+
+	// Esconder field usuario_cambiar
+	$("#div_usuario_cambiar").hide();
+	$("#div_usuario_cambiar").removeClass("hidden")
+
+	$("#tipo_de_cambio")
+
+
+	var dict_autocomplete = JSON.parse('{{titulos_autocomplete|safe}}')
+	list_autocomplete = []
+	
+	$.each(dict_autocomplete, function(key, value){
+		list_autocomplete.push(key)
+	});
+	
+	$("#titulo_inicial").autocomplete({
+		source: list_autocomplete,
+		minLength: 2,
+		select: function(event, ui){
+			// Poner el id en el hidden imput que lleva el id del libro compartido
+			var titulo_seleccionado = ui.item.value
+			var id_libro_cambiado = dict_autocomplete[titulo_seleccionado]
+			$("#id_libro_cambiado").val(id_libro_cambiado)
+		}
+	});
+});
+</script>
+{% endblock extra_javascript %}
+

@@ -12,6 +12,7 @@ class NManager(models.Manager):
 	"""
 
 	def compartio_libro_abierto(self, perfil_actor, libro):
+		print "compartio_libro_abierto: %s" % (libro)
 		notificacion = self.create(perfil_actor=perfil_actor, libro=libro, tipo="compartio_libro_abierto")
 
 		return notificacion

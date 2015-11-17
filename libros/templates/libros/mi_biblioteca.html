@@ -78,6 +78,11 @@
 						<a class = "mas_info_libro" data-id="{{l.id}}" data-url-target="{% url 'libros:info_grupos_libro' %}" data-click="0"
 							data-toggle="collapse" data-parent="#accordion" href="#acordion{{forloop.counter}}">
 							<i class="fa fa-toggle-down pull-right"></i>
+							{% if l.abierto_comunidad %}
+								<i title="Abierto a la comunidad" class="fa fa-check-square pull-left"></i>
+							{% else %}
+								<i title="No abierto a la comunidad" class="fa fa-circle-o pull-left"></i>
+							{% endif %}
 							<h5><strong>{{l.libro.titulo}}</strong> &nbsp {{l.libro.autor}}</h5>
 						</a>
 					</h4>
@@ -90,8 +95,7 @@
 						-->
 						<div class = "grupos_prestado">
 						</div>
-					</div>
-					<div>
+						<br>
 						<div class="checkbox">
 						   <label for="checkboxes-0">
 						     &nbsp
@@ -102,7 +106,8 @@
 						     	</small>
 						   </label>
 						</div>
-					</div>					
+						<a title="Marcar como No Disponible" href="" class="pull-right"><i class="fa fa-minus-square"></i></a>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -114,7 +119,7 @@
 			<div class="panel-heading">
 				<h4 class="panel-title">
 					<a  data-toggle="collapse" data-parent="#accordion" href="#acordion2{{forloop.counter}}">
-						<i style="color:red" class="fa fa-flag fa-flip-horizontal pull-left"></i>						
+						<i style="color:red" class="fa fa-flag fa-flip-horizontal pull-left"></i>
 						<i class="fa fa-toggle-down pull-right"></i>
 						<strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
 					</a>					
@@ -238,10 +243,13 @@ $(document).ready(function(){
 							mensaje_grupos.html("<i class = 'fa fa-group'></i>  No has compartido este libro con ningún grupo");
 						}
 
+						var checkbox_compartir = (objeto_this).closest(".panel_info_disponible").find(".compartir_todos");
 						if (respuesta[0]){
-							var checkbox_compartir = (objeto_this).find(".compartir_todos");
-							console.log(checkbox_compartir);
+							console.log("PONER CHECKED TRUE");
 							checkbox_compartir.prop("checked", true);
+						} else {
+							console.log("PONER CHECKED FALSE");
+							checkbox_compartir.prop("checked", false);
 						}
 					}
 				});
@@ -308,7 +316,7 @@ $(document).ready(function(){
 			url: url_ajax,
 			data: data,
 			success: function(response){
-				console.log("se cambio el estado de abierto_comunidad a: " + response);				
+				location.reload();
 			},
 			error: function(){
 				console.log("error");

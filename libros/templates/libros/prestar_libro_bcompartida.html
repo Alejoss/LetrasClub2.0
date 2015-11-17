@@ -1,17 +1,57 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.css' %} ">
+{% endblock extra_css %}
 
 {% block content %}
-
 <div class = "col-md-6 col-md-offset-1">
+	<br>
+	<h2> Prestar el libro <strong>{{libro_compartido.libro.titulo}}</strong></h2>
+
+	<br>
 	<form class="form-horizontal" action="{% url 'libros:prestar_libro_bcompartida' libro_compartido.id %}" 
 	method="post">
 		{% csrf_token %}
-			<fieldset>
-				{{form}}
+				<fieldset>
+					{{form}}
+				</fieldset>
 			<br>
-			<input class = "btn btn-success pull-right" type="submit" value="Submit">	
+			<input class = "btn btn-success pull-right" type="submit" value="Prestar">	
 	</form>
 </div>
 
+<div class = "col-md-4">
+	<br>
+	<div class = "row">
+		<div class = "col-md-10 col-md-offset-1">			
+			<div class="box-content text-center">	
+				<img class="img-responsive thumbnail" src="{{libro_compartido.biblioteca_compartida.imagen}}" alt=""/>
+				<h3>
+					<a href="{% url 'libros:biblioteca_compartida' libro_compartido.biblioteca_compartida.slug %}">
+						{{libro_compartido.biblioteca_compartida.nombre}}
+					</a>
+					<br/>
+					<small>{{libro_compartido.biblioteca_compartida.ciudad.name}}</small>
+				</h3>		
+			</div>
+		</div>
+	</div>
+</div>
 
 {% endblock content %}
+
+{% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
+<script>
+$(document).ready(function(){
+	usernames_ciudad = JSON.parse('{{usernames_autocomplete|safe}}');
+
+	$("#input_libro").autocomplete({
+		source: usernames_ciudad,
+		minLength: 2
+	});
+});
+</script>
+{% endblock extra_javascript %}

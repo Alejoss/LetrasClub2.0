@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<hr class = "half-margins invisible">
+
+<div class = "col-md-6 col-md-offset-1">
+	{% if razon_contacto == "registrar_biblioteca" %}
+	<h4>Para registrar una nueva Biblioteca Compartida, necesitamos conocernos: </h4>
+	{% endif %}
+	<form class="form-horizontal" action="{% url 'perfiles:contactanos' 'registrar_biblioteca' %}" method="post">
+		{% csrf_token %}		
+			<fieldset>
+			<br>
+				{{form}}
+			<br>
+			<input class = "btn btn-success pull-right" type="submit" value="Enviar">
+			<hr class = "invisible">
+	</form>
+</div>
+<div class = "col-md-4">
+	<hr class = "invisible">
+	<p class = "gray">		
+		Gracias por contactarnos, te responderemos lo antes posible.
+	</p>
+</div>
+<script type="text/javascript">	
+</script>
+
+{% endblock content %}

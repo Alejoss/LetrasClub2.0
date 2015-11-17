@@ -77,7 +77,10 @@
 					{% if l.receptor_anuncio_devolucion %}
 						<p> <small> marcaste este libro como devuelto </small></p>
 					{% else %}
-						<button class="btn btn-info anunciar_devuelto" data-toggle="modal" data-target=".bs-example-modal-sm" data-id="{{l.id}}" >Ya lo devolví</button>
+						<button class="btn btn-info anunciar_devuelto" data-toggle="modal" data-target=".bs-example-modal-sm" data-id="{{l.id}}" 
+						data-tipo="perfil">
+						Ya lo devolví
+						</button>
 					{% endif %}
 				</div><!-- /right btn -->
 			</div>
@@ -100,7 +103,6 @@
 							<div class="toggle-content">
 								<p>
 									<small>
-									Fecha máxima de devolución: {{l.fecha_max_devolucion|date}}. <br>
 									Dirección: {{l.biblioteca_compartida.direccion}}
 									</small>
 								</p>
@@ -109,7 +111,14 @@
 					</div>
 				</div><!-- /left text -->
 				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->					
-					<button class="btn btn-info" data-toggle="modal" data-target="#modal_anunciar_devolucion">Ya lo devolví</button>
+					{% if l.receptor_anuncio_devolucion %}
+						<p> <small> marcaste este libro como devuelto </small></p>
+					{% else %}
+					<button class="btn btn-info anunciar_devuelto" data-toggle="modal" data-target="#modal_anunciar_devolucion" data-id="{{l.id}}" 
+					data-tipo="bcompartida">
+						Ya lo devolví
+					</button>
+					{% endif %}
 				</div><!-- /right btn -->
 			</div>
 		</div>
@@ -398,8 +407,6 @@
 		<i class="fa fa-book"></i>
 	</div>
 
-	<h3>
-
 	<div class="row profile-activity hidden-xs">
 		<!-- activity item -->
 		<div class="col-xs-10 col-sm-11">
@@ -418,12 +425,26 @@
 			{% empty %}
 				<p> No tienes libros disponibles por ahora </p>
 			{% endfor %}
+		</div>
 
 		<div class="col-sm-12">
 			<hr class="half-margins" />
 		</div><!-- /activity separator -->
 	</div>
-	<!-- /activity list -->
+	
+	{% if bibliotecas_compartidas %}
+		{% for biblioteca in bibliotecas_compartidas %}
+		<div class = "well">
+			<img src="{{biblioteca.imagen}}" class="img-responsive circular pull-right">
+			<br>
+			<h3>
+				<a href="{% url 'libros:biblioteca_compartida' biblioteca.slug  %}" class="">{{biblioteca.nombre}}</a>
+			</h3>
+		</div>
+		{% endfor %}
+		<hr class = "half-margins invisible">
+	{% endif %}
+
 </div>
 {% endblock content %}
 
@@ -455,18 +476,20 @@
 
 		$(".anunciar_devuelto").on("click", function(e){
 			e.preventDefault();
-			var lprestado_id = $(this).data("id");
-			console.log(lprestado_id);
-			$("#modal_devolucion").data("id", lprestado_id);			
+			var lprestado_id = $(this).data("id");			
+			var tipo = $(this).data("tipo");
+			$("#modal_devolucion").attr("data-id", lprestado_id);
+			$("#modal_devolucion").attr("data-tipo", tipo);
 		});
 
 		$("#modal_devolucion").on("click", function(e){
 			e.preventDefault();
 			var libro_id = $(this).data("id");
+			var tipo = $(this).data("tipo")
 			$.ajax({
 				method: "POST",
 				url: "/libros/anunciar_devolucion/",
-				data: {'id_libro_prestado': libro_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+				data: {'id_libro_prestado': libro_id, 'csrfmiddlewaretoken': '{{ csrf_token }}', 'tipo': tipo},
 				success: function(){
 					location.reload();
 				}

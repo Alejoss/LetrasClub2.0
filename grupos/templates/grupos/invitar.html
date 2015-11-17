@@ -59,11 +59,10 @@
 <script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
 <script>
 	$(document).ready(function(){
-		var usernames_dict=JSON.parse('{{usernames_dict|safe}}');		
+		var usernames_dict=JSON.parse('{{usernames_dict|safe}}');
 
 		var usernames_autocomplete = [];
-		$.each(usernames_dict, function(key, value){
-			console.log(key, value);
+		$.each(usernames_dict, function(key, value){		
 			usernames_autocomplete.push({'label': key+" - "+value.ciudad, 'value': key});
 		});
 

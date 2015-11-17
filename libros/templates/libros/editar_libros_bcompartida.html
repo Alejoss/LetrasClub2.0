@@ -2,90 +2,174 @@
 
 {% block content %}
 <br>
+<div class = "row">
+	<div class = "col-md-10 col-md-offset-1">
+		<div class = "pull-right">
+			<a href="{% url 'libros:nuevo_libro' 'biblioteca_compartida' biblioteca_compartida.slug  %}">
+			<i class = "fa fa-plus"></i> &nbsp Sumar Libro</a>
+			<br>
+			<a href="{% url 'libros:cambiar_libro_bcompartida_g' biblioteca_compartida.id  %}">
+			<i class = "fa fa-exchange"></i>&nbsp Cambiar Libro</a>
+		</div>
+		<h1> <a href="{% url 'libros:biblioteca_compartida' biblioteca_compartida.slug %}">{{biblioteca_compartida.nombre}}</a> <small>administrar libros</small>
+		</h1>
+		<hr>
+	</div>
+</div>
 
-<div class = "col-md-10 col-md-offset-1">
-	<a class = "pull-right" href="{% url 'libros:nuevo_libro' 'biblioteca_compartida' biblioteca_compartida.slug  %}">
-	<i class = "fa fa-plus"></i> Nuevo Libro</a>
-	<h1>{{biblioteca_compartida.nombre}} <small>administrar libros</small></h1>
-	<hr>
+{% if libros_no_retirados %}
+<div class ="row">
+	<div class = "col-md-10 col-md-offset-1">
+		<div class = "well">
+			{% for l in libros_no_retirados %}
+				<p> Aceptaste prestar el libro <strong>{{l.libro_disponible.libro.titulo}}</strong> de <strong>{{l.libro_disponible.libro.titulo}}</strong> a 
+				<a target="_blank" href="{% url 'perfiles:perfil_usuario' l.perfil_envio.usuario.username %}">{{l.perfil_envio.usuario.username}}</a>. 
+				<a href="" data-url="{% url 'libros:retiro_libro_bcompartida_ajax' %}" data-id="{{l.id}}" class = "retiro_libro"> Ya lo retiró 
+				<i class = "fa fa-check"></i></a>.</p>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+{% endif %}
+
+{% if libros_requests %}
+	<div class ="row">
+		<div class = "col-md-10 col-md-offset-1">
+			<h3> Tienes pedidos pendientes</h3>
+			<!-- CALLOUT -->
+			{% for r in libros_requests %}
+			<div class="accordion panel-group" id="accordion">
+				<div class="panel panel-default panel_info_disponible">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<a data-id="{{l.id}}" data-toggle="collapse" data-parent="#acordion" href="#acordion2{{forloop.counter}}">
+								<i class="fa fa-toggle-down pull-right"></i>
+								<h5><strong>{{r.libro_disponible.libro.titulo}}</strong> {{r.libro_disponible.libro.autor}}</h5>
+							</a>
+						</h4>
+					</div>
+					<div id="acordion2{{forloop.counter}}" class="collapse">
+						<div class="panel-body">
+							<p>
+								{{r.fecha_request|date}} | <a target="_blank" href="{% url 'perfiles:perfil_usuario' r.perfil_envio.usuario.username %} ">{{r.perfil_envio.usuario.username}} </a> desea leer este libro.
+							</p>
+							<a href="#" data-id="{{r.id}}" data-url="{% url 'libros:prestar_libro_bcompartida_ajax' %}" class="btn btn-success btn-lg aceptar_request">Aceptar</a>
+							<a href="#" data-id="{{r.id}}" data-url="{% url 'libros:rechazar_libro_bcompartida_ajax' %}" class="btn btn-warning btn-lg rechazar_request">Rechazar</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endfor %}
+			<hr class="half-margins" /><!-- divider 30px -->
+		</div>
+	</div>	
+{% endif %}
+
+<div class = "row">
+	<div id ="libros_biblioteca" class = "col-md-10 col-md-offset-1">
+		{% for l in libros_disponibles %}
+			<div class="accordion panel-group" id="accordion">
+				<div class="panel panel-default panel_info_disponible">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<a data-id="{{l.id}}" data-toggle="collapse" data-parent="#accordion" href="#acordion{{forloop.counter}}">
+								<i class="fa fa-toggle-down pull-right"></i>
+								<h5><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h5>
+							</a>
+						</h4>
+					</div>
+					<div id="acordion{{forloop.counter}}" class="collapse">
+						<div class="panel-body opciones_libro_disponible">
+							<a href="{% url 'libros:prestar_libro_bcompartida' l.id %}" rel="nofollow" target="_blank" class="btn btn-success btn-lg" data-id="{{l.id}}">
+							Prestar Libro
+							</a>
+							<a href="{% url 'libros:cambiar_libro_bcompartida' biblioteca_compartida.id l.id %}" rel="nofollow" target="_blank" class="btn btn-info btn-lg" data-id="{{l.id}}">
+							Cambiar Libro
+							</a>
+							<a href="" rel="nofollow" target="_blank" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}">
+							No Disponible
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endfor %}
+
+		{% for l in libros_no_disponibles %}
+			<div class="accordion panel-group" id="accordion">
+				<div class="panel panel-default panel_info_disponible">
+					<div class="panel-heading">
+						<h4 class="panel-title">
+							<a data-id="{{l.id}}" data-toggle="collapse" data-parent="#accordion" href="#acordion3{{forloop.counter}}">
+								<i style="color:red" class="fa fa-flag fa-flip-horizontal pull-left"></i>
+								<i class="fa fa-toggle-down pull-right"></i>
+								<h5><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h5>
+							</a>
+						</h4>
+					</div>
+					<div id="acordion3{{forloop.counter}}" class="collapse">
+						<div class="panel-body opciones_libro_no_disponible">
+							{% if l.prestado %}
+								<p> Este libro fue prestado </p>
+							{% else %}						
+								<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-info btn-lg marcar_disponible" data-id="{{l.id}}">Marcar como Disponible
+								</a>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endfor %}
+	</div>
 </div>
 
 <div class = "row">
 	<div class = "col-md-10 col-md-offset-1">
-		<h3>Libros Disponibles</h3>
-		{% for l in libros_disponibles %}
+		<br>
+		{% if libros_prestados %}
+			<h3>Libros Prestados</h3>
+		{% endif %}
+		{% for l in libros_prestados %}		
 		<div class="alert callout alert-default">
 			<div class="row">
-				<div class="col-md-7 col-sm-9"><!-- left text -->
+				<div class="col-md-8 col-sm-8"><!-- left text -->
 					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
+					<div class="toggle transparent">
+						<div class="toggle">
+							<label><h6>
+							Prestaste este libro a <a href="{% url 'perfiles:perfil_usuario' l.perfil_prestamo.usuario.username %}">
+							{{l.perfil_prestamo.usuario.username}}</a>
+							</h6></label>
+							<div class="toggle-content">
+								<p> 
+									<small>
+									Teléfono de contacto en el perfil: {{l.perfil_receptor.numero_telefono_contacto}}. <br>
+									Email: {{l.perfil_receptor.usuario.email}}.
+									</small>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div><!-- /left text -->
+				<div class = "col-md-1">
 				</div>
-				<div class="col-md-5 col-sm-3 text-right">
-					<a href="{% url 'libros:prestar_libro_bcompartida' l.id %}" rel="nofollow" target="_blank" class="btn btn-success btn-lg" data-id="{{l.id}}">
-					Prestar Libro
-					</a>
-					<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}">
-					No Disponible
-					</a>
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					{% if l.receptor_anuncio_devolucion %}
+						<p style="{color: red !important}">* {{l.perfil_receptor.usuario.username}} marcó este libro como devuelto</p>
+						<a href="" rel="nofollow" class="btn btn-danger btn-lg marcar_devuelto" data-id="{{l.id}}">
+						Marcar como Devuelto</a>
+					{% else %}
+						<a href="" rel="nofollow" class="btn btn-info btn-lg marcar_devuelto" data-id="{{l.id}}">
+						Marcar como Devuelto</a>
+					{% endif %}
 				</div><!-- /right btn -->
 			</div>
 		</div>
-		{% endfor %}
+		{% endfor %}	
 	</div>
 </div>
 
-<div class = "row">
-	<div class = "col-md-10 col-md-offset-1">
-		<br>
-		<h3>Libros no Disponibles</h3>
-		{% for l in libros_no_disponibles %}
-		<div class="alert callout alert-default">
-			<div class="row">
-				<div class="col-md-7 col-sm-9"><!-- left text -->
-					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
-				</div>
-				<div class="col-md-5 col-sm-3 text-right">
-					{% if l.prestado %}
-						<p> Este libro fue prestado </p>
-					{% else %}						
-						<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-info btn-lg marcar_disponible" data-id="{{l.id}}">
-						Marcar como Disponible
-						</a>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-		{% endfor %}
-	</div>
-</div>
-
-
-<hr>
-
-<div class = "row">
-	<div class = "col-md-10 col-md-offset-1">
-		<br>
-		<h3>Libros Prestados</h3>
-		{% for l in libros_prestados%}
-		<div class="alert callout alert-default">
-			<div class="row">
-				<div class="col-md-7 col-sm-9"><!-- left text -->
-					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
-				</div>
-				<div class="col-md-5 col-sm-3 text-right">
-					{% if l.prestado %}
-						<p> Este libro fue prestado </p>
-					{% else %}						
-						<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-info btn-lg marcar_devuelto" data-id="{{l.id}}">
-						Marcar como Devuelto
-						</a>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-		{% endfor %}
-	</div>
-</div>
-
+<hr class = "half-margins invisible">
 
 <script>
 $(document).ready(function(){
@@ -93,6 +177,7 @@ $(document).ready(function(){
 	$(".marcar_no_disponible").on("click", function(e){
 		e.preventDefault();
 		var id_libro_disp = $(this).data("id");
+		var marcar_button = $(this)
 		$.ajax({
 			url: "/libros/marcar_no_disponible/",
 			method: "POST",
@@ -100,6 +185,12 @@ $(document).ready(function(){
 				'id_libro_disp': id_libro_disp,
 				'tipo': "biblioteca",
 				'csrfmiddlewaretoken': '{{ csrf_token }}'
+			},
+			success: function(){
+				location.reload();
+			},
+			error: function(){
+				alert("Lo sentimos, hubo un problema al marcar libro como no disponible")
 			}
 		});
 	});
@@ -114,6 +205,12 @@ $(document).ready(function(){
 				'id_libro': id_libro,
 				'tipo': "biblioteca",
 				'csrfmiddlewaretoken': '{{ csrf_token }}'
+			},
+			success: function(){
+				location.reload();
+			},
+			error: function(){
+				alert("Lo sentimos, hubo un problema al marcar libro como disponible")
 			}
 		});
 	});
@@ -128,6 +225,63 @@ $(document).ready(function(){
 				'id_libro': id_libro,
 				'tipo': 'biblioteca',
 				'csrfmiddlewaretoken': "{{ csrf_token }}" 
+			},
+			success: function(){
+				location.reload();
+			}
+		});
+	});
+
+	$(".aceptar_request").on("click", function(e){
+		e.preventDefault();
+		var id_request = $(this).data("id");
+		var data = {'id_request': id_request, 'csrfmiddlewaretoken': '{{ csrf_token }}'};
+		var ajax_url = $(this).data("url");
+		$.ajax({
+			method: "POST",
+			url: ajax_url,
+			data: data,
+			success: function(){
+				location.reload();
+			},
+			error: function(){
+				alert("Hubo un error al aceptar el préstamos. Disculpa las molestias")
+			}
+		});
+	});
+
+	$(".rechazar_request").on("click", function(e){
+		e.preventDefault();
+		var id_request = $(this).data("id");
+		var data = {'id_request': id_request, 'csrfmiddlewaretoken': '{{ csrf_token }}'};
+		var ajax_url = $(this).data("url");
+		$.ajax({
+			method: "POST",
+			url: ajax_url,
+			data: data,
+			success: function(){
+				location.reload();
+			},
+			error: function(){
+				alert("Hubo un error al rechazar el préstamos. Disculpa las molestias")
+			}
+		});
+	});
+
+	$(".retiro_libro").on("click", function(e){
+		e.preventDefault();
+		var id_request = $(this).data("id");
+		var data = {'id_request': id_request, 'csrfmiddlewaretoken': '{{ csrf_token }}'};
+		var ajax_url = $(this).data("url");
+		$.ajax({
+			method: "POST",
+			url: ajax_url,
+			data: data,
+			success: function(){
+				location.reload();
+			},
+			error: function(){
+				alert("Hubo un error al marcar el libro como retirado. Disculpa las molestias")
 			}
 		});
 	});

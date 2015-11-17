@@ -31,18 +31,33 @@ class NuevaBibliotecaCompartida(forms.ModelForm):
 		widgets = {
 					'nombre': TextInput(attrs={'class': 'form-control'}),
 					'direccion': Textarea(attrs={'class': 'form-control'}),
-					'imagen': URLInput(attrs={'class': 'form-control'})
+					'imagen': URLInput(attrs={'class': 'form-control'}),
+					'punto_google_maps': TextInput(attrs={'class': 'form-control'}),
+					'direccion_web': URLInput(attrs={'class': 'form-control'})
 				}
 
 
 class EditarBibliotecaCompartida(NuevaBibliotecaCompartida):
 
-	pass
+	class Meta(NuevaBibliotecaCompartida.Meta):
+		fields = ('nombre', 'direccion', 'imagen', 'punto_google_maps', 'direccion_web')
 
 
 class FormPrestarLibroBCompartida(forms.Form):
 
-	_choices = [("2_semanas", "2 Semanas"), ('1_mes', '1 Mes'), ('2_meses', '2 Meses'), ('3_meses', '3 Meses'), ('indefinido', 'Sin fecha máxima')]
+	usuario = forms.CharField(max_length=255, required=True, label="Prestar a:", widget=TextInput(attrs={'class': 'form-control', 'id': 'input_libro'}))
 
-	usuario = forms.CharField(max_length=255, required=True)
-	tiempo_entrega = forms.ChoiceField(choices=_choices, required=False, initial=_choices[2][0], widget=Select())
+
+class FormCambiarLibroBCompartida(forms.Form):
+
+	_choices = [("0", "Cambiar con una usuario que no es miembro de Letras.Club"), ("1", "Cambiar con un usuario de Letras.Club")]
+
+	titulo_inicial = forms.CharField(max_length=255, required=True, label="Título del libro cambiado",
+		widget=TextInput(attrs={'class': 'form-control', 'id': 'titulo_inicial'}))
+	id_libro_cambiado = forms.IntegerField(required=True, widget=HiddenInput(attrs={'class': 'form-control', 'id': 'id_libro_cambiado'}))
+	titulo_recibido = forms.CharField(max_length=255, required=True, label="Título del libro recibido",
+		widget=TextInput(attrs={'class': 'form-control', 'id': 'titulo_recibido'}))
+	autor_recibido = forms.CharField(max_length=255, required=True, label="Autor del libro cambiado",
+		widget=TextInput(attrs={'class': 'form-control', 'id': 'autor_recibido'}))	
+	usuario_cambiar = forms.CharField(max_length=255, required=True, label="Usuario con el que cambiaste el libro",
+		widget=TextInput(attrs={'class': 'form-control', 'id': 'usuario_cambiar'}))

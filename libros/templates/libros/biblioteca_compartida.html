@@ -2,31 +2,87 @@
 {% load staticfiles %}
 
 {% block content %}
-<!-- GOOGLE MAP -->
+
+{% if punto_gmaps %}
+<!-- GOOGLE MAP 
+	var	$googlemap_latitude 	= -37.812344,
+	$googlemap_longitude	= 144.968900,
+	$googlemap_zoom			= 13;
+-->
 <div class = "row">
 	<div class = "col-md-12">
 	<div id="gmap" class="grayscale"><!-- map container --></div>
 	<script type="text/javascript">
-		var	$googlemap_latitude 	= -37.812344,
-			$googlemap_longitude	= 144.968900,
+		var	$googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}"),
+			$googlemap_longitude	= parseFloat("{{punto_gmaps.1|safe}}"),
 			$googlemap_zoom			= 13;
 	</script>
 	</div>
 </div>
 <!-- /GOOGLE MAP -->
+{% endif %}
 
 <div class = "col-md-8">
 
 {% if libros_bcompartida %}
-
 <br>
-<h1> Libros: </h1>
+<div class = "well">
+	<p>
+		<strong>
+			Reglas:<br>
+		</strong>
+			Puedes cambiar un libro por otro o pedirlo. El administrador de la <strong>Biblioteca Compartida</strong> debe aceptar el cambio o el préstamo.<br>
+			Si deseas pedir un libro prestado, debes estar registrado en <strong>Letras.Club</strong> y dar click en el botón "Pedir Libro". 
+	</p>
+</div>
+<h1> Libros </h1>
 
 	{% for l in libros_bcompartida %}		
-		<div class="alert alert-default"><!-- DEFAULT -->
-			<strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
-		</div>		
+		<div class="alert alert-default">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
+				</div>
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a href="" rel="nofollow" data-toggle="modal" data-target="#modal_pedir_libro" data-id="{{l.id}}" class="btn btn-warning btn-lg pedir_libro"
+					data-url-ajax="{% url 'libros:request_existente_bcompartida_ajax' %}" data-titulo="{{l.libro.titulo}}">Pedir Libro</a>
+				</div><!-- /right btn -->
+			</div>
+		</div>
 	{% endfor %}
+
+	<!-- Modal pedir libros BCompartida -->
+	<div id="modal_pedir_libro" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-md">
+			<div class="modal-content">
+
+				<div class="modal-header"><!-- modal header -->
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="modal_label_pedir_libro">Pedir libro</h4>
+				</div><!-- /modal header -->
+
+				<!-- modal body -->
+				<div class="modal-body">
+					<p>
+					<br>
+					Al pedir un libro a <strong>{{biblioteca_compartida.nombre}}</strong>, se enviará una notificación al administrador. Si él revisa tu perfil
+					y acepta prestarte el libro, puedes ir a recogerlo a la dirección: <strong>'{{biblioteca_compartida.direccion}}'</strong>. Recuerda que también puedes visitar el lugar y cambiar el libro por otro (siempre y cuando el administrador esté de acuerdo con el cambio).
+					<br>
+					<br>
+					Gracias por ser parte de ésta genial comunidad! <i class="fa fa-smile-o"></i> No olvides comentarlo con tus amigos.
+				</div>
+				<!-- /modal body -->
+
+				<div class="modal-footer"><!-- modal footer -->
+					<button class="btn btn-default" data-dismiss="modal">Cancelar</button>
+					<button id="pedir_libro_submit" class="btn btn-primary" data-id="" data-url-ajax="{% url 'libros:pedir_bcompartida_ajax' %}">
+						Pedir Libro 
+					</button>
+				</div><!-- /modal footer -->
+
+			</div>
+		</div>
+	</div>
 
 {% else %}
 
@@ -39,15 +95,15 @@
 <div class = "col-md-4">
 	<br>
 	<div class = "row">
-		<div class = "col-md-11">
-			<div class = "pull-right">
-				<div class="box-content thumbnail text-center">	
-					<img class="img-responsive" src="{{biblioteca_compartida.imagen}}" alt=""/>
-					<h3>
-						<span>{{biblioteca_compartida.nombre}}</span> <br />
-						<small>{{biblioteca_compartida.ciudad.name}}</small>
-					</h3>		
-				</div>
+		<div class = "col-md-10 col-md-offset-1">			
+			<div class="box-content text-center">	
+				<img class="img-responsive thumbnail" src="{{biblioteca_compartida.imagen}}" alt=""/>
+				<h3>
+					<span>{{biblioteca_compartida.nombre}}</span> 
+					<a target="_blank" title="{{biblioteca_compartida.direccion_web}}" href="{{biblioteca_compartida.direccion_web}}">
+					<i class="fa fa-external-link"></i> <br/></a>						
+					<small>{{biblioteca_compartida.ciudad.name}}</small>
+				</h3>		
 			</div>
 		</div>
 	</div>
@@ -69,7 +125,6 @@
 		
 	{% if usuario_es_administrador %}	
 	<div class = "col-md-8">
-	<hr>
 		<div class="featured-box noborder"><!-- add .transparent for no background color -->
 			<i class="fa fa-cogs"></i>
 			<div class = "row">
@@ -77,9 +132,62 @@
 				<a href="{% url 'libros:editar_info_bcompartida' biblioteca_compartida.slug %}"><small>Editar información</small></a>
 			</div>
 		</div>
-	<hr>
+	<hr class="invisible">
 	</div>
 	{% endif %}	
 </div>
 
 {% endblock content %}
+
+
+{% block extra_javascript %}
+<script type="text/javascript">
+	$(document).ready(function(){		
+
+		var	googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}");
+		var	googlemap_longitude	= parseFloat("{{punto_gmaps.1|safe}}");
+
+		console.log(googlemap_latitude)
+		console.log(googlemap_longitude)
+
+		$(".pedir_libro").on("click", function(){
+			$("#pedir_libro_submit").html('<i class="fa fa-cog fa-spin"></i>')
+			$("#modal_label_pedir_libro").text("Pedir libro: " + $(this).data("titulo"));
+			var id_libro_disp = $(this).attr("data-id");	
+			var data = {'id_libro_disp': id_libro_disp}
+			var url_ajax = $(this).data("url-ajax");
+
+			$.ajax({
+				method: "GET",
+				url: url_ajax,
+				data: data,
+				success: function(){
+					$("#pedir_libro_submit").html('Pedir Libro')
+					$("#pedir_libro_submit").attr("data-id", id_libro_disp)
+				},
+				error: function(){
+					$("#pedir_libro_submit").html('Ya pediste este libro')
+				}
+			});
+		});
+
+		$("#pedir_libro_submit").on("click", function(){
+			var id_libro_disp = $(this).data("id");
+			var url_ajax = $(this).data("url-ajax")
+			var data = {'id_libro_disp': id_libro_disp, 'csrfmiddlewaretoken': '{{csrf_token}}'};
+
+			$.ajax({
+				method: "POST",
+				url: url_ajax,
+				data: data,
+				success: function(){
+					location.reload();
+				},
+				error: function(){
+					alert("Hubo un error al pedir el libro. Disculpa las molestias");
+				}
+			});
+		});
+	});
+</script>
+{% endblock extra_javascript %}

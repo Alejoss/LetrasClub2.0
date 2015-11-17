@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^usuario/libros/(?P<username>[-\w.]+)/$', views.perfil_usuario_libros, name="perfil_usuario_libros"),
     url(r'^usuario/(?P<username>[-\w.]+)/$', views.perfil_usuario, name="perfil_usuario"),
     url(r'^editar_libro_leido/$', views.editar_libro_leido, name="editar_libro_leido"),
+    url(r'^contactanos/(?P<razon_contacto>[-\w]+)/$', views.contactanos, name="contactanos"),
 
     # Ajax
     url(r'^leyendo_libro_ajax/$', views.leyendo_libro_ajax, name="leyendo_libro_ajax"),

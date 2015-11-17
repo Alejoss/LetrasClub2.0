@@ -11,15 +11,15 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 
-from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles, Libro
+from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles, Libro, BibliotecaCompartida
 from perfiles.models import Perfil, UsuarioLeyendo
 from grupos.models import UsuariosGrupo, RequestInvitacion
 from notificaciones.models import Notificacion
 from comentarios.models import CommentPerfil
 
-from forms import formRegistro, formEditarPerfil
+from forms import formRegistro, formEditarPerfil, ContactForm
 from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, obtener_libros_perfil, obtener_usuario_leyendo, \
-							 notif_grupos_comenzo_leer, notif_grupos_termino_leer
+							 notif_grupos_comenzo_leer, notif_grupos_termino_leer, enviar_mail_contactanos
 
 
 def registro(request):
@@ -50,18 +50,19 @@ def perfil_propio(request):
 	Muestra el perfil del usuario que está hecho loginm enfocado en la actividad
 	"""
 	template = "perfiles/perfil_propio.html"
-	perfil_usuario = obtener_perfil(request.user)
-	avatar = obtener_avatar_large(perfil_usuario)
+	perfil = obtener_perfil(request.user)
+	avatar = obtener_avatar_large(perfil)
 
 	# Grupos Perfil
 	grupos = None
-	if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
-		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related('grupo')
+	if UsuariosGrupo.objects.filter(perfil=perfil, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil, activo=True).select_related('grupo')
 		grupos = [ug.grupo for ug in usuarios_grupo_obj]
 
 	# Usuario Leyendo
-	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
-	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario).select_related('libro')
+	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil)
+	
+	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil).select_related('libro')
 
 	# autocomplete Usuario Leyendo
 	titulos_autocomplete = {}
@@ -70,8 +71,8 @@ def perfil_propio(request):
 		titulos_autocomplete[l.libro.titulo] = (l.libro.id, l.libro.autor)
 
 	# Muro, comentarios y actividades
-	comentarios = CommentPerfil.objects.filter(muro=perfil_usuario, eliminado=False).annotate(num_respuestas=Count("respuestas"))
-	notificaciones_perfil = Notificacion.objects.filter(perfil_actor=perfil_usuario).annotate(num_respuestas=Count("respuestas"))
+	comentarios = CommentPerfil.objects.filter(muro=perfil, eliminado=False).annotate(num_respuestas=Count("respuestas"))
+	notificaciones_perfil = Notificacion.objects.filter(perfil_actor=perfil).annotate(num_respuestas=Count("respuestas"))
 
 	actividad_0 = list(chain(comentarios, notificaciones_perfil))
 	actividad_0.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
@@ -87,9 +88,14 @@ def perfil_propio(request):
 	for l in libros_disponibles:
 		autores_autocomplete[l.libro.autor] = l.libro.id
 
+	# Si es admin de una biblioteca, poner link a la biblioteca
+	bibliotecas_compartidas = None
+	if BibliotecaCompartida.objects.filter(perfil_admin=perfil).exists():
+		bibliotecas_compartidas = BibliotecaCompartida.objects.filter(perfil_admin=perfil)
+
 	context = {'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
 	           'libros_leidos_usuario': libros_leidos_usuario, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 
-	           'autores_autocomplete': json.dumps(autores_autocomplete), 'actividad': actividad}
+	           'autores_autocomplete': json.dumps(autores_autocomplete), 'actividad': actividad, 'bibliotecas_compartidas': bibliotecas_compartidas}
 	
 	return render(request, template, context)
 
@@ -100,8 +106,8 @@ def perfil_propio_libros(request):
 	Muestra el perfil del usuario loggeado. enfocado en los libros y notificaciones
 	"""
 	template = "perfiles/perfil_propio_libros.html"
-	perfil_usuario = obtener_perfil(request.user)
-	avatar = obtener_avatar_large(perfil_usuario)
+	perfil = obtener_perfil(request.user)
+	avatar = obtener_avatar_large(perfil)
 
 	# Libros Perfil
 	libros_perfil = {
@@ -112,31 +118,31 @@ def perfil_propio_libros(request):
 
 	libros_requests = libros_prestados = libros_prestados_bcompartida = libros_pedidos = []
 
-	if LibrosRequest.objects.filter(perfil_envio=perfil_usuario, aceptado=False, eliminado=False).exists():
+	if LibrosRequest.objects.filter(perfil_envio=perfil, aceptado=False, eliminado=False).exists():
 		libros_perfil['tiene_libros_pedidos'] = True
-		libros_pedidos = LibrosRequest.objects.filter(perfil_envio=perfil_usuario, aceptado=False, eliminado=False)
+		libros_pedidos = LibrosRequest.objects.filter(perfil_envio=perfil, aceptado=False, eliminado=False)
 
-	if LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).exists():
+	if LibrosRequest.objects.filter(perfil_recepcion=perfil, aceptado=False, eliminado=False).exists():
 		libros_perfil['tiene_requests_pendientes'] = True
-		libros_requests = LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False)
+		libros_requests = LibrosRequest.objects.filter(perfil_recepcion=perfil, aceptado=False, eliminado=False)
 
-	if LibrosPrestados.objects.filter(perfil_receptor=perfil_usuario, fecha_devolucion=None).exists():
+	if LibrosPrestados.objects.filter(perfil_receptor=perfil, fecha_devolucion=None).exists():
 		libros_perfil['tiene_libros_prestados'] = True
-		libros_prestados = LibrosPrestados.objects.filter(perfil_receptor=perfil_usuario, fecha_devolucion=None)
+		libros_prestados = LibrosPrestados.objects.filter(perfil_receptor=perfil, fecha_devolucion=None)
 
-	if LibrosPrestadosBibliotecaCompartida.objects.filter(perfil_prestamo=perfil_usuario, fecha_devolucion=None).exists():
+	if LibrosPrestadosBibliotecaCompartida.objects.filter(perfil_prestamo=perfil, fecha_devolucion=None).exists():
 		libros_perfil['tiene_libros_prestados'] = True
-		libros_prestados_bcompartida = LibrosPrestadosBibliotecaCompartida.objects.filter(perfil_prestamo=perfil_usuario, fecha_devolucion=None)
+		libros_prestados_bcompartida = LibrosPrestadosBibliotecaCompartida.objects.filter(perfil_prestamo=perfil, fecha_devolucion=None)
 
 	# Grupos Perfil
 	grupos = None
-	if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
-		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related('grupo')
+	if UsuariosGrupo.objects.filter(perfil=perfil, activo=True).exists():
+		usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil, activo=True).select_related('grupo')
 		grupos = [ug.grupo for ug in usuarios_grupo_obj]
 
 	# Usuario Leyendo
-	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil_usuario)
-	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil_usuario).select_related('libro')
+	actualmente_leyendo, libros_leidos_usuario = obtener_usuario_leyendo(perfil)
+	libros_disponibles = LibrosDisponibles.objects.filter(perfil=perfil).select_related('libro')
 
 	# autocomplete Usuario Leyendo
 	titulos_autocomplete = {}
@@ -149,17 +155,23 @@ def perfil_propio_libros(request):
 
 	# Request de entrar a grupos a los que el usuario es admin
 	requests_entrar_grupo = None
-	if UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).exists():
-			usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).select_related('grupo')
+	if UsuariosGrupo.objects.filter(perfil=perfil, es_admin=True).exists():
+			usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil, es_admin=True).select_related('grupo')
 			grupos = [x.grupo for x in usuarios_grupo_obj]
 			
 			requests_entrar_grupo = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos)
+
+	# Si es admin de una biblioteca, poner link a la biblioteca
+	bibliotecas_compartidas = None
+	if BibliotecaCompartida.objects.filter(perfil_admin=perfil).exists():
+		bibliotecas_compartidas = BibliotecaCompartida.objects.filter(perfil_admin=perfil)
 
 	context = {'libros_perfil': libros_perfil, 'libros_requests': libros_requests, 'libros_prestados': libros_prestados,
 	           'libros_pedidos': libros_pedidos, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 
 	           'libros_disponibles': libros_disponibles, 'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
 	           'libros_leidos_usuario': libros_leidos_usuario, 'requests_entrar_grupo': requests_entrar_grupo, 
-	           'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete)}
+	           'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete),
+	           'bibliotecas_compartidas': bibliotecas_compartidas}
 	
 	return render(request, template, context)
 
@@ -200,9 +212,13 @@ def perfil_usuario(request, username):
 	
 	avatar = obtener_avatar_large(perfil)
 
+	# Si es admin de una biblioteca, poner link a la biblioteca
+	bibliotecas_compartidas = None
+	if BibliotecaCompartida.objects.filter(perfil_admin=perfil).exists():
+		bibliotecas_compartidas = BibliotecaCompartida.objects.filter(perfil_admin=perfil)
+
 	context = {'historial_libros': historial_libros, 'perfil': perfil, 'avatar': avatar, 'actividad': actividad,
-	'grupos': grupos
-	}
+	'grupos': grupos, 'bibliotecas_compartidas': bibliotecas_compartidas}	
 
 	return render(request, template, context)
 
@@ -244,8 +260,14 @@ def perfil_usuario_libros(request, username):
 
 	avatar = obtener_avatar_large(perfil)
 
+	# Si es admin de una biblioteca, poner link a la biblioteca
+	bibliotecas_compartidas = None
+	if BibliotecaCompartida.objects.filter(perfil_admin=perfil).exists():
+		bibliotecas_compartidas = BibliotecaCompartida.objects.filter(perfil_admin=perfil)
+
 	context = {'libros_prestados': libros_prestados, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 'libros_disponibles': libros_disponibles,
-	           'historial_libros': historial_libros, 'libros_perfil': libros_perfil, 'perfil': perfil, 'avatar': avatar, 'grupos': grupos}
+	           'historial_libros': historial_libros, 'libros_perfil': libros_perfil, 'perfil': perfil, 'avatar': avatar, 'grupos': grupos,
+	           'bibliotecas_compartidas': bibliotecas_compartidas}
 
 	return render(request, template, context)
 
@@ -263,25 +285,25 @@ def editar_perfil(request):
 	Procesa el view y el form para que el usuario edite su perfil
 	"""
 	template = "perfiles/editar_perfil.html"
-	perfil_usuario = obtener_perfil(request.user)
+	perfil = obtener_perfil(request.user)
 
 	if request.method == "POST":
-		form = formEditarPerfil(request.POST, instance=perfil_usuario)
+		form = formEditarPerfil(request.POST, instance=perfil)
 
 		if form.is_valid():
 			form.save()
 			return HttpResponseRedirect(reverse('perfiles:perfil_propio'))
 
 	else:
-		if perfil_usuario.ciudad:
-			ciudad_default = perfil_usuario.ciudad
+		if perfil.ciudad:
+			ciudad_default = perfil.ciudad
 		else:
 			ciudad_default = obtenerquito()
 		form = formEditarPerfil(
 			initial={
-				'descripcion': perfil_usuario.descripcion,
+				'descripcion': perfil.descripcion,
 				'ciudad': ciudad_default,
-				'numero_telefono_contacto': perfil_usuario.numero_telefono_contacto
+				'numero_telefono_contacto': perfil.numero_telefono_contacto
 			})
 
 	context = {'form': form}
@@ -295,8 +317,8 @@ def libros_usuario_ajax(request):
 	Crea un UsuarioLeyendo object y señala la fecha actual como inicio
 	"""
 	if request.is_ajax():
-		perfil_usuario = obtener_perfil(request.user)
-		titulos_autocomplete, autores_autocomplete = obtener_libros_perfil(perfil_usuario)
+		perfil = obtener_perfil(request.user)
+		titulos_autocomplete, autores_autocomplete = obtener_libros_perfil(perfil)
 		context = {'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete)}
 		return HttpResponse(context, status=200)
 	else:
@@ -312,7 +334,7 @@ def leyendo_libro_ajax(request):
 		libro_id = request.POST.get("libro_id", "")
 		titulo = request.POST.get("titulo", "")
 		autor = request.POST.get("autor", "")
-		perfil_usuario = obtener_perfil(request.user)
+		perfil = obtener_perfil(request.user)
 
 		print "libro_id: %s" % (libro_id)
 		print "titulo: %s" % (titulo)
@@ -327,7 +349,7 @@ def leyendo_libro_ajax(request):
 			libro = Libro.objects.get(id=int(libro_id))
 
 			# Revisar si el último UsuarioLeyendo object no es el mismo que declaro estar leyendo, para evitar repeticiones
-			ultimo_libro = UsuarioLeyendo.objects.filter(perfil=perfil_usuario).latest('inicio')
+			ultimo_libro = UsuarioLeyendo.objects.filter(perfil=perfil).latest('inicio')
 			if ultimo_libro.libro.titulo == titulo:
 				return HttpResponse("es el mismo libro que ya está leyendo", status=400)
 
@@ -335,7 +357,7 @@ def leyendo_libro_ajax(request):
 			# El autocomplete pudiera haber llenado el id del hidden input y luego se pudo haber quedado así,
 			# a pesar de que el usuario borro el nombre del autocomplete e insertó otro título.
 			if libro.titulo == titulo and libro.autor == autor:				
-				UsuarioLeyendo.objects.create(perfil=perfil_usuario, libro=libro)
+				UsuarioLeyendo.objects.create(perfil=perfil, libro=libro)
 				
 			else:
 				if not titulo or not autor:
@@ -345,16 +367,16 @@ def leyendo_libro_ajax(request):
 				libro = Libro.objects.create(titulo=titulo, autor=autor)
 
 				# crear objeto UsuarioLeyendo
-				UsuarioLeyendo.objects.create(libro=libro, perfil=perfil_usuario)
+				UsuarioLeyendo.objects.create(libro=libro, perfil=perfil)
 
 			# crear notificaciones para cada grupo
-			Notificacion.objects.comenzo_leer(perfil_usuario, libro)
-			notif_grupos_comenzo_leer(perfil_usuario, libro)
+			Notificacion.objects.comenzo_leer(perfil, libro)
+			notif_grupos_comenzo_leer(perfil, libro)
 
 		else:
 			# Significa que el libro no está en su biblioteca
 			# Revisar si el último UsuarioLeyendo object no es el mismo que declaro estar leyendo, para evitar repeticiones
-			ultimo_libro = UsuarioLeyendo.objects.filter(perfil=perfil_usuario).latest('inicio')
+			ultimo_libro = UsuarioLeyendo.objects.filter(perfil=perfil).latest('inicio')
 			if ultimo_libro.libro.titulo == titulo:
 				return HttpResponse("es el mismo libro que ya está leyendo", status=400)
 
@@ -367,15 +389,15 @@ def leyendo_libro_ajax(request):
 				libro = Libro.objects.create(titulo=titulo, autor=autor)
 
 			# crear objeto LibroDisponible, suma libro a su biblioteca, solo si no existe ya en la biblioteca
-			if not LibrosDisponibles.objects.filter(libro=libro, perfil=perfil_usuario).exists():				
-				LibrosDisponibles.objects.create(libro=libro, perfil=perfil_usuario, disponible=False, ciudad=perfil_usuario.ciudad)
+			if not LibrosDisponibles.objects.filter(libro=libro, perfil=perfil).exists():				
+				LibrosDisponibles.objects.create(libro=libro, perfil=perfil, disponible=False, ciudad=perfil.ciudad)
 
 			# crear objeto UsuarioLeyendo
-			UsuarioLeyendo.objects.create(libro=libro, perfil=perfil_usuario)
+			UsuarioLeyendo.objects.create(libro=libro, perfil=perfil)
 			
 			# crear notificaciones para cada grupo
-			Notificacion.objects.comenzo_leer(perfil_usuario, libro)
-			notif_grupos_comenzo_leer(perfil_usuario, libro)
+			Notificacion.objects.comenzo_leer(perfil, libro)
+			notif_grupos_comenzo_leer(perfil, libro)
 
 		return HttpResponse(status=200)
 
@@ -398,13 +420,13 @@ def termino_leer_ajax(request):
 			libro_leyendo.termino = datetime.today()
 			libro_leyendo.save()
 
-			perfil_usuario = obtener_perfil(request.user)
+			perfil = obtener_perfil(request.user)
 
 			# notificacion termino leer libro
-			Notificacion.objects.termino_leer(perfil_usuario, libro_leyendo.libro)
+			Notificacion.objects.termino_leer(perfil, libro_leyendo.libro)
 
 			# notificaciones para cada grupo
-			notif_grupos_termino_leer(perfil_usuario, libro_leyendo.libro)
+			notif_grupos_termino_leer(perfil, libro_leyendo.libro)
 			
 			return HttpResponse(status=201)
 
@@ -428,33 +450,25 @@ def editar_libro_leido(request):
 			
 			usuario_leyendo_obj = UsuarioLeyendo.objects.get(id=int(libro_leido_id))
 			libro_leido = usuario_leyendo_obj.libro
-
-			print "termino: %s" % (termino)
-			print "usuario_leyendo_obj.termino: %s" % (usuario_leyendo_obj.termino)
 			
 			cambio_valores = False
 
 			# Valores del objeto Libro
 			if len(autor) and libro_leido.autor != autor:
-				print "cambio autor"
 				libro_leido.autor = autor
 				cambio_valores = True
 			if len(titulo) and libro_leido.titulo != titulo:
-				print "cambio titulo"
 				libro_leido.titulo = titulo
 				cambio_valores = True
 			if cambio_valores:
-				print "cambio valores, save"
 				libro_leido.save()
 
 			# Valores del objeto UsuarioLeyendo
 			if termino and not usuario_leyendo_obj.termino:
-				print "cambio a terminado"
 				usuario_leyendo_obj.termino = datetime.today()
 				usuario_leyendo_obj.save()
 
 			if not termino and usuario_leyendo_obj.termino:
-				print "cambio a no terminado"
 				usuario_leyendo_obj.termino = None
 				usuario_leyendo_obj.save()
 				
@@ -489,3 +503,37 @@ def eliminar_libro_leido_ajax(request):
 			return HttpResponse(status=400)
 	else:
 		return HttpResponse(status=400)
+
+
+def contactanos(request, razon_contacto):
+	template = "contactanos.html",
+
+	if request.method == "POST":
+		
+		form = ContactForm(request.POST)
+
+		if form.is_valid():
+			tema = form.cleaned_data['tema']
+			mensaje = form.cleaned_data['mensaje']
+			correo = form.cleaned_data['correo']
+			nombre = form.cleaned_data['nombre']
+
+			enviar_mail_contactanos(nombre, correo, tema, mensaje)
+
+			perfil = obtener_perfil(request.user)
+			ciudad = perfil.ciudad
+
+		return redirect('libros:libros_ciudad', slug_ciudad=ciudad.slug, id_ciudad=ciudad.id, filtro='titulo')
+
+	else:
+
+		if razon_contacto == "registrar_biblioteca":
+
+			form = ContactForm(initial={'tema': "Registrar nueva Biblioteca Compartida"})
+			form.fields['mensaje'].placeholder = "Hola, deseo registrar una Biblioteca Compartida ..."  # !!! Falta
+				
+		else:
+			form = ContactForm()
+	
+	context = {'form': form, 'razon_contacto': razon_contacto}
+	return render(request, template, context)

@@ -19,9 +19,13 @@ cambiar_dueno.short_description = "Cambiar Dueno"
 class LibroDisponibleAdmin(admin.ModelAdmin):
 	actions = [cambiar_dueno]
 
+
+class BibliotecaCompartidaAdmin(admin.ModelAdmin):
+	exclude = ('slug',)
+
 admin.site.register(Libro)
 admin.site.register(LibrosRequest)
-admin.site.register(BibliotecaCompartida)
+admin.site.register(BibliotecaCompartida, BibliotecaCompartidaAdmin)
 admin.site.register(LibrosBibliotecaCompartida)
 admin.site.register(LibrosDisponibles, LibroDisponibleAdmin)
 admin.site.register(LibrosPrestadosBibliotecaCompartida)

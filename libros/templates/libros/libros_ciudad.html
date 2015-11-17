@@ -166,8 +166,7 @@
 	<div class="fb-page" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true" data-show-posts="false"><div class="fb-xfbml-parse-ignore"><blockquote cite="https://www.facebook.com/facebook"><a href="https://www.facebook.com/facebook">Facebook</a></blockquote></div></div>
 	
 	<hr class="half-margins invisible" /><!-- divider 30px -->
-
-	{% comment 'bibliotecas compartidas' %} 
+	
 	<h4> Bibliotecas Compartidas</h4>
 
 	<div class="tabs nomargin">
@@ -191,8 +190,8 @@
 		</div>
 	</div>
 	
-	<a href="{% url 'libros:nueva_biblioteca_compartida' ciudad.slug ciudad.id %}" class="pull-right"> <small>Registrar una Biblioteca Compartida en {{ciudad.name}}</small></a>
-	{% endcomment %}
-
+	<a href="{% url 'perfiles:contactanos' 'registrar_biblioteca' %}" class="pull-right"> 
+		<small>Registrar una Biblioteca Compartida en {{ciudad.name}}</small>
+	</a>
 </div>
 {% endblock content %}

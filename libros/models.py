@@ -28,6 +28,7 @@ class LibrosLeidos(models.Model):
 	perfil = models.ForeignKey(Perfil)
 	libro = models.ForeignKey(Libro)
 	fecha_lectura = models.DateTimeField(null=True)
+	eliminado = models.BooleanField(default=False)
 
 	def __unicode__(self):
 		return "Libros Leidos object: %s - %s" % (self.perfil.usuario, self.libro.titulo)
@@ -41,6 +42,7 @@ class LibrosDisponibles(models.Model):
 	abierto_comunidad = models.BooleanField(default=True)
 	prestado = models.BooleanField(default=False)
 	ciudad = models.ForeignKey(City)
+	eliminado = models.BooleanField(default=False)
 
 	def cambiar_abierto_comunidad(self):
 		if self.abierto_comunidad:
@@ -104,10 +106,11 @@ class BibliotecaCompartida(models.Model):
 	slug = models.SlugField(blank=True)
 	perfil_admin = models.ForeignKey(Perfil)
 	ciudad = models.ForeignKey(City)
-	punto_google_maps = models.CharField(max_length=500, blank=True)
+	punto_google_maps = models.CharField(max_length=500, blank=True)  # [latitude, longitude]
 	direccion = models.CharField(max_length=500, blank=True)
 	imagen = models.URLField(blank=True)
 	eliminada = models.BooleanField(default=False)
+	direccion_web = models.URLField(blank=True)
 	
 	def save(self, *args, **kwargs):
 		if not self.id:
@@ -115,6 +118,16 @@ class BibliotecaCompartida(models.Model):
 			self.slug = slugify(self.nombre)
 
 		super(BibliotecaCompartida, self).save(*args, **kwargs)
+
+	@property
+	def direccion_gmaps(self, *args, **kwargs):
+		if self.punto_google_maps:
+			cadenas_texto = self.punto_google_maps.split(',')
+			latitude = float(cadenas_texto[0])
+			longitude = float(cadenas_texto[1])
+			return latitude, longitude
+		else:
+			return None
 
 	def __unicode__(self):
 		return "Biblioteca Compartida: %s" % (self.nombre)
@@ -125,6 +138,7 @@ class LibrosBibliotecaCompartida(models.Model):
 	biblioteca_compartida = models.ForeignKey(BibliotecaCompartida)
 	disponible = models.BooleanField(default=True)
 	prestado = models.BooleanField(default=False)
+	eliminado = models.BooleanField(default=False)
 
 	def __unicode__(self):
 		return "Libro BibliotecaCompartida: %s - %s" % (self.libro.titulo, self.biblioteca_compartida.nombre)
@@ -135,8 +149,24 @@ class LibrosPrestadosBibliotecaCompartida(models.Model):
 	perfil_prestamo = models.ForeignKey(Perfil)
 	biblioteca_compartida = models.ForeignKey(BibliotecaCompartida)
 	fecha_max_devolucion = models.DateTimeField(null=True)
-	fecha_prestamo = models.DateTimeField(null=True)
+	fecha_prestamo = models.DateTimeField(auto_now_add=True, null=True)
 	fecha_devolucion = models.DateTimeField(null=True)
+	receptor_anuncio_devolucion = models.BooleanField(default=False)
 
 	def __unicode__(self):
 		return "Libro Biblioteca Compartida: %s - %s" % (self.libro.titulo, self.biblioteca_compartida.nombre)
+
+
+class LibrosRequestBibliotecaCompartida(models.Model):
+	libro_disponible = models.ForeignKey(LibrosBibliotecaCompartida)
+	perfil_envio = models.ForeignKey(Perfil)
+	fecha_request = models.DateTimeField(auto_now=True)
+	aceptado = models.BooleanField(default=False)
+	eliminado = models.BooleanField(default=False)
+	retirado = models.BooleanField(default=False)
+
+	class Meta:
+		ordering = ["fecha_request"]
+
+	def __unicode__(self):
+		return "Request prestamo biblioteca compartida: %s - %s" % (self.perfil_envio, self.libro_disponible)

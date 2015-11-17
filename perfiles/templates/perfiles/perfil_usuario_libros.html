@@ -152,7 +152,20 @@
 			<br>
 		{% endfor %}
 	{% endif %}
-	<!-- /activity list -->
-	<hr class = "invisible">
+
+	<hr class ="half-margins invisible">
+
+	{% if bibliotecas_compartidas %}
+		{% for biblioteca in bibliotecas_compartidas %}
+		<div class = "well">
+			<img src="{{biblioteca.imagen}}" class="img-responsive circular pull-right">
+			<br>
+			<h3>
+				<a href="{% url 'libros:biblioteca_compartida' biblioteca.slug  %}" class="">{{biblioteca.nombre}}</a>
+			</h3>
+		</div>
+		{% endfor %}
+		<hr class = "half-margins invisible">
+	{% endif %}
 </div>
 {% endblock content %}

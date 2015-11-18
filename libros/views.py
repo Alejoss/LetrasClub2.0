@@ -73,12 +73,14 @@ def nuevo_libro(request, tipo_dueno, username):
                     libro_disponible_obj = LibrosDisponibles(libro=nuevo_libro, perfil=perfil_usuario, ciudad=quito)
                     libro_disponible_obj.save()
 
-                    # !!! Crear notificaciones y libros compartidos con grupo
+                    # Crear notificacion compartio libro abierto
                     Notificacion.objects.compartio_libro_abierto(perfil_usuario, nuevo_libro)
 
                     if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
                         usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related("grupo")
+                        # crear objetos LibroDisponiblesGrupo
                         for u_grupo in usuarios_grupo_obj:
+                            LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_obj, grupo=u_grupo.grupo)
                             Notificacion.objects.compartio_libro_grupo(perfil_usuario, nuevo_libro, u_grupo.grupo)
                     
                     return HttpResponseRedirect(reverse('libros:mi_biblioteca'))

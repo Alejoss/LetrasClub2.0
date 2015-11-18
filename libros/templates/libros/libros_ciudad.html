@@ -143,27 +143,6 @@
 		{% endfor %}
 	{% endif %}
 	
-	<div class ="divider"></div>
-
-	<p class ="well">
-	Actualmente hay <strong>{{num_libros_disponibles}}</strong> libros compartidos en {{ciudad.name}}.
-
-	{% if user.is_authenticated %}
-		<a href="{% url 'libros:nuevo_libro' 'perfil' user.username %}">Comparte</a>
-	{% else %}
-		<a href="{% url 'libros:main' %}">Comparte</a>
-	{% endif %} un libro tuyo y ten acceso a todos ellos.
-	</p>
-
-	<p class ="well">
-	<i class ="fa fa-info-circle"></i>
-	Los libros compartidos son libros <strong>físicos</strong> (no digitales) que los miembros de la comunidad han aceptado prestar. <br>
-	Para <strong>compartir</strong> un libro solamente necesitas escribir el título y el autor. <br> 
-	Para <strong>pedir prestado</strong> un libro, elige el libro y da click en Pedir Libro. El dueño del libro podrá decidir se prestarte basándose en la información de tu perfil: ¿Has prestado libros? ¿Has devuelto los libros que te han prestado?. <i class ="fa fa-thumbs-o-up"></i>
-	</p>
-
-	<!-- facebook -->
-	<div class="fb-page" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true" data-show-posts="false"><div class="fb-xfbml-parse-ignore"><blockquote cite="https://www.facebook.com/facebook"><a href="https://www.facebook.com/facebook">Facebook</a></blockquote></div></div>
 	
 	<hr class="half-margins invisible" /><!-- divider 30px -->
 	
@@ -189,9 +168,32 @@
 			</div>	
 		</div>
 	</div>
-	
+
 	<a href="{% url 'perfiles:contactanos' 'registrar_biblioteca' %}" class="pull-right"> 
 		<small>Registrar una Biblioteca Compartida en {{ciudad.name}}</small>
 	</a>
+	
+	<div class ="divider"></div>
+
+	<p class ="well">
+	Actualmente hay <strong>{{num_libros_disponibles}}</strong> libros compartidos en {{ciudad.name}}.
+
+	{% if user.is_authenticated %}
+		<a href="{% url 'libros:nuevo_libro' 'perfil' user.username %}">Comparte</a>
+	{% else %}
+		<a href="{% url 'libros:main' %}">Comparte</a>
+	{% endif %} un libro tuyo y ten acceso a todos ellos.
+	</p>
+
+	<p class ="well">
+	<i class ="fa fa-info-circle"></i>
+	Los libros compartidos son libros <strong>físicos</strong> (no digitales) que los miembros de la comunidad han aceptado prestar. <br>
+	Para <strong>compartir</strong> un libro solamente necesitas escribir el título y el autor. <br> 
+	Para <strong>pedir prestado</strong> un libro, elige el libro y da click en Pedir Libro. El dueño del libro podrá decidir se prestarte basándose en la información de tu perfil: ¿Has prestado libros? ¿Has devuelto los libros que te han prestado?. <i class ="fa fa-thumbs-o-up"></i>
+	</p>
+
+	<!-- facebook -->
+	<div class="fb-page" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true" data-show-posts="false"><div class="fb-xfbml-parse-ignore"><blockquote cite="https://www.facebook.com/facebook"><a href="https://www.facebook.com/facebook">Facebook</a></blockquote></div></div>
+	
 </div>
 {% endblock content %}

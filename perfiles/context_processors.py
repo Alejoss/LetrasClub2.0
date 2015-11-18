@@ -1,5 +1,5 @@
 from perfiles.models import Perfil
-from libros.models import LibrosRequest
+from libros.models import LibrosRequest, LibrosPrestados
 from grupos.models import RequestInvitacion, UsuariosGrupo
 
 
@@ -40,6 +40,9 @@ def notificaciones(request):
 		# Notificacion si tiene pedidos de libros
 		requests_libros = LibrosRequest.objects.filter(perfil_recepcion=perfil_usuario, aceptado=False, eliminado=False).count()
 
+		# Notificacion si tiene libros prestados
+		libros_recibidos = LibrosPrestados.objects.filter(perfil_receptor=perfil_usuario, fecha_devolucion__isnull=True).count()
+
 		# Revisar si el usuario es admin de algun grupo, notificacion para los admins si existen requests no aceptados
 		requests_inv_grupos = 0
 		if UsuariosGrupo.objects.filter(perfil=perfil_usuario, es_admin=True).exists():
@@ -48,6 +51,6 @@ def notificaciones(request):
 			
 			requests_inv_grupos = RequestInvitacion.objects.filter(aceptado=False, grupo__in=grupos).count()				
 
-		notificaciones = requests_libros + requests_inv_grupos
+		notificaciones = requests_libros + requests_inv_grupos + libros_recibidos
 
 	return {'notificaciones': notificaciones}

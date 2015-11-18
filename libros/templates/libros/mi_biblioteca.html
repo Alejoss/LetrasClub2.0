@@ -89,10 +89,7 @@
 				</div>
 				<div id="acordion{{forloop.counter}}" class="collapse">
 					<div class="panel-body">
-						<p class = "mensaje_grupos"></p>
-						<!--
-						<a href="" rel="nofollow" class="btn btn-warning btn-lg marcar_no_disponible" data-id="{{l.id}}" title="Ya no estará disponible en tu Biblioteca">Marcar disponible para la comunidad</a>
-						-->
+						<p class = "mensaje_grupos"></p>						
 						<div class = "grupos_prestado">
 						</div>
 						<br>
@@ -106,7 +103,7 @@
 						     	</small>
 						   </label>
 						</div>
-						<a title="Marcar como No Disponible" href="" class="pull-right"><i class="fa fa-minus-square"></i></a>
+						<a href="" rel="nofollow" class="pull-right marcar_no_disponible" data-id="{{l.id}}" title="Ya no estará disponible en tu Biblioteca"><i class="fa fa-flag"></i></a>
 					</div>
 				</div>
 			</div>

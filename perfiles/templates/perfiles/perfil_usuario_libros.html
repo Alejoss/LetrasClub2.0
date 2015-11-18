@@ -19,7 +19,11 @@
 					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h4>
 				</div><!-- /left text -->
 				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-					<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-warning btn-lg">Pedir Libro</a>
+					{% if user.is_authenticated %}
+						<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-default btn-lg">Pedir Libro</a>
+					{% else %}
+						<a href="{% url 'libros:main' %}" class="btn btn-default btn-lg" title="Necesitas hacer Login para pedir este libro"><i class="fa fa-lock"></i></a>
+					{% endif %}
 				</div><!-- /right btn -->
 			</div>
 		</div>

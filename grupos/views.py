@@ -106,7 +106,7 @@ def main_grupo_libros(request, id_grupo, queryset):
 	if request.user.is_authenticated():
 		usuario_es_miembro = UsuariosGrupo.objects.filter(perfil=perfil_usuario, grupo=grupo).exists()
 
-	usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=grupo, activo=True).select_related('perfil')
+	usuarios_grupo_obj = UsuariosGrupo.objects.filter(grupo=grupo, activo=True).select_related('perfil')
 	miembros = [usuario_grupo_obj for usuario_grupo_obj in usuarios_grupo_obj]
 
 	# Invitar a un usuario al grupo
@@ -270,16 +270,16 @@ def compartir_libro_grupo(request, id_grupo):
 					# Crear notificacion libro compartido con grupo !! usar nueva funcion
 					Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible.libro, grupo)
 
-					return HttpResponse("Libro disponible para ese grupo cambiado a activo")
+					return redirect('grupos:main_grupo_libros', id_grupo=grupo.id, queryset="titulo")
 				else:
-					return HttpResponse("Ya existe ese libro disponible para ese grupo")
+					return redirect('grupos:main_grupo_libros', id_grupo=grupo.id, queryset="titulo")
 			else:
 				LibroDisponibleGrupo.objects.create(grupo=grupo, libro_disponible=libro_disponible)
 
 				# Crear notificacion libro compartido con grupo !! usar nueva funcion
 				Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible.libro, grupo)
 
-				return HttpResponse("Libro compartido con grupo", status=201)
+				return redirect('grupos:main_grupo_libros', id_grupo=grupo.id, queryset="titulo")
 
 		elif tipo == "nuevo":
 			# el form envia el titulo y el autor para crear un nuevo libro
@@ -292,16 +292,16 @@ def compartir_libro_grupo(request, id_grupo):
 				nuevo_libro = Libro.objects.create(titulo=titulo, autor=autor, descripcion=descripcion)
 
 				# crea un Libro Disponible object
-				libro_disponible_grupo_obj = LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_obj, 
+				libro_disponible_obj = LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_obj, 
 					abierto_comunidad=False, ciudad=perfil_obj.ciudad)
 
 				# crea un LibroDisponibleGrupo object
-				LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_grupo_obj, grupo=grupo)
+				LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_obj, grupo=grupo)
 
 				# crear notificacion libro compartido con grupo
-				Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible.libro, grupo)				
+				Notificacion.objects.compartio_libro_grupo(perfil_obj, libro_disponible_obj.libro, grupo)				
 
-				return HttpResponse("Libro compartido con grupo", status=201)  # Redirect a Grupo
+				return redirect('grupos:main_grupo_libros', id_grupo=grupo.id, queryset="titulo")
 
 			else:
 				return HttpResponse("Falta titulo o autor", status=400)

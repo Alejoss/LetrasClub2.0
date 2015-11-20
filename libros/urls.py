@@ -10,6 +10,7 @@ urlpatterns = [
 
     url(r'^libro/(?P<slug_libro>\w+)/(?P<id_libro>\d+)/$', views.libro, name="libro"),
 
+    url(r'^pedirlibro/(?P<id_libro_disponible>\d+)/(?P<id_grupo>\d+)/$', views.pedir_libro, name="pedir_libro_grupo"),
     url(r'^pedirlibro/(?P<id_libro_disponible>\d+)/$', views.pedir_libro, name="pedir_libro"),
     url(r'^libro_request/(?P<libro_request_id>\d+)/$', views.libro_request, name="libro_request"),
 
@@ -27,7 +28,7 @@ urlpatterns = [
         name="prestar_libro_bcompartida"),
 
     url(r'^cambiar_libro_bcompartida_g/(?P<id_biblioteca_compartida>\d+)/$', views.cambiar_libro_bcompartida, 
-        name="cambiar_libro_bcompartida_g"), # url cambiar libro sin parametro id_libro_compartido
+        name="cambiar_libro_bcompartida_g"),  # url cambiar libro sin parametro id_libro_compartido
     url(r'^cambiar_libro_bcompartida/(?P<id_biblioteca_compartida>\d+)/(?P<id_libro_compartido>\d+)/$', views.cambiar_libro_bcompartida, 
         name="cambiar_libro_bcompartida"),
 
@@ -35,6 +36,8 @@ urlpatterns = [
         name="anunciar_devolucion"),
     url(r'^cancelar_pedido/$', views.cancelar_pedido, 
         name="cancelar_pedido"),
+    url(r'^cancelar_pedido_bcompartida/$', views.cancelar_pedido_bcompartida, 
+        name="cancelar_pedido_bcompartida"),
 
     url(r'^buscar/(?P<slug_ciudad>\w+)/(?P<filtro>\w+)/$', views.buscar, name='buscar'),
     url(r'^cambiar_dueno_libros/$', views.cambiar_dueno_libros, name="cambiar_dueno_libros"),

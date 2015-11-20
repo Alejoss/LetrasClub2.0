@@ -4,6 +4,7 @@ from django.db import models
 from grupos.models import Grupo
 from perfiles.models import Perfil
 from notificaciones.models import Notificacion
+from libros.models import BibliotecaCompartida
 
 
 class CommentGrupo(models.Model):
@@ -69,6 +70,36 @@ class CommentPerfil(models.Model):
 class RespuestaCommentPerfil(models.Model):
 	#  Respuestas para un objeto CommentGrupo
 	comment_perfil = models.ForeignKey(CommentPerfil, related_name="respuestas")
+	perfil = models.ForeignKey(Perfil)
+	texto = models.CharField(max_length=1000)
+	eliminado = models.BooleanField(default=False)
+	fecha = models.DateTimeField(auto_now_add=True)
+
+	def __unicode__(self):
+		return "Respuesta al comment_perfil en el grupo: %s" % (self.comment_perfil.perfil.usuario.username)
+
+	class Meta:
+		ordering = ["fecha"]
+
+
+class CommentBCompartida(models.Model):
+	#  Guarda los comentarios que van en el muro de un Grupo
+	bcompartida = models.ForeignKey(BibliotecaCompartida)
+	perfil = models.ForeignKey(Perfil)
+	texto = models.CharField(max_length=1000)
+	eliminado = models.BooleanField(default=False)
+	fecha = models.DateTimeField(auto_now_add=True)
+
+	def __unicode__(self):
+		return "Comment en grupo: %s - %s" % (self.grupo, self.perfil)
+
+	class Meta:
+		ordering = ["fecha"]
+
+
+class RespuestaCommentBCompartida(models.Model):
+	#  Respuestas para un objeto CommentGrupo
+	comment_bcompartida = models.ForeignKey(CommentBCompartida, related_name="respuestas")
 	perfil = models.ForeignKey(Perfil)
 	texto = models.CharField(max_length=1000)
 	eliminado = models.BooleanField(default=False)

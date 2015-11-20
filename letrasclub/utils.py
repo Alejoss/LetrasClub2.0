@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import datetime
+from itertools import chain
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.db.models import Count
 
 from django.conf import settings
 from perfiles.models import Perfil, UsuarioLeyendo
@@ -10,6 +12,7 @@ from libros.models import LibrosPrestados, LibrosPrestadosBibliotecaCompartida, 
 from cities_light.models import City
 from notificaciones.models import Notificacion
 from grupos.models import UsuariosGrupo
+from comentarios.models import CommentPerfil, CommentBCompartida
 
 
 # Devuelve el modelo de Quito
@@ -299,8 +302,37 @@ def notif_grupos_termino_leer(perfil_usuario, libro):
 	"""
 	crea una notificacion termino_leer con fk a cada grupo al que pertenece el usuario
 	"""
+
 	grupos_usuario = UsuariosGrupo.objects.filter(perfil=perfil_usuario)
 
 	for g_u in grupos_usuario:
 		Notificacion.objects.termino_leer(perfil_usuario, libro=libro, grupo=g_u.grupo)
 
+
+def obtener_muro_perfil(perfil):
+
+	tipos_excluir_query = ["comenzo_leer", "termino_leer", "bcompartida_presto", "bcompartida_cambio"]
+	# se debe excluir algunos querys para evitar repeticion de notificaciones que se muestran en dos muros,
+	# es un relajo, hay que arreglar esto.
+	
+	comentarios = CommentPerfil.objects.filter(muro=perfil, eliminado=False).annotate(num_respuestas=Count("respuestas"))
+	n_excluir = Notificacion.objects.filter(perfil_actor=perfil).exclude(tipo__in=tipos_excluir_query).annotate(num_respuestas=Count("respuestas"))
+	n_generales = Notificacion.objects.filter(perfil_actor=perfil, grupo=None).annotate(num_respuestas=Count("respuestas"))
+	
+	actividad = list(chain(comentarios, n_excluir, n_generales))
+	actividad.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
+	actividad.reverse()  # Ordena desde el más reciente.
+
+	return actividad
+
+
+def obtener_muro_bcompartida(biblioteca_compartida):
+
+	comentarios = CommentBCompartida.objects.filter(bcompartida=biblioteca_compartida, eliminado=False).annotate(num_respuestas=Count("respuestas"))
+	notificaciones = Notificacion.objects.filter(biblioteca_compartida=biblioteca_compartida).annotate(num_respuestas=Count("respuestas"))
+
+	actividad = list(chain(comentarios, notificaciones))
+	actividad.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
+	actividad.reverse()  # Ordena desde el más reciente.
+
+	return actividad

@@ -69,8 +69,13 @@
 <div class = "col-md-8">
 	<hr class ="half-margins invisible">
 
-	<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_actividad' grupo.id %}'" >Actividad</button>
-	<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}'" >Libros</button>
+	{% if filtro == "libros" %}
+		<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_actividad' grupo.id %}'">Actividad</button>
+		<button class = "btn btn-primary active">Libros</button>
+	{% else %}
+		<button class = "btn btn-primary active">Actividad</button>
+		<button class = "btn btn-primary" onclick="location.href='{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}'">Libros</button>
+	{% endif %}
 	<hr class = "half-margins invisible">
 
 	{% if filtro == "libros" %}
@@ -121,14 +126,15 @@
 					
 					{% if l.perfil != perfil_usuario and user.is_authenticated %}
 					<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-						<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-default btn-lg">Pedir Libro</a>
+						<a href="{% url 'libros:pedir_libro_grupo' l.id grupo.id %}" rel="nofollow" target="_blank" class="btn btn-default btn-lg">Pedir Libro</a>
 					</div><!-- /right btn -->
 					{% endif %}
 				</div>
 			</div>
 		{% endfor %}
+	
 	{% else %}
-		<!--queryset actividad-->
+	<!--queryset actividad-->
 
 		{% if usuario_es_miembro %}
 			<!-- Comment form -->	
@@ -160,7 +166,7 @@
 						
 							&nbsp {{act.0.texto}}
 
-							<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_ajax' %}" data-clicked="0"
+							<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_grupo_ajax' %}" data-clicked="0"
 							class="show_respuestas_comment cerrado pull-right" href="">
 								<i class = "fa fa-comment"></i>
 								{{act.0.num_respuestas|default:""}}							
@@ -198,7 +204,7 @@
 						<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
 						class="show_comments_notificacion cerrado pull-right" href="">
 							<i class = "fa fa-comment"></i>
-							{{act.0.num_respuestas|default:""}}
+							{{act.0.num_respuestas|default:""}}							
 						</a>
 						{% if act.0.tipo == "compartio_libro_grupo" %}
 							<a title="Ver libros disponibles en {{grupo.nombre}}" href="{% url 'grupos:main_grupo_libros' grupo.id 'titulo' %}">
@@ -216,7 +222,12 @@
 							<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> terminó de leer
 							<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>!
 							</p>
-						{% endif %}
+						{% elif act.0.tipo == "presto_libro" %}
+							<p><a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> prestó el libro 
+							<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
+							a <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_target.usuario.username %}">{{act.0.perfil_target.usuario.username}}</a>.
+							</p>
+						{% endif %}						
 						<div class = "hidden comments">
 							<br>
 							<div class = "col-md-offset-1 div_respuestas">

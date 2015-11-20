@@ -57,7 +57,7 @@ class FormCambiarLibroBCompartida(forms.Form):
 	id_libro_cambiado = forms.IntegerField(required=True, widget=HiddenInput(attrs={'class': 'form-control', 'id': 'id_libro_cambiado'}))
 	titulo_recibido = forms.CharField(max_length=255, required=True, label="Título del libro recibido",
 		widget=TextInput(attrs={'class': 'form-control', 'id': 'titulo_recibido'}))
-	autor_recibido = forms.CharField(max_length=255, required=True, label="Autor del libro cambiado",
+	autor_recibido = forms.CharField(max_length=255, required=True, label="Autor del libro recibido",
 		widget=TextInput(attrs={'class': 'form-control', 'id': 'autor_recibido'}))	
-	usuario_cambiar = forms.CharField(max_length=255, required=True, label="Usuario con el que cambiaste el libro",
+	usuario_cambiar = forms.CharField(max_length=255, required=False, label="Usuario con el que cambiaste el libro",
 		widget=TextInput(attrs={'class': 'form-control', 'id': 'usuario_cambiar'}))

@@ -4,9 +4,14 @@
 {% block content %}
 <br>
 <div class = "col-md-6 col-md-offset-1">
-	<h3> Pedir prestado '{{libro_disponible.libro.titulo}}'' de {{libro_disponible.libro.autor}} al usuario 
+	<h3>Pedir prestado '{{libro_disponible.libro.titulo}}'' de {{libro_disponible.libro.autor}} al usuario 
 	<a target="_blank" href="{% url 'perfiles:perfil_usuario' libro_disponible.perfil.usuario.username %}">{{libro_disponible.perfil.usuario.username}}</a></h3>
+
+	{% if id_grupo %}
+	<form id="form_pedir_libro" class="form-horizontal" action="{% url 'libros:pedir_libro_grupo' libro_disponible.id id_grupo %}" method="post">
+	{% else %}
 	<form id="form_pedir_libro" class="form-horizontal" action="{% url 'libros:pedir_libro' libro_disponible.id %}" method="post">
+	{% endif%}
 		{% csrf_token %}		
 			<fieldset>
 				{{form_pedir_libro}}

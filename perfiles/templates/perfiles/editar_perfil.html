@@ -5,8 +5,14 @@
 <div class = "col-md-8">
 	<hr class ="invisible half-margins">
 
+	<h2> En Letras.Club tu perfil es simple </h2>
+
+	<figure class="text-center margin-bottom8">		
+		<img class="img-responsive img-circle" src="{{avatar}}" width="260" height="260" alt="">
+	</figure>
+
 	<div class="col-md-offset-1">
-		<h3> {{perfil_usuario.usuario.username}} - <small> {{perfil_usuario.usuario.email}} </small></h3>
+		<h4> {{perfil_usuario.usuario.username}} - <small> {{perfil_usuario.usuario.email}} </small></h4>
 	</div>
 	<form id="form_editar_perfil" class="form-horizontal" action="{% url 'perfiles:editar_perfil' %}" method="post">
 		{% csrf_token %}		

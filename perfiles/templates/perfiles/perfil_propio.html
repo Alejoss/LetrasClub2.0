@@ -42,9 +42,9 @@
 					<a class="pull-left" href="{% url 'perfiles:perfil_usuario' act.0.perfil.usuario.username %}">							
 						<img src="{{act.0.perfil.imagen_perfil}}" class="img-responsive circular">
 					</a>
-				
-					&nbsp {{act.0.texto}}
-
+					<p>
+						&nbsp {{act.0.texto}}
+					</p>
 					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_perfil_ajax' %}" data-clicked="0"
 					class="show_respuestas_comment cerrado pull-right" href="">
 						<i class = "fa fa-comment"></i>
@@ -79,7 +79,7 @@
 		{% else %}
 			<!-- es un objeto Notificacion -->
 			<div class="alert callout alert-default">
-				<div class="row">
+				<div class="row">					
 					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
 					class="show_comments_notificacion cerrado pull-right" href="">
 						<i class = "fa fa-comment"></i>
@@ -102,6 +102,19 @@
 						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> compartió el libro 
 						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
 						con la comunidad de {{act.0.perfil_actor.ciudad.name}}.
+						</p>
+					{% elif act.0.tipo == "presto_libro" %}
+						<p> Prestó el libro 
+						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong> 
+						a <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_target.usuario.username %}">{{act.0.perfil_target.usuario.username}}</a>.
+						</p>
+					{% elif act.0.tipo == "bcompartida_cambio" %}
+						<p> Cambió el libro <strong>{{act.0.segundo_libro.titulo}}</strong> de <strong>{{act.0.segundo_libro.autor}}</strong> por el libro <strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>
+						con la Biblioteca Compartida <a target="blank" href="{% url 'libros:biblioteca_compartida' act.0.biblioteca_compartida.slug %}">{{act.0.biblioteca_compartida.nombre}}</a>.
+						</p>
+					{% elif act.0.tipo == "bcompartida_presto" %}
+						<p> Recibió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong> 
+						de la Biblioteca Compartida <a target="blank" href="{% url 'libros:biblioteca_compartida' act.0.biblioteca_compartida.slug %}">{{act.0.biblioteca_compartida.nombre}}</a>.
 						</p>
 					{% endif %}
 					<div class = "hidden comments">

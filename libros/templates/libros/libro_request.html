@@ -6,8 +6,14 @@
 	<br>
 	<br>
 	<h2>
-		<a target="_blank" href="{% url 'perfiles:perfil_usuario' libro_request.perfil_envio.usuario.username %}">
-		{{libro_request.perfil_envio.usuario}}</a> te ha pedido que le prestes el libro '{{libro_request.libro.titulo}}'.
+		{% if libro_request.grupo %}
+			<a target="_blank" href="{% url 'perfiles:perfil_usuario' libro_request.perfil_envio.usuario.username %}">
+			{{libro_request.perfil_envio.usuario}}</a> te ha pedido que le prestes el libro '{{libro_request.libro.titulo}}' a través del grupo
+			<a target="_blank" href="{% url 'grupos:main_grupo_actividad' libro_request.grupo.id %}">{{libro_request.grupo}}</a>
+		{% else %}
+			<a target="_blank" href="{% url 'perfiles:perfil_usuario' libro_request.perfil_envio.usuario.username %}">
+			{{libro_request.perfil_envio.usuario}}</a> te ha pedido que le prestes el libro '{{libro_request.libro.titulo}}'.
+		{% endif %}
 	</h2>
 	<hr>
 	

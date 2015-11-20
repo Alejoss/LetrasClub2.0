@@ -11,7 +11,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 
-from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles, Libro, BibliotecaCompartida
+from libros.models import LibrosRequest, LibrosPrestados, LibrosPrestadosBibliotecaCompartida, LibrosDisponibles, Libro, BibliotecaCompartida, \
+							LibrosRequestBibliotecaCompartida
 from perfiles.models import Perfil, UsuarioLeyendo
 from grupos.models import UsuariosGrupo, RequestInvitacion
 from notificaciones.models import Notificacion
@@ -19,7 +20,7 @@ from comentarios.models import CommentPerfil
 
 from forms import formRegistro, formEditarPerfil, ContactForm
 from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, obtener_libros_perfil, obtener_usuario_leyendo, \
-							 notif_grupos_comenzo_leer, notif_grupos_termino_leer, enviar_mail_contactanos
+							 notif_grupos_comenzo_leer, notif_grupos_termino_leer, enviar_mail_contactanos, obtener_muro_perfil
 
 
 def registro(request):
@@ -71,14 +72,8 @@ def perfil_propio(request):
 		titulos_autocomplete[l.libro.titulo] = (l.libro.id, l.libro.autor)
 
 	# Muro, comentarios y actividades
-	comentarios = CommentPerfil.objects.filter(muro=perfil, eliminado=False).annotate(num_respuestas=Count("respuestas"))
-	notificaciones_perfil = Notificacion.objects.filter(perfil_actor=perfil).annotate(num_respuestas=Count("respuestas"))
-
-	actividad_0 = list(chain(comentarios, notificaciones_perfil))
-	actividad_0.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
-	actividad_0.reverse()  # Ordena desde el más reciente.
-
 	actividad = []
+	actividad_0 = obtener_muro_perfil(perfil)
 	for act in actividad_0:
 		if act.__class__.__name__ == "CommentPerfil":
 			actividad.append((act, "comment"))
@@ -113,14 +108,20 @@ def perfil_propio_libros(request):
 	libros_perfil = {
 		'tiene_requests_pendientes': False,
 		'tiene_libros_prestados': False,
-		'tiene_libros_pedidos': False
+		'tiene_libros_pedidos': False,
+		'tiene_libros_pedidos_bcompartida': False
 		}
 
-	libros_requests = libros_prestados = libros_prestados_bcompartida = libros_pedidos = []
+	libros_requests = libros_prestados = libros_prestados_bcompartida = libros_pedidos = libros_pedidos_bcompartida = []
 
 	if LibrosRequest.objects.filter(perfil_envio=perfil, aceptado=False, eliminado=False).exists():
 		libros_perfil['tiene_libros_pedidos'] = True
 		libros_pedidos = LibrosRequest.objects.filter(perfil_envio=perfil, aceptado=False, eliminado=False)
+
+	if LibrosRequestBibliotecaCompartida.objects.filter(perfil_envio=perfil, retirado=False, eliminado=False).exists():
+		libros_perfil['tiene_libros_pedidos_bcompartida'] = True
+		libros_pedidos_bcompartida = LibrosRequestBibliotecaCompartida.objects.filter(perfil_envio=perfil, 
+			retirado=False, eliminado=False).select_related("libro_disponible")
 
 	if LibrosRequest.objects.filter(perfil_recepcion=perfil, aceptado=False, eliminado=False).exists():
 		libros_perfil['tiene_requests_pendientes'] = True
@@ -168,7 +169,8 @@ def perfil_propio_libros(request):
 
 	context = {'libros_perfil': libros_perfil, 'libros_requests': libros_requests, 'libros_prestados': libros_prestados,
 	           'libros_pedidos': libros_pedidos, 'libros_prestados_bcompartida': libros_prestados_bcompartida, 
-	           'libros_disponibles': libros_disponibles, 'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
+	           'libros_pedidos_bcompartida': libros_pedidos_bcompartida, 'libros_disponibles': libros_disponibles, 
+	           'avatar': avatar, 'grupos': grupos, 'actualmente_leyendo': actualmente_leyendo,
 	           'libros_leidos_usuario': libros_leidos_usuario, 'requests_entrar_grupo': requests_entrar_grupo, 
 	           'titulos_autocomplete': json.dumps(titulos_autocomplete), 'autores_autocomplete': json.dumps(autores_autocomplete),
 	           'bibliotecas_compartidas': bibliotecas_compartidas}
@@ -188,14 +190,9 @@ def perfil_usuario(request, username):
 	if user_obj == request.user:
 		return HttpResponseRedirect(reverse('perfiles:perfil_propio'))
 		
-	comentarios = CommentPerfil.objects.filter(muro=perfil, eliminado=False).annotate(num_respuestas=Count("respuestas"))
-	notificaciones_perfil = Notificacion.objects.filter(perfil_actor=perfil).annotate(num_respuestas=Count("respuestas"))
-
-	actividad_0 = list(chain(comentarios, notificaciones_perfil))
-	actividad_0.sort(key=lambda x: x.fecha)  # Ordena comentarios y notificaciones alternados por fecha.
-	actividad_0.reverse()  # Ordena desde el más reciente.
-
+	# Muro, comentarios y actividades
 	actividad = []
+	actividad_0 = obtener_muro_perfil(perfil)
 	for act in actividad_0:
 		if act.__class__.__name__ == "CommentPerfil":
 			actividad.append((act, "comment"))
@@ -286,6 +283,7 @@ def editar_perfil(request):
 	"""
 	template = "perfiles/editar_perfil.html"
 	perfil = obtener_perfil(request.user)
+	avatar = obtener_avatar_large(perfil)
 
 	if request.method == "POST":
 		form = formEditarPerfil(request.POST, instance=perfil)
@@ -306,7 +304,7 @@ def editar_perfil(request):
 				'numero_telefono_contacto': perfil.numero_telefono_contacto
 			})
 
-	context = {'form': form}
+	context = {'form': form, 'avatar': avatar}
 
 	return render(request, template, context)
 

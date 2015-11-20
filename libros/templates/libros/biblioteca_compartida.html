@@ -98,6 +98,18 @@
 
 <div class = "col-md-4">
 	<br>
+	{% if usuario_es_administrador %}	
+	<div class = "col-md-8">
+		<div class="featured-box noborder"><!-- add .transparent for no background color -->
+			<i class="fa fa-cogs"></i>
+			<div class = "row">
+				<a href="{% url 'libros:editar_libros_bcompartida' biblioteca_compartida.slug  %}"><small>Administrar libros</small></a><br>
+				<a href="{% url 'libros:editar_info_bcompartida' biblioteca_compartida.slug %}"><small>Editar información</small></a>
+			</div>
+		</div>
+	<hr class="invisible">
+	</div>
+	{% endif %}
 	<div class = "row">
 		<div class = "col-md-10 col-md-offset-1">			
 			<div class="box-content text-center">	
@@ -127,32 +139,135 @@
 		</div>
 	</div>
 		
-	{% if usuario_es_administrador %}	
-	<div class = "col-md-8">
-		<div class="featured-box noborder"><!-- add .transparent for no background color -->
-			<i class="fa fa-cogs"></i>
-			<div class = "row">
-				<a href="{% url 'libros:editar_libros_bcompartida' biblioteca_compartida.slug  %}"><small>Administrar libros</small></a><br>
-				<a href="{% url 'libros:editar_info_bcompartida' biblioteca_compartida.slug %}"><small>Editar información</small></a>
+	<div class = "row">
+	<div class = "col-md-12">
+	{% if user.is_authenticated %}
+		<!-- Comment form -->	
+		<form action="{% url 'comments:comentar_bcompartida' biblioteca_compartida.slug %}" method="post" class="sky-form boxed form_comentario">
+			{% csrf_token %}
+			<fieldset>							
+				<section>
+					<label class="textarea">
+						<i class="icon-append fa fa-comments"></i>
+						<textarea placeholder="Escribe un comentario ..." name = "comentario" rows="3"></textarea>
+					</label>
+				</section>
+			</fieldset>			
+			<footer>
+				<button type="submit" class="button">Publicar</button>
+			</footer>
+			<br>
+		</form>	
+	{% endif %}
+	<!-- Actividad -->
+	{% for act in actividad %}
+		{% if act.1 == "comment" %}
+			<div class="alert callout alert-default">
+				<div class="row parent_comment">
+					<a class="pull-left" href="{% url 'perfiles:perfil_usuario' act.0.perfil.usuario.username %}">							
+						<img src="{{act.0.perfil.imagen_perfil}}" class="img-responsive circular">
+					</a>
+					<p>
+						&nbsp {{act.0.texto}}
+					</p>
+					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_bcompartida_ajax' %}" data-clicked="0"
+					class="show_respuestas_comment cerrado pull-right" href="">
+						<i class = "fa fa-comment"></i>
+						{{act.0.num_respuestas|default:""}}							
+					</a>
+					<div class = "hidden comments">
+						<br>
+						<div class = "col-md-offset-1 div_respuestas">
+							<div class = "respuestas_comment">
+							</div>
+							{% if user.is_authenticated %}
+							<!-- Comment form -->	
+							<form action="" method="post" class="sky-form">
+								{% csrf_token %}
+								<fieldset>
+									<section>
+										<label class="textarea">
+											<i class="icon-append fa fa-comment fa-flip-horizontal"></i>
+											<textarea class="texto_respuesta" placeholder="Escribe una respuesta para {{act.0.perfil.usuario.username}}" 
+											name = "comentario" rows="2"></textarea>
+										</label>
+									</section>
+									<button data-id="{{act.0.id}}" data-url="{% url 'comments:responder_comment_bcompartida_ajax' %}" type="submit" class="button enviar_respuesta">
+									Responder</button>
+								</fieldset>			
+							</form>
+							{% endif %}
+						</div>
+					</div>
+				</div>
 			</div>
-		</div>
-	<hr class="invisible">
+		{% else %}
+			<!-- es un objeto Notificacion -->
+			<div class="alert callout alert-default">
+				<div class="row">
+					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
+					class="show_comments_notificacion cerrado pull-right" href="">
+						<i class = "fa fa-comment"></i>
+						{{act.0.num_respuestas|default:""}}
+					</a>
+					{% if act.0.tipo == "bcompartida_presto" %}
+						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> tomó prestado el libro
+						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>
+						</p>
+					{% elif act.0.tipo == "bcompartida_cambio" %}
+						<p> Cambió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong> por el libro <strong> {{act.0.segundo_libro.titulo}} </strong> de <strong> {{act.0.segundo_libro.autor}}</strong>
+						{% if act.0.perfil_actor %}
+						con el usuario <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a>
+						{% endif %}
+						</p>
+					{% endif %}
+					<div class = "hidden comments">
+						<br>
+						<div class = "col-md-offset-1 div_respuestas">
+							<div class = "respuestas_comment">
+							</div>
+							{% if user.is_authenticated %}
+							<!-- Comment form -->	
+							<form action="" method="post" class="sky-form">
+								{% csrf_token %}
+								<fieldset>
+									<section>
+										<label class="textarea">
+											<i class="icon-append fa fa-comment fa-flip-horizontal"></i>
+											<textarea class="texto_comment" placeholder="Escribe tu comentario" 
+											name = "comentario" rows="2"></textarea>
+										</label>
+									</section>
+									<button data-id="{{act.0.id}}" data-url="{% url 'comments:comment_notificacion_ajax' %}" type="submit" class="button comment_notificacion">
+									Comentar
+									</button>
+								</fieldset>
+							</form>
+							{% else %}
+								<p class="pull-right" title="Necesitas estar registrado para poder comentar"><i class="fa fa-lock"></i></p>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endif %}
+	{% endfor %}
 	</div>
-	{% endif %}	
+	</div>
 </div>
 
 {% endblock content %}
 
 
 {% block extra_javascript %}
+<script type="text/javascript" src="{% static 'assets/js/jquery-ui-fold.js' %}"></script>
+<script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+
 <script type="text/javascript">
 	$(document).ready(function(){		
 
 		var	googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}");
 		var	googlemap_longitude	= parseFloat("{{punto_gmaps.1|safe}}");
-
-		console.log(googlemap_latitude)
-		console.log(googlemap_longitude)
 
 		$(".pedir_libro").on("click", function(){
 			$("#pedir_libro_submit").html('<i class="fa fa-cog fa-spin"></i>')
@@ -192,6 +307,188 @@
 				}
 			});
 		});
+	// Funcionalidades de comentarios
+	
+	// Esconder comentarios
+	$(".comments").hide();
+	$(".comments").removeClass("hidden");
+
+	$(".show_respuestas_comment").on("click", function(e){
+		e.preventDefault();
+		var comments_div = $(this).parent().find(".comments")
+
+		if( $(this).hasClass("cerrado") ){
+			comments_div.show("fold");
+			$(this).removeClass("cerrado");
+		} else{
+			comments_div.hide("fold");
+			$(this).addClass("cerrado");
+		}
+
+		// revisar data-clicked para definir si es necesario hacer request por las respuestas o no		
+		if($(this).data("clicked")==0){			
+			// ajax pide respuestas al comment
+			var id_comment = $(this).data("id");
+			var url_ajax = $(this).data("url-ajax");
+			var icon_abrir_comments = $(this);
+
+			$.ajax({
+				method: "GET",
+				url: url_ajax,
+				data: {'id_comment': id_comment},
+				success: function(response){
+					respuestas = JSON.parse(response);
+					var respuestas_div = icon_abrir_comments.parent().find('.respuestas_comment');
+				
+					$.each(respuestas, function(index, value){
+					$(respuestas_div).append(
+						"<div class=well>"+
+						"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+value[2]+"'>"+
+						"<img class='img-responsive circular' src='"+value[3]+"'>"+"</a>"+"&nbsp"+
+						value[1]+
+						"</div>"
+						);
+					});
+
+					// cambiar data "clicked" a 1 para que no vuelva a cargar en caso de que cierre y abra los comments de nuevo
+					icon_abrir_comments.data("clicked", "1");
+				}
+			});
+		} 
 	});
+
+	$(".show_comments_notificacion").on("click", function(e){
+		e.preventDefault();
+		var comments_div = $(this).parent().find(".comments")
+
+		if( $(this).hasClass("cerrado") ){
+			comments_div.show("fold");
+			$(this).removeClass("cerrado");
+		} else{
+			comments_div.hide("fold");
+			$(this).addClass("cerrado");
+		}
+
+		// revisar data-clicked para definir si es necesario hacer request por las respuestas o no
+		
+		if($(this).data("clicked")==0){			
+			// ajax pide respuestas al comment
+			var id_notificacion = $(this).data("id");
+			var url_ajax = $(this).data("url-ajax");
+			var icon_abrir_comments = $(this);
+			
+
+			$.ajax({
+				method: "GET",
+				url: url_ajax,
+				data: {'id_notificacion': id_notificacion},
+				success: function(response){
+					respuestas = JSON.parse(response);
+					var respuestas_div = icon_abrir_comments.parent().find('.respuestas_comment');
+				
+					$.each(respuestas, function(index, value){
+					$(respuestas_div).append(
+						"<div class=well>"+
+						"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+value[2]+"'>"+
+						"<img class='img-responsive circular' src='"+value[3]+"'>"+"</a>"+"&nbsp"+
+						value[1]+
+						"</div>"
+						);
+					});
+
+					// cambiar data "clicked" a 1 para que no vuelva a cargar en caso de que cierre y abra los comments de nuevo
+					icon_abrir_comments.data("clicked", "1");
+				}
+			});
+		} 
+	});
+
+	var CambiarTextoError = function(objeto, texto_original){
+		objeto.text("Hubo un error");
+		setTimeout(function(){
+			objeto.text(texto_original);
+		}, 2000);
+	}
+
+	$(".enviar_respuesta").on("click", function(e){
+		e.preventDefault();
+
+		var texto_respuesta = $(this).parent().find(".texto_respuesta").val()
+		var comment_id = $(this).data("id");
+		var url_ajax = $(this).data("url")
+
+		var data = {'texto_respuesta': texto_respuesta, 'comment_id': comment_id, 'csrfmiddlewaretoken': "{{csrf_token}}"}
+		var submit_button = $(this);
+
+		var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(response){
+				respuesta = JSON.parse(response);
+				var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+							
+				$(respuestas_div).append(
+					"<div class=well>"+
+					"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+respuesta[2]+"'>"+
+					"<img class='img-responsive circular' src='"+respuesta[3]+"'>"+"</a>"+"&nbsp"+
+					respuesta[1]+
+					"</div>"
+					);								
+			},
+			error: function(){
+				CambiarTextoError(submit_button, "Responder");
+			}
+		})
+	});
+
+	$(".comment_notificacion").on("click", function(e){
+		e.preventDefault();
+
+		var texto_comment = $(this).parent().find(".texto_comment").val();
+		var id_notificacion = $(this).data("id");
+		var url_ajax = $(this).data("url");
+
+		var data = {'texto_comment': texto_comment, 'id_notificacion': id_notificacion, 'csrfmiddlewaretoken': "{{csrf_token}}"}
+		var submit_button = $(this);
+
+		var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+
+		$.ajax({
+			method: "POST",
+			url: url_ajax,
+			data: data,
+			success: function(response){
+				respuesta = JSON.parse(response);
+				var respuestas_div = submit_button.closest(".div_respuestas").find('.respuestas_comment');
+							
+				$(respuestas_div).append(
+					"<div class=well>"+
+					"<a class='pull-left' target='_blank' href='"+"/perfil/usuario/"+respuesta[2]+"'>"+
+					"<img class='img-responsive circular' src='"+respuesta[3]+"'>"+"</a>"+"&nbsp"+
+					respuesta[1]+
+					"</div>"
+					);		
+			},
+			error: function(){
+				CambiarTextoError(submit_button, "Comentar");
+			}
+		});
+	});
+	
+
+	$(".form_comentario").validate({
+		rules: {
+			comentario: {
+				required: true,
+			}
+		},
+		messages: {
+			comentario: "Escribe un comentario."
+		}
+	});
+});
 </script>
 {% endblock extra_javascript %}

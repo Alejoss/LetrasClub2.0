@@ -18,8 +18,8 @@
 				{{form.non_field_errors}}
 
 				<select class="form-control" id="tipo_de_cambio" name="tipo_cambio">
-					<option value="0">Cambiar con una persona que no es miembro de Letras.Club</option>
-					<option value="1">Cambiar con un usuario de Letras.Club</option>
+					<option id="cambiar_sin_usuario" value="0">Cambiar con una persona que no es miembro de Letras.Club</option>
+					<option id="cambiar_con_usuario" value="1">Cambiar con un usuario de Letras.Club</option>
 				</select>
 
 				{{form.titulo_inicial.errors}}
@@ -36,7 +36,7 @@
 				{{form.autor_recibido.label}}
 				{{form.autor_recibido}}
 
-				<div id = "div_usuario_cambiar hidden">
+				<div class="hidden" id = "div_usuario_cambiar">
 				{{form.usuario_cambiar.errors}}
 				{{form.usuario_cambiar.label}}
 				{{form.usuario_cambiar}}
@@ -53,13 +53,21 @@
 <script type="text/javascript" src="{% static 'assets/plugins/ui_autocomplete/jquery-ui.min.js' %}"></script>
 <script>
 $(document).ready(function(){
-
 	// Esconder field usuario_cambiar
 	$("#div_usuario_cambiar").hide();
-	$("#div_usuario_cambiar").removeClass("hidden")
+	$("#div_usuario_cambiar").removeClass("hidden");
 
-	$("#tipo_de_cambio")
+	// setear opcion 0 como default en el form
+	$("#cambiar_sin_usuario").attr("selected", "selected")
+	
+	$("#tipo_de_cambio").on("change", function(){
 
+		if ($("#cambiar_con_usuario").is(":selected")) {
+			$("#div_usuario_cambiar").show("fold");
+		} else {
+			$("#div_usuario_cambiar").hide("fold");
+		}
+	});
 
 	var dict_autocomplete = JSON.parse('{{titulos_autocomplete|safe}}')
 	list_autocomplete = []
@@ -77,6 +85,18 @@ $(document).ready(function(){
 			var id_libro_cambiado = dict_autocomplete[titulo_seleccionado]
 			$("#id_libro_cambiado").val(id_libro_cambiado)
 		}
+	});
+
+	var usernames_autocomplete = JSON.parse('{{usernames_autocomplete|safe}}')
+	list_usernames = []
+	
+	$.each(usernames_autocomplete, function(key, value){
+		list_usernames.push(value)
+	});
+	
+	$("#usuario_cambiar").autocomplete({
+		source: list_usernames,
+		minLength: 2,
 	});
 });
 </script>

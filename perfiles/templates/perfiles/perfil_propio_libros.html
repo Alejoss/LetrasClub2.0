@@ -18,7 +18,7 @@
 	</button>
 	<hr class = "half-margins invisible">
 		
-	{% if libros_perfil.tiene_libros_pedidos %}
+	{% if libros_perfil.tiene_libros_pedidos or libros_perfil.tiene_libros_pedidos_bcompartida %}
 		<h4> Has pedido prestado estos libros </h4>
 
 		{% for r in libros_pedidos %}
@@ -28,7 +28,7 @@
 				<div class="col-md-9 col-sm-9"><!-- left text -->
 					<h4><strong>{{r.libro.titulo}}</strong> {{r.libro.autor}}</h4>
 					<p>
-						Jul-5-2015 | pediste este libro a <a href="{% url 'perfiles:perfil_usuario' r.perfil_recepcion.usuario.username %}">{{r.perfil_recepcion.usuario.username}}.
+						Pediste este libro a <a href="{% url 'perfiles:perfil_usuario' r.perfil_recepcion.usuario.username %}">{{r.perfil_recepcion.usuario.username}}.
 						</a>
 					</p>
 				</div><!-- /left text -->
@@ -37,10 +37,34 @@
 				</div><!-- /right btn -->
 			</div>
 		</div>
-		<hr class="half-margins" /><!-- divider 30px -->
 		<!-- /CALLOUT -->
 		{% endfor %}
-	
+
+		{% for r in libros_pedidos_bcompartida %}
+		<div class="alert callout alert-default fade in">
+			<div class="row">
+				<div class="col-md-9 col-sm-9"><!-- left text -->
+					<h4><strong>{{r.libro_disponible.libro.titulo}}</strong> {{r.libro_disponible.libro.autor}}</h4>
+					{% if r.aceptado %}
+						<a href="{% url 'libros:biblioteca_compartida' r.libro_disponible.biblioteca_compartida.slug %}">
+						{{r.libro_disponible.biblioteca_compartida.nombre}}.
+						</a> aceptó prestarte el libro. Puedes retirarlo cuando quieras.
+					{% else %}
+					<p>
+						Pediste este libro a <a href="{% url 'libros:biblioteca_compartida' r.libro_disponible.biblioteca_compartida.slug %}">
+						{{r.libro_disponible.biblioteca_compartida.nombre}}.
+						</a>
+					</p>
+					{% endif %}
+				</div><!-- /left text -->
+				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
+					<a class="cancelar_pedido_bcompartida" data-id="{{r.id}}" href="" rel="nofollow">Cancelar</a>
+				</div><!-- /right btn -->
+			</div>
+		</div>
+		{% endfor %}
+		<hr class="half-margins" /><!-- divider 30px -->
+
 	{% endif %}
 
 	{% if libros_perfil.tiene_libros_prestados %}
@@ -455,11 +479,18 @@
 <script>
 	$(document).ready(function(){
 
-		/*
-		setTimeout(function(){
-			$(".notificaciones").hide();
-		},1000)
-		*/
+		$(".cancelar_pedido_bcompartida").on("click", function(e){
+			e.preventDefault();
+			var request_id = $(this).data("id");
+			$.ajax({
+				method: "POST",
+				url: "/libros/cancelar_pedido_bcompartida/",
+				data: {'request_id': request_id, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+				success: function(){
+					location.reload();
+				}
+			});
+		});
 
 		$(".cancelar_pedido").on("click", function(e){
 			e.preventDefault();

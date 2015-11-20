@@ -95,6 +95,7 @@ class LibrosRequest(models.Model):
 	email = models.CharField(max_length=255, blank=True)
 	aceptado = models.BooleanField(default=False)
 	eliminado = models.BooleanField(default=False)
+	grupo = models.ForeignKey(Grupo, blank=True, null=True)
 
 	def __unicode__(self):
 		return "Libro Request object: %s - %s - %s" % (self.libro.titulo, self.perfil_envio.usuario, self.perfil_recepcion.usuario)
@@ -163,7 +164,7 @@ class LibrosRequestBibliotecaCompartida(models.Model):
 	fecha_request = models.DateTimeField(auto_now=True)
 	aceptado = models.BooleanField(default=False)
 	eliminado = models.BooleanField(default=False)
-	retirado = models.BooleanField(default=False)
+	retirado = models.BooleanField(default=False)  # Define si el usuario ya paso retirando el libro de la biblioteca compartida
 
 	class Meta:
 		ordering = ["fecha_request"]

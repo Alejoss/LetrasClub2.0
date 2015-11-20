@@ -1,1 +1,1 @@
-web: newrelic-admin run-program gunicorn redlibros.wsgi
+web: gunicorn redlibros.wsgi --log-file -

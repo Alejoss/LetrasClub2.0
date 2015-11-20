@@ -1,1 +1,1 @@
-web: gunicorn redlibros.wsgi --log-file -
+web: gunicorn letrasclub.wsgi --log-file -

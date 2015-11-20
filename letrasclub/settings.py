@@ -14,7 +14,7 @@ ADMINS = ('Alejando', 'alejoveintimilla@gmail.com')
 SECRET_KEY = os.environ['LIBROS_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 HEROKU = not DEBUG
 
 ALLOWED_HOSTS = ["*"]

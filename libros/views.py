@@ -1093,19 +1093,13 @@ def cheat_libros(request):
     quito = City.objects.get(name="Quito")
     for k, v in json_data.items():
         libro, creado = Libro.objects.get_or_create(titulo=k, autor=v[2], descripcion=v[3])
-        print "libro creado: %s" % (creado)
-        print "perfil: %s" % (v[1])
         if v[0]:
             casa_ku = BibliotecaCompartida.objects.get(id=1)
             ldc, creadoldc = LibrosBibliotecaCompartida.objects.get_or_create(libro=libro, biblioteca_compartida=casa_ku)
-            if creadoldc:
-                print "libro biblioteca compartida creado: %s" % (libro.titulo)
         else:
             try:
                 perfil = Perfil.objects.get(usuario__username=v[1])         
                 ld, creadold = LibrosDisponibles.objects.get_or_create(libro=libro, perfil=perfil, ciudad=quito)
-                if creadold:
-                    print "libro disponible creado: %s" % (libro.titulo)
             except:
                 print "PERFIL ERROR: %s" % (v[1])
 

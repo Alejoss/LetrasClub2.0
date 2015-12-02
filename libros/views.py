@@ -237,7 +237,6 @@ def pedir_libro(request, id_libro_disponible, id_grupo=None):
     Recibe un id de un objeto LibrosDisponibles, renderiza un form con un mensaje editable que le va a llegar
     al dueño del libro    
     """
-    print "id_grupo: %s" % (id_grupo)
     perfil_usuario = obtener_perfil(request.user)
 
     if request.method == "POST":
@@ -268,8 +267,6 @@ def pedir_libro(request, id_libro_disponible, id_grupo=None):
                 mail_pedir_libro(request_libro, mensaje)
 
             return HttpResponseRedirect(reverse('perfiles:perfil_propio'))
-        else:
-            print "form not valid!"
     
     libro_disponible_obj = LibrosDisponibles.objects.get(id=id_libro_disponible)
     
@@ -318,12 +315,10 @@ def libro_request(request, libro_request_id):
 
             libro_disponible_obj.save()
 
-            print "libro_request.grupo: %s" % (libro_request.grupo)
             # Si el request fue hecho en un grupo, hay que marcar no activo en ese LibroDisponibleGrupo
             if libro_request.grupo:
                 if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible_obj, grupo=libro_request.grupo).exists():
                     libro_disponible_grupo = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible_obj, grupo=libro_request.grupo).first()
-                    print "libro_disponible_grupo: %s" % (libro_disponible_grupo)
                     libro_disponible_grupo.activo = False
                     libro_disponible_grupo.save()
 
@@ -468,8 +463,7 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
 
             return HttpResponseRedirect(reverse('libros:biblioteca_compartida', 
                 kwargs={'slug_biblioteca_compartida': biblioteca_compartida.slug}))
-        else:
-            print form.errors
+
     else:
         form = EditarBibliotecaCompartida(initial={
                 'punto_google_maps': biblioteca_compartida.punto_google_maps,
@@ -953,8 +947,6 @@ def compartir_todos_ajax(request):
         perfil_usuario = obtener_perfil(request.user)
 
         if nuevo_estado:
-            print "nuevo estado abierto_comunidad: %s" % (nuevo_estado)
-            print "Crear notificaciones"
 
             # crear notificaciones
             Notificacion.objects.compartio_libro_abierto(perfil_usuario, libro_disponible.libro)
@@ -966,13 +958,9 @@ def compartir_todos_ajax(request):
 
         else:
             # si marco no abierto_comunidad, revisar si está compartido con otros grupos, si no marcar no_disponible
-            print "nuevo estado abierto_comunidad: %s" % (nuevo_estado)
-            print "Revisar si está compartido con grupos"
             if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, activo=True).exists():
-                print "Sí está compartido con otros grupos"
                 pass
             else:
-                print "No está compartido con otro grupo, marcar disponible False"
                 libro_disponible.disponible = False
                 libro_disponible.save()
 
@@ -1092,3 +1080,33 @@ def retiro_libro_bcompartida_ajax(request):
 
     else:
         return HttpResponse(status=400)
+
+
+def cheat_libros(request):
+    
+    import requests as r
+
+    datos = r.get("https://safe-scrubland-1751.herokuapp.com/libros/cheat_disponibles/")
+
+    json_data = datos.json()
+
+    quito = City.objects.get(name="Quito")
+    for k, v in json_data.items():
+        libro, creado = Libro.objects.get_or_create(titulo=k, autor=v[2], descripcion=v[3])
+        print "libro creado: %s" % (creado)
+        print "perfil: %s" % (v[1])
+        if v[0]:
+            casa_ku = BibliotecaCompartida.objects.get(id=1)
+            ldc, creadoldc = LibrosBibliotecaCompartida.objects.get_or_create(libro=libro, biblioteca_compartida=casa_ku)
+            if creadoldc:
+                print "libro biblioteca compartida creado: %s" % (libro.titulo)
+        else:
+            try:
+                perfil = Perfil.objects.get(usuario__username=v[1])         
+                ld, creadold = LibrosDisponibles.objects.get_or_create(libro=libro, perfil=perfil, ciudad=quito)
+                if creadold:
+                    print "libro disponible creado: %s" % (libro.titulo)
+            except:
+                print "PERFIL ERROR: %s" % (v[1])
+
+    return HttpResponse("datos imprimidos")

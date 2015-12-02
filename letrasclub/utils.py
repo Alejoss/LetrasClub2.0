@@ -17,7 +17,7 @@ from comentarios.models import CommentPerfil, CommentBCompartida
 
 # Devuelve el modelo de Quito
 def obtenerquito():
-	return City.objects.get(id=18)
+	return City.objects.get(name="Quito")
 
 
 # Perfil y Editar Perfil

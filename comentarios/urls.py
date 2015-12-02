@@ -1,7 +1,7 @@
 from django.conf.urls import url
 import views
 
-urlpatterns = [	
+urlpatterns = [
 	url(r'^perfil/(?P<username>[-\w.]+)/$', views.comentar_perfil, name="comentar_perfil"),
 	url(r'^grupo/(?P<id_grupo>\d+)/$', views.comentar_grupo, name="comentar_grupo"),
 	url(r'^biblioteca_compartida/(?P<slug_biblioteca_compartida>[-\w]+)/$', views.comentar_bcompartida, name="comentar_bcompartida"),

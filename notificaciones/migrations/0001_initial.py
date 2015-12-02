@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('grupos', '0004_requestinvitacion_eliminado'),
-        ('perfiles', '0001_initial'),
+        ('libros', '0001_initial'),
+        ('grupos', '0001_initial'),
     ]
 
     operations = [
@@ -19,9 +19,12 @@ class Migration(migrations.Migration):
                 ('fecha', models.DateTimeField(auto_now_add=True)),
                 ('tipo', models.CharField(max_length=50)),
                 ('leida', models.BooleanField(default=False)),
-                ('grupo', models.ForeignKey(to='grupos.Grupo', null=True)),
-                ('perfil_actor', models.ForeignKey(related_name='actor', to='perfiles.Perfil')),
-                ('perfil_target', models.ForeignKey(related_name='target', to='perfiles.Perfil', null=True)),
+                ('biblioteca_compartida', models.ForeignKey(blank=True, to='libros.BibliotecaCompartida', null=True)),
+                ('grupo', models.ForeignKey(blank=True, to='grupos.Grupo', null=True)),
+                ('libro', models.ForeignKey(related_name='libro', blank=True, to='libros.Libro', null=True)),
             ],
+            options={
+                'ordering': ['-fecha'],
+            },
         ),
     ]

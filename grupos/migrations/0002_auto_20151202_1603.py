@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='usuariosgrupo',
-            name='usuario',
+            name='perfil',
             field=models.ForeignKey(to='perfiles.Perfil'),
         ),
         migrations.AddField(
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='requestinvitacion',
             name='invitado_por',
-            field=models.ForeignKey(related_name='invitado_por', to='perfiles.Perfil'),
+            field=models.ForeignKey(related_name='invitado_por', to='perfiles.Perfil', null=True),
         ),
         migrations.AddField(
             model_name='requestinvitacion',

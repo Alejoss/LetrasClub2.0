@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 ('direccion', models.CharField(max_length=500, blank=True)),
                 ('imagen', models.URLField(blank=True)),
                 ('eliminada', models.BooleanField(default=False)),
+                ('direccion_web', models.URLField(blank=True)),
             ],
         ),
         migrations.CreateModel(
@@ -33,11 +34,19 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='LibroDisponibleGrupo',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('activo', models.BooleanField(default=True)),
+            ],
+        ),
+        migrations.CreateModel(
             name='LibrosBibliotecaCompartida',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('disponible', models.BooleanField(default=True)),
                 ('prestado', models.BooleanField(default=False)),
+                ('eliminado', models.BooleanField(default=False)),
             ],
         ),
         migrations.CreateModel(
@@ -45,7 +54,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('disponible', models.BooleanField(default=True)),
+                ('abierto_comunidad', models.BooleanField(default=True)),
                 ('prestado', models.BooleanField(default=False)),
+                ('eliminado', models.BooleanField(default=False)),
             ],
             options={
                 'ordering': ['libro__titulo'],
@@ -56,6 +67,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('fecha_lectura', models.DateTimeField(null=True)),
+                ('eliminado', models.BooleanField(default=False)),
             ],
         ),
         migrations.CreateModel(
@@ -74,8 +86,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('fecha_max_devolucion', models.DateTimeField(null=True)),
-                ('fecha_prestamo', models.DateTimeField(null=True)),
+                ('fecha_prestamo', models.DateTimeField(auto_now_add=True, null=True)),
                 ('fecha_devolucion', models.DateTimeField(null=True)),
+                ('receptor_anuncio_devolucion', models.BooleanField(default=False)),
             ],
         ),
         migrations.CreateModel(
@@ -88,7 +101,20 @@ class Migration(migrations.Migration):
                 ('email', models.CharField(max_length=255, blank=True)),
                 ('aceptado', models.BooleanField(default=False)),
                 ('eliminado', models.BooleanField(default=False)),
-                ('libro', models.ForeignKey(to='libros.Libro')),
             ],
+        ),
+        migrations.CreateModel(
+            name='LibrosRequestBibliotecaCompartida',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('fecha_request', models.DateTimeField(auto_now=True)),
+                ('aceptado', models.BooleanField(default=False)),
+                ('eliminado', models.BooleanField(default=False)),
+                ('retirado', models.BooleanField(default=False)),
+                ('libro_disponible', models.ForeignKey(to='libros.LibrosBibliotecaCompartida')),
+            ],
+            options={
+                'ordering': ['fecha_request'],
+            },
         ),
     ]

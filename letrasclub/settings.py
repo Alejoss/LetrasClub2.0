@@ -14,8 +14,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = os.environ['LIBROS_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-HEROKU = not DEBUG
+DEBUG = True
+HEROKU = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -23,7 +23,8 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ['es']
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['EC']
 
 # Context Processors
-TEMPLATE_CONTEXT_PROCESSORS += ('perfiles.context_processors.procesar_perfil', 'perfiles.context_processors.procesar_ciudad',
+TEMPLATE_CONTEXT_PROCESSORS += ('perfiles.context_processors.procesar_ciudad',
+                                'perfiles.context_processors.procesar_perfil',
                                 'perfiles.context_processors.notificaciones',
                                 'social.apps.django_app.context_processors.backends', 
                                 'social.apps.django_app.context_processors.login_redirect')
@@ -117,6 +118,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
 TEMPLATE_DIRS = (BASE_DIR + "/templates/",)
+FIXTURE_DIRS = (BASE_DIR + "/fixtures/",)
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATIC_ROOT = '/'
 

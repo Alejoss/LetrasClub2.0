@@ -89,7 +89,7 @@ SOCIAL_AUTH_PIPELINE = (
 
 DATABASES = {}
 
-if LOCAL_DB:  
+if not LOCAL_DB:  
     DATABASES['default'] = dj_database_url.config()
 
 else:

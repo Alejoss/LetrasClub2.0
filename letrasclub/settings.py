@@ -15,7 +15,9 @@ SECRET_KEY = os.environ['LIBROS_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-HEROKU = not DEBUG
+HEROKU = True
+LOCAL_DB = False
+AMAZON_S3 = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -87,7 +89,7 @@ SOCIAL_AUTH_PIPELINE = (
 
 DATABASES = {}
 
-if HEROKU:  
+if LOCAL_DB:  
     DATABASES['default'] = dj_database_url.config()
 
 else:
@@ -122,7 +124,7 @@ FIXTURE_DIRS = (BASE_DIR + "/fixtures/",)
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATIC_ROOT = '/'
 
-if HEROKU:
+if AMAZON_S3:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     AWS_ACCESS_KEY_ID = os.environ['AWSAccessKeyId']
     AWS_SECRET_ACCESS_KEY = os.environ['AWSSecretKey']
@@ -131,7 +133,7 @@ if HEROKU:
     STATIC_URL = S3_URL
     STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
-if not HEROKU:
+else:
     STATIC_URL = '/static/'
 
 # Heroku
@@ -150,10 +152,8 @@ if HEROKU:
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_KEY"]
 
     # Sendgrid
-    """
     EMAIL_HOST = 'smtp.sendgrid.net'
     EMAIL_HOST_USER = os.environ['SENDGRID_USERNAME']
     EMAIL_HOST_PASSWORD = os.environ['SENDGRID_PASSWORD']
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    """

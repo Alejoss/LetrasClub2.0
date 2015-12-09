@@ -101,7 +101,8 @@ def mail_pedir_libro(request_libro, mensaje):
 		% (request_libro.perfil_envio.usuario.username, request_libro.libro.titulo))
 	html_message = render_to_string("pedir_libro_mail.html", {'usuario_receptor_mail': request_libro.perfil_recepcion.usuario.username, 
 				'nombre_usuario_envio': request_libro.perfil_envio.usuario.username, 'mensaje': mensaje,
-				'titulo_libro': request_libro.libro.titulo, 'autor_libro': request_libro.libro.autor, 'telefono': request_libro.telefono})
+				'titulo_libro': request_libro.libro.titulo, 'autor_libro': request_libro.libro.autor, 
+				'telefono': request_libro.perfil_envio.telefono})
 
 	send_mail(
 			subject=titulo,
@@ -127,7 +128,7 @@ def mail_pedir_libro_bcompartida(request_libro, biblioteca_compartida):
 	html_message = render_to_string("pedir_libro_bcompartida_mail.html", {'usuario_receptor_mail': biblioteca_compartida.perfil_admin.usuario.username, 
 				'nombre_usuario_envio': request_libro.perfil_envio.usuario.username, 'biblioteca_compartida_nombre': biblioteca_compartida.nombre,
 				'titulo_libro': request_libro.libro_disponible.libro.titulo, 'autor_libro': request_libro.libro_disponible.libro.autor, 
-				'telefono': request_libro.telefono})
+				'telefono': request_libro.perfil_envio.telefono})
 
 	send_mail(
 			subject=titulo,

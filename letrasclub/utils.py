@@ -134,7 +134,7 @@ def mail_pedir_libro_bcompartida(request_libro, biblioteca_compartida):
 			subject=titulo,
 			message=mensaje_texto,
 			from_email="letras.club@no-reply.com",
-			recipient_list=[request_libro.perfil_recepcion.usuario.email],
+			recipient_list=[request_libro.libro_disponible.biblioteca_compartida.perfil_admin.usuario.email],
 			fail_silently=True,
 			html_message=html_message
 		)	

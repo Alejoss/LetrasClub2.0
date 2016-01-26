@@ -4,8 +4,9 @@ import json
 from django.db.models import Q
 
 from datetime import datetime
+from itertools import chain
 
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,17 +16,19 @@ from django.utils.html import strip_tags
 
 from cities_light.models import City
 from libros.models import LibrosDisponibles, LibrosPrestados, Libro, LibrosRequest, BibliotecaCompartida, \
-                          LibrosBibliotecaCompartida, LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo, \
-                          LibrosRequestBibliotecaCompartida
+    LibrosBibliotecaCompartida, LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo, \
+    LibrosRequestBibliotecaCompartida
 from perfiles.models import Perfil
 from grupos.models import Grupo, UsuariosGrupo
 from notificaciones.models import Notificacion
 
-from forms import FormNuevoLibro, FormPedirLibro, NuevaBibliotecaCompartida, EditarBibliotecaCompartida, FormPrestarLibroBCompartida, \
-                        FormCambiarLibroBCompartida
-from letrasclub.utils import obtener_perfil, definir_fecha_devolucion, obtenerquito, mail_pedir_libro, mail_anunciar_devolucion, \
-                            mail_aceptar_prestamo, obtener_avatar_large, obtener_historial_libros, mail_pedir_libro_bcompartida, \
-                            obtener_muro_bcompartida
+from forms import FormNuevoLibro, FormPedirLibro, NuevaBibliotecaCompartida, EditarBibliotecaCompartida, \
+    FormPrestarLibroBCompartida, \
+    FormCambiarLibroBCompartida
+from letrasclub.utils import obtener_perfil, definir_fecha_devolucion, obtenerquito, mail_pedir_libro, \
+    mail_anunciar_devolucion, \
+    mail_aceptar_prestamo, obtener_avatar_large, obtener_historial_libros, mail_pedir_libro_bcompartida, \
+    obtener_muro_bcompartida
 
 
 def main(request):
@@ -38,7 +41,8 @@ def main(request):
     try:
         notificaciones_main = Notificacion.objects.filter(leida=False, grupo=None)[:20]
     except:
-        notificaciones_main = Notificacion.objects.filter(leida=False, grupo=None)  # Puede que no haya suficientes notificaciones
+        notificaciones_main = Notificacion.objects.filter(leida=False,
+                                                          grupo=None)  # Puede que no haya suficientes notificaciones
 
     context = {'notificaciones_main': notificaciones_main}
     return render(request, template, context)
@@ -55,10 +59,10 @@ def nuevo_libro(request, tipo_dueno, username):
 
     if request.method == "POST":
         form = FormNuevoLibro(request.POST)
-        
-        if form.is_valid():            
+
+        if form.is_valid():
             titulo = form.cleaned_data.get("titulo", "")
-            autor = form.cleaned_data.get("autor", "")            
+            autor = form.cleaned_data.get("autor", "")
             descripcion = form.cleaned_data.get("descripcion", "")
             disponible = form.cleaned_data.get("disponible", "")
 
@@ -78,25 +82,30 @@ def nuevo_libro(request, tipo_dueno, username):
                     Notificacion.objects.compartio_libro_abierto(perfil_usuario, nuevo_libro)
 
                     if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
-                        usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related("grupo")
+                        usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario,
+                                                                          activo=True).select_related("grupo")
                         # crear objetos LibroDisponiblesGrupo
                         for u_grupo in usuarios_grupo_obj:
-                            LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_obj, grupo=u_grupo.grupo)
+                            LibroDisponibleGrupo.objects.create(libro_disponible=libro_disponible_obj,
+                                                                grupo=u_grupo.grupo)
                             Notificacion.objects.compartio_libro_grupo(perfil_usuario, nuevo_libro, u_grupo.grupo)
-                    
+
                     return HttpResponseRedirect(reverse('libros:mi_biblioteca'))
-                
+
                 elif tipo_dueno == "biblioteca_compartida":
                     slug = username  # fea manera de tomar el argumento y usarlo para biblioteca_compartida
                     biblioteca_compartida = BibliotecaCompartida.objects.get(slug=slug)
-                    libro_disponible_obj = LibrosBibliotecaCompartida(biblioteca_compartida=biblioteca_compartida, libro=nuevo_libro)
+                    libro_disponible_obj = LibrosBibliotecaCompartida(biblioteca_compartida=biblioteca_compartida,
+                                                                      libro=nuevo_libro)
                     libro_disponible_obj.save()
 
-                    return HttpResponseRedirect(reverse('libros:biblioteca_compartida', kwargs={'slug_biblioteca_compartida': slug}))
+                    return HttpResponseRedirect(
+                        reverse('libros:biblioteca_compartida', kwargs={'slug_biblioteca_compartida': slug}))
 
             else:
                 # Si no lo marco disponible, crear el objeto LibrosDisponibles pero con abierto_comunidad=False
-                LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_usuario, ciudad=quito, abierto_comunidad=False, disponible=False)
+                LibrosDisponibles.objects.create(libro=nuevo_libro, perfil=perfil_usuario, ciudad=quito,
+                                                 abierto_comunidad=False, disponible=False)
 
                 return HttpResponseRedirect(reverse('libros:mi_biblioteca'))
 
@@ -137,21 +146,34 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
     Recibe como parametro una ciudad, un id de la ciudad y un filtro. 
     renderea un html con los libros ordenados por el filtro
     """
-    
+
     template = "libros/libros_ciudad.html"
     ciudad = City.objects.get(pk=id_ciudad)
-    
+
     perfil_usuario = None
     if request.user.is_authenticated():
         perfil_usuario = obtener_perfil(request.user)
 
     if filtro == "autor":
-        lista_libros_disponibles = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True, prestado=False).order_by("libro__autor")
+        libros_disponibles_personas = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True)
+        libros_disponibles_bcompartidas = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida__ciudad=ciudad, disponible=True)
+        lista_libros_disponibles = sorted(chain(libros_disponibles_personas, libros_disponibles_bcompartidas),
+                                          key=lambda instance: instance.libro.autor)
     else:
-        lista_libros_disponibles = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True, prestado=False)
+        libros_disponibles_personas = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True)
+        libros_disponibles_bcompartidas = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida__ciudad=ciudad, disponible=True)
+        lista_libros_disponibles = sorted(chain(libros_disponibles_personas, libros_disponibles_bcompartidas),
+                                          key=lambda instance: instance.libro.titulo)
 
     bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad, eliminada=False)
-    num_libros_disponibles = LibrosDisponibles.objects.filter(ciudad=ciudad, disponible=True, prestado=False).count()
+    gmap_bcompartidas = []
+    for b in bibliotecas_compartidas:
+        latlong = b.punto_google_maps.split(", ")
+        marker_gmaps = [b.nombre, latlong[0].strip(), latlong[1].strip(), b.slug]
+        gmap_bcompartidas.append(marker_gmaps)
+
+    gmap_bcompartidas = json.dumps(gmap_bcompartidas)
+    num_libros_disponibles = len(lista_libros_disponibles)
 
     # Paginator
     paginator = Paginator(lista_libros_disponibles, 100)
@@ -180,9 +202,10 @@ def libros_ciudad(request, slug_ciudad, id_ciudad, filtro):
         'num_libros_disponibles': num_libros_disponibles,
         'paginator': paginator,
         'bibliotecas_compartidas': bibliotecas_compartidas,
+        'gmap_bcompartidas': gmap_bcompartidas,
         'grupos_abiertos': grupos_abiertos,
         'grupos_usuario': grupos_usuario
-        }
+    }
 
     return render(request, template, context)
 
@@ -215,7 +238,9 @@ def buscar_ciudad(request):
             perfil_usuario.ciudad = ciudad
             perfil_usuario.save()
 
-        return HttpResponseRedirect(reverse('libros:libros_ciudad', kwargs={'slug_ciudad': ciudad.slug, 'id_ciudad': ciudad.id, 'filtro': 'titulo'}))
+        return HttpResponseRedirect(reverse('libros:libros_ciudad',
+                                            kwargs={'slug_ciudad': ciudad.slug, 'id_ciudad': ciudad.id,
+                                                    'filtro': 'titulo'}))
 
     ciudades = City.objects.all()
     nombres_ciudades_importantes = ["Quito", "Guayaquil", "Cuenca"]
@@ -253,32 +278,35 @@ def pedir_libro(request, id_libro_disponible, id_grupo=None):
             libro_request = Libro.objects.get(id=libro_id)
             perfil_envio = obtener_perfil(request.user)
             perfil_recepcion = LibrosDisponibles.objects.get(id=id_libro_disponible).perfil
-            
+
             if id_grupo:
                 grupo = Grupo.objects.get(id=id_grupo)
-                request_libro = LibrosRequest(libro=libro_request, perfil_envio=perfil_envio, perfil_recepcion=perfil_recepcion, 
-                                          mensaje=mensaje, telefono=telefono, email=email, grupo=grupo)
+                request_libro = LibrosRequest(libro=libro_request, perfil_envio=perfil_envio,
+                                              perfil_recepcion=perfil_recepcion,
+                                              mensaje=mensaje, telefono=telefono, email=email, grupo=grupo)
             else:
-                request_libro = LibrosRequest(libro=libro_request, perfil_envio=perfil_envio, perfil_recepcion=perfil_recepcion, 
-                                          mensaje=mensaje, telefono=telefono, email=email)
+                request_libro = LibrosRequest(libro=libro_request, perfil_envio=perfil_envio,
+                                              perfil_recepcion=perfil_recepcion,
+                                              mensaje=mensaje, telefono=telefono, email=email)
             request_libro.save()
 
-            if perfil_recepcion.usuario.email:    
+            if perfil_recepcion.usuario.email:
                 mail_pedir_libro(request_libro, mensaje)
 
             return HttpResponseRedirect(reverse('perfiles:perfil_propio'))
-    
+
     libro_disponible_obj = LibrosDisponibles.objects.get(id=id_libro_disponible)
-    
+
     form_pedir_libro = FormPedirLibro(initial={
         'libro_id': libro_disponible_obj.libro.id,
         'telefono': perfil_usuario.numero_telefono_contacto,
-        'email': request.user.email,        
-        })
+        'email': request.user.email,
+    })
 
     avatar = obtener_avatar_large(libro_disponible_obj.perfil)
 
-    context = {'libro_disponible': libro_disponible_obj, 'form_pedir_libro': form_pedir_libro, 'avatar': avatar, 'id_grupo': id_grupo}
+    context = {'libro_disponible': libro_disponible_obj, 'form_pedir_libro': form_pedir_libro, 'avatar': avatar,
+               'id_grupo': id_grupo}
 
     return render(request, template, context)
 
@@ -294,7 +322,7 @@ def libro_request(request, libro_request_id):
     if request.user != libro_request.perfil_recepcion.usuario:
         raise PermissionDenied
 
-    if request.method == "POST":        
+    if request.method == "POST":
         decision = request.POST.get("prestar", "")
         if decision == "prestado":
             libro_request.aceptado = True
@@ -305,11 +333,13 @@ def libro_request(request, libro_request_id):
 
             fecha_prestamo = datetime.today()
             libro_prestado = LibrosPrestados(libro=libro_request.libro, perfil_receptor=libro_request.perfil_envio,
-                                     perfil_dueno=libro_request.perfil_recepcion, fecha_prestamo=fecha_prestamo, mensaje_aceptacion=mensaje,
-                                     fecha_max_devolucion=fecha_max_devolucion)
+                                             perfil_dueno=libro_request.perfil_recepcion, fecha_prestamo=fecha_prestamo,
+                                             mensaje_aceptacion=mensaje,
+                                             fecha_max_devolucion=fecha_max_devolucion)
             libro_prestado.save()
 
-            libro_disponible_obj = LibrosDisponibles.objects.filter(libro=libro_request.libro, perfil=libro_request.perfil_recepcion).first()
+            libro_disponible_obj = LibrosDisponibles.objects.filter(libro=libro_request.libro,
+                                                                    perfil=libro_request.perfil_recepcion).first()
             libro_disponible_obj.disponible = False
             libro_disponible_obj.prestado = True
 
@@ -317,18 +347,22 @@ def libro_request(request, libro_request_id):
 
             # Si el request fue hecho en un grupo, hay que marcar no activo en ese LibroDisponibleGrupo
             if libro_request.grupo:
-                if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible_obj, grupo=libro_request.grupo).exists():
-                    libro_disponible_grupo = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible_obj, grupo=libro_request.grupo).first()
+                if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible_obj,
+                                                       grupo=libro_request.grupo).exists():
+                    libro_disponible_grupo = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible_obj,
+                                                                                 grupo=libro_request.grupo).first()
                     libro_disponible_grupo.activo = False
                     libro_disponible_grupo.save()
 
             # Crear notificacion y si es necesario, notificacion en el grupo
             if libro_request.grupo:
-                Notificacion.objects.presto_libro(libro_prestado.perfil_dueno, libro_prestado.perfil_receptor, libro_prestado.libro, libro_request.grupo)
+                Notificacion.objects.presto_libro(libro_prestado.perfil_dueno, libro_prestado.perfil_receptor,
+                                                  libro_prestado.libro, libro_request.grupo)
             else:
-                Notificacion.objects.presto_libro(libro_prestado.perfil_dueno, libro_prestado.perfil_receptor, libro_prestado.libro)
+                Notificacion.objects.presto_libro(libro_prestado.perfil_dueno, libro_prestado.perfil_receptor,
+                                                  libro_prestado.libro)
 
-            if libro_prestado.perfil_receptor.usuario.email:                
+            if libro_prestado.perfil_receptor.usuario.email:
                 mail_aceptar_prestamo(libro_prestado)
 
             return HttpResponseRedirect(reverse('libros:mi_biblioteca'))
@@ -347,9 +381,10 @@ def libro_request(request, libro_request_id):
     historial_libros = obtener_historial_libros(perfil_request)
     avatar = obtener_avatar_large(perfil_request)
 
-    ldisponibles_perfil_request = LibrosDisponibles.objects.filter(perfil=perfil_request, disponible=True, prestado=False).count()
+    ldisponibles_perfil_request = LibrosDisponibles.objects.filter(perfil=perfil_request, disponible=True,
+                                                                   prestado=False).count()
 
-    context = {'libro_request': libro_request, 'avatar': avatar, 'historial_libros': historial_libros, 
+    context = {'libro_request': libro_request, 'avatar': avatar, 'historial_libros': historial_libros,
                'ldisponibles_perfil_request': ldisponibles_perfil_request}
 
     return render(request, template, context)
@@ -384,13 +419,14 @@ def nueva_biblioteca_compartida(request, slug_ciudad, id_ciudad):
         form = NuevaBibliotecaCompartida(request.POST)
 
         if form.is_valid():
-            
             biblioteca_compartida = form.save(commit=False)
             biblioteca_compartida.perfil_admin = obtener_perfil(request.user)
             biblioteca_compartida.ciudad = ciudad
             biblioteca_compartida.save()
 
-            return HttpResponseRedirect(reverse('libros:libros_ciudad', kwargs={'slug_ciudad': ciudad.slug, 'id_ciudad': ciudad.id, 'filtro': 'titulo'}))
+            return HttpResponseRedirect(reverse('libros:libros_ciudad',
+                                                kwargs={'slug_ciudad': ciudad.slug, 'id_ciudad': ciudad.id,
+                                                        'filtro': 'titulo'}))
 
     else:
         form = NuevaBibliotecaCompartida()
@@ -403,19 +439,20 @@ def nueva_biblioteca_compartida(request, slug_ciudad, id_ciudad):
 def biblioteca_compartida(request, slug_biblioteca_compartida):
     """
     Esta view tampoco está en uso, muestra los libros disponibles en una biblioteca compartida
-    """    
- 
+    """
+
     template = "libros/biblioteca_compartida.html"
 
     biblioteca_compartida = BibliotecaCompartida.objects.get(slug=slug_biblioteca_compartida)
     usuario_es_administrador = False
-    
+
     if request.user.is_authenticated():
         perfil = obtener_perfil(request.user)
         if biblioteca_compartida.perfil_admin == perfil:
             usuario_es_administrador = True
 
-    libros_bcompartida = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, disponible=True, prestado=False)
+    libros_bcompartida = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida,
+                                                                   disponible=True, prestado=False)
     num_libros_bcompartida = libros_bcompartida.count()
 
     punto_gmaps = None
@@ -432,10 +469,28 @@ def biblioteca_compartida(request, slug_biblioteca_compartida):
             actividad.append((act, "notificacion"))
 
     context = {'biblioteca_compartida': biblioteca_compartida, 'usuario_es_administrador': usuario_es_administrador,
-               'libros_bcompartida': libros_bcompartida, 'num_libros_bcompartida': num_libros_bcompartida, 
+               'libros_bcompartida': libros_bcompartida, 'num_libros_bcompartida': num_libros_bcompartida,
                'punto_gmaps': punto_gmaps, 'actividad': actividad}
 
     return render(request, template, context)
+
+
+def cinco_libros_bcompartida(request):
+    if request.is_ajax():
+        biblioteca_slug = request.GET.get("bcompartida_slug")
+        biblioteca_compartida = get_object_or_404(BibliotecaCompartida, slug=biblioteca_slug)
+        libros = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, disponible=True,
+                                                           eliminado=False, prestado=False).select_related('libro')[:5]
+        lista_libros = [l.libro.titulo for l in libros]
+        bcompartida_url = reverse('libros:biblioteca_compartida',
+                                       kwargs={'slug_biblioteca_compartida': unicode(biblioteca_compartida.slug)})
+        libros_json = json.dumps(
+                {'libros': lista_libros, 'datos_bcompartida': [bcompartida_url, biblioteca_compartida.nombre]})
+
+        return HttpResponse(libros_json)
+
+    else:
+        return HttpResponse(status=400)
 
 
 @login_required
@@ -448,7 +503,7 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
 
     biblioteca_compartida = BibliotecaCompartida.objects.get(slug=slug_biblioteca_compartida)
 
-    perfil_usuario = obtener_perfil(request.user)    
+    perfil_usuario = obtener_perfil(request.user)
 
     if biblioteca_compartida.perfil_admin != perfil_usuario:
         raise PermissionDenied
@@ -461,17 +516,17 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
         if form.is_valid():
             form.save()
 
-            return HttpResponseRedirect(reverse('libros:biblioteca_compartida', 
-                kwargs={'slug_biblioteca_compartida': biblioteca_compartida.slug}))
+            return HttpResponseRedirect(reverse('libros:biblioteca_compartida',
+                                                kwargs={'slug_biblioteca_compartida': biblioteca_compartida.slug}))
 
     else:
         form = EditarBibliotecaCompartida(initial={
-                'punto_google_maps': biblioteca_compartida.punto_google_maps,
-                'nombre': biblioteca_compartida.nombre,
-                'direccion': biblioteca_compartida.direccion,
-                'imagen': biblioteca_compartida.imagen,
-                'direccion_web': biblioteca_compartida.direccion_web
-            })
+            'punto_google_maps': biblioteca_compartida.punto_google_maps,
+            'nombre': biblioteca_compartida.nombre,
+            'direccion': biblioteca_compartida.direccion,
+            'imagen': biblioteca_compartida.imagen,
+            'direccion_web': biblioteca_compartida.direccion_web
+        })
 
     context = {'biblioteca_compartida': biblioteca_compartida, 'form': form}
 
@@ -485,27 +540,35 @@ def editar_libros_bcompartida(request, slug_biblioteca_compartida):
     """
 
     template = "libros/editar_libros_bcompartida.html"
-    
+
     biblioteca_compartida = BibliotecaCompartida.objects.get(slug=slug_biblioteca_compartida)
 
-    libros_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, disponible=True, prestado=False, eliminado=False)
-    libros_no_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, disponible=False, 
-        prestado=False, eliminado=False)
-    libros_prestados = LibrosPrestadosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, fecha_devolucion=None)
+    libros_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida,
+                                                                   disponible=True, prestado=False, eliminado=False)
+    libros_no_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida,
+                                                                      disponible=False,
+                                                                      prestado=False, eliminado=False)
+    libros_prestados = LibrosPrestadosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida,
+                                                                          fecha_devolucion=None)
 
     libros_requests = libros_no_retirados = False
-    if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=biblioteca_compartida, aceptado=False, eliminado=False).exists():
-        libros_requests = LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=biblioteca_compartida, 
+    if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=biblioteca_compartida,
+                                                        aceptado=False, eliminado=False).exists():
+        libros_requests = LibrosRequestBibliotecaCompartida.objects.filter(
+            libro_disponible__biblioteca_compartida=biblioteca_compartida,
             aceptado=False, eliminado=False).select_related("libro_disponible")
 
-    if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=biblioteca_compartida, aceptado=True, 
-            retirado=False, eliminado=False).exists():
-        libros_no_retirados = LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=biblioteca_compartida, 
+    if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=biblioteca_compartida,
+                                                        aceptado=True,
+                                                        retirado=False, eliminado=False).exists():
+        libros_no_retirados = LibrosRequestBibliotecaCompartida.objects.filter(
+            libro_disponible__biblioteca_compartida=biblioteca_compartida,
             aceptado=True, retirado=False).select_related("libro_disponible")
 
-    context = {'biblioteca_compartida': biblioteca_compartida, 'libros_prestados': libros_prestados, 'libros_disponibles': libros_disponibles, 
-            'libros_no_disponibles': libros_no_disponibles, 'libros_requests': libros_requests,
-            'libros_no_retirados': libros_no_retirados}
+    context = {'biblioteca_compartida': biblioteca_compartida, 'libros_prestados': libros_prestados,
+               'libros_disponibles': libros_disponibles,
+               'libros_no_disponibles': libros_no_disponibles, 'libros_requests': libros_requests,
+               'libros_no_retirados': libros_no_retirados}
 
     return render(request, template, context)
 
@@ -518,30 +581,34 @@ def prestar_libro_bcompartida(request, id_libro_compartido):
 
     template = "libros/prestar_libro_bcompartida.html"
 
-    libro_disponible_obj = LibrosBibliotecaCompartida.objects.select_related('biblioteca_compartida').get(id=id_libro_compartido)
+    libro_disponible_obj = LibrosBibliotecaCompartida.objects.select_related('biblioteca_compartida').get(
+        id=id_libro_compartido)
 
     if request.method == "POST":
         form = FormPrestarLibroBCompartida(request.POST)
 
         if form.is_valid():
-            username = form.cleaned_data.get('usuario', '')            
-            
+            username = form.cleaned_data.get('usuario', '')
+
             # crear LibrosPrestadosBibliotecaCompartida object
             perfil_usuario_prestamo = Perfil.objects.get(usuario__username=username)
-            libro_prestado = LibrosPrestadosBibliotecaCompartida(libro=libro_disponible_obj.libro, perfil_prestamo=perfil_usuario_prestamo, 
+            libro_prestado = LibrosPrestadosBibliotecaCompartida(libro=libro_disponible_obj.libro,
+                                                                 perfil_prestamo=perfil_usuario_prestamo,
                                                                  biblioteca_compartida=libro_disponible_obj.biblioteca_compartida)
             libro_prestado.save()
 
             # poner no disponible a LibrosBibliotecaCompartida object
             libro_disponible_obj.disponible = False
             libro_disponible_obj.prestado = True
-            libro_disponible_obj.save()            
+            libro_disponible_obj.save()
 
             # Crear notificacion
-            Notificacion.objects.bcompartida_presto(libro_disponible_obj.biblioteca_compartida, perfil_usuario_prestamo, libro_disponible_obj.libro)
+            Notificacion.objects.bcompartida_presto(libro_disponible_obj.biblioteca_compartida, perfil_usuario_prestamo,
+                                                    libro_disponible_obj.libro)
 
-            return HttpResponseRedirect(reverse('libros:editar_libros_bcompartida', 
-                kwargs={'slug_biblioteca_compartida': libro_disponible_obj.biblioteca_compartida.slug}))
+            return HttpResponseRedirect(reverse('libros:editar_libros_bcompartida',
+                                                kwargs={
+                                                    'slug_biblioteca_compartida': libro_disponible_obj.biblioteca_compartida.slug}))
 
     else:
         form = FormPrestarLibroBCompartida()
@@ -550,7 +617,8 @@ def prestar_libro_bcompartida(request, id_libro_compartido):
     perfiles_obj = Perfil.objects.filter(ciudad=ciudad).select_related("usuario")
     usernames_autocomplete = [perfil.usuario.username for perfil in perfiles_obj]
 
-    context = {'form': form, 'libro_compartido': libro_disponible_obj, 'usernames_autocomplete': json.dumps(usernames_autocomplete)}
+    context = {'form': form, 'libro_compartido': libro_disponible_obj,
+               'usernames_autocomplete': json.dumps(usernames_autocomplete)}
 
     return render(request, template, context)
 
@@ -561,7 +629,7 @@ def cambiar_libro_bcompartida(request, id_biblioteca_compartida, id_libro_compar
     View rederiza y procesa el form para cambiar libro por otro en una biblioteca compartida.
     """
     template = "libros/cambiar_libro_bcompartida.html"
-    
+
     biblioteca_compartida = BibliotecaCompartida.objects.get(id=id_biblioteca_compartida)
 
     libro_disponible = None
@@ -570,7 +638,7 @@ def cambiar_libro_bcompartida(request, id_biblioteca_compartida, id_libro_compar
 
     if request.method == "POST":
         form = FormCambiarLibroBCompartida(request.POST)
-        if form.is_valid():        
+        if form.is_valid():
             id_libro_cambiado = form.cleaned_data.get("id_libro_cambiado")
             titulo_nuevo_libro = form.cleaned_data.get("titulo_recibido")
             autor_nuevo_libro = form.cleaned_data.get("autor_recibido")
@@ -588,7 +656,8 @@ def cambiar_libro_bcompartida(request, id_biblioteca_compartida, id_libro_compar
             if username_cambiar:
                 if Perfil.objects.filter(usuario__username=username_cambiar).exists():
                     usuario_cambiar = Perfil.objects.get(usuario__username=username_cambiar)
-                    Notificacion.objects.bcompartida_cambio(biblioteca_compartida, libro_cambiado.libro, nuevo_libro, usuario_cambiar)
+                    Notificacion.objects.bcompartida_cambio(biblioteca_compartida, libro_cambiado.libro, nuevo_libro,
+                                                            usuario_cambiar)
             else:
                 Notificacion.objects.bcompartida_cambio(biblioteca_compartida, libro_cambiado.libro, nuevo_libro)
 
@@ -596,14 +665,15 @@ def cambiar_libro_bcompartida(request, id_biblioteca_compartida, id_libro_compar
 
     else:
         if id_libro_compartido:
-            form = FormCambiarLibroBCompartida(initial={                
+            form = FormCambiarLibroBCompartida(initial={
                 'titulo_inicial': libro_disponible.libro.titulo,
                 'id_libro_cambiado': libro_disponible.id
             })
         else:
             form = FormCambiarLibroBCompartida()
 
-    libros_bcompartida = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, disponible=True).select_related("libro")
+    libros_bcompartida = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida,
+                                                                   disponible=True).select_related("libro")
     titulos_autocomplete = {}
     for libro_bc in libros_bcompartida:
         titulos_autocomplete[libro_bc.libro.titulo] = libro_bc.id
@@ -611,8 +681,10 @@ def cambiar_libro_bcompartida(request, id_biblioteca_compartida, id_libro_compar
     usuarios_autocomplete_obj = Perfil.objects.filter(ciudad=biblioteca_compartida.ciudad).select_related("usuario")
     usernames_autocomplete = [perfil.usuario.username for perfil in usuarios_autocomplete_obj]
 
-    context = {'form': form, 'libro_disponible': libro_disponible, 'titulos_autocomplete': json.dumps(titulos_autocomplete), 
-        'biblioteca_compartida': biblioteca_compartida, 'usernames_autocomplete': json.dumps(usernames_autocomplete)}
+    context = {'form': form, 'libro_disponible': libro_disponible,
+               'titulos_autocomplete': json.dumps(titulos_autocomplete),
+               'biblioteca_compartida': biblioteca_compartida,
+               'usernames_autocomplete': json.dumps(usernames_autocomplete)}
 
     return render(request, template, context)
 
@@ -651,7 +723,7 @@ def marcar_disponible(request):
     Ajax request, marca el libro como disponible
     """
 
-    if request.is_ajax():        
+    if request.is_ajax():
         # !!! Notificacion??
 
         id_libro = request.POST.get('id_libro', '')
@@ -697,17 +769,19 @@ def marcar_devuelto(request):
             libro_prestado.fecha_devolucion = fecha_devolucion
             libro_prestado.save()
 
-            libro_no_disponible = LibrosDisponibles.objects.filter(libro=libro_prestado.libro, perfil=libro_prestado.perfil_dueno).first()
+            libro_no_disponible = LibrosDisponibles.objects.filter(libro=libro_prestado.libro,
+                                                                   perfil=libro_prestado.perfil_dueno).first()
             libro_no_disponible.disponible = True
             libro_no_disponible.prestado = False
             libro_no_disponible.save()
 
-        elif tipo == "biblioteca":            
+        elif tipo == "biblioteca":
             libro_prestado = get_object_or_404(LibrosPrestadosBibliotecaCompartida, id=id_libro_prestado)
             libro_prestado.fecha_devolucion = fecha_devolucion
             libro_prestado.save()
 
-            libro_no_disponible = LibrosBibliotecaCompartida.objects.filter(libro=libro_prestado.libro, biblioteca_compartida=libro_prestado.biblioteca_compartida).first()
+            libro_no_disponible = LibrosBibliotecaCompartida.objects.filter(libro=libro_prestado.libro,
+                                                                            biblioteca_compartida=libro_prestado.biblioteca_compartida).first()
             libro_no_disponible.disponible = True
             libro_no_disponible.prestado = False
             libro_no_disponible.save()
@@ -729,7 +803,7 @@ def anunciar_devolucion(request):
         id_libro_prestado = request.POST.get("id_libro_prestado")
         tipo = request.POST.get("tipo", "")
         perfil_usuario = obtener_perfil(request.user)
-        
+
         if tipo == "bcompartida":
             libro_prestado = LibrosPrestadosBibliotecaCompartida.objects.get(id=id_libro_prestado)
 
@@ -750,12 +824,12 @@ def anunciar_devolucion(request):
                 libro_prestado.receptor_anuncio_devolucion = True
                 libro_prestado.save()
 
-                if libro_prestado.perfil_dueno.usuario.email:       
+                if libro_prestado.perfil_dueno.usuario.email:
                     mail_anunciar_devolucion(libro_prestado)
 
         return HttpResponseRedirect(reverse('perfiles:perfil_propio'))
     else:
-        raise PermissionDenied 
+        raise PermissionDenied
 
 
 @login_required
@@ -798,14 +872,14 @@ def cancelar_pedido_bcompartida(request):
             return HttpResponse("request de libro cancelado", status=200)
     else:
         raise PermissionDenied
-        
+
 
 def buscar(request, slug_ciudad, filtro):
     """
     busca un libro disponible
     """
     template = 'libros/busqueda.html'
-    
+
     query_string = ""
     libros_disponibles = None
 
@@ -813,9 +887,11 @@ def buscar(request, slug_ciudad, filtro):
         query_string = request.GET['q']
         if query_string:
             if filtro == "autor":
-                libros_disponibles = LibrosDisponibles.objects.filter(libro__autor__icontains=query_string, disponible=True)
+                libros_disponibles = LibrosDisponibles.objects.filter(libro__autor__icontains=query_string,
+                                                                      disponible=True)
             else:
-                libros_disponibles = LibrosDisponibles.objects.filter(libro__titulo__icontains=query_string, disponible=True)
+                libros_disponibles = LibrosDisponibles.objects.filter(libro__titulo__icontains=query_string,
+                                                                      disponible=True)
 
         context = {'query_string': query_string,
                    'libros_disponibles': libros_disponibles,
@@ -868,27 +944,28 @@ def cambiar_dueno_libros(request):
 
 # Ajax Calls
 def info_libro_grupos_ajax(request):
-        # Responde con los grupos en que está compartido el libro y si está compartido con todos
-        if request.is_ajax():
-            id_libro_disponible = request.GET.get('id_libro_disponible')
-            libro_disponible = LibrosDisponibles.objects.get(id=id_libro_disponible)
+    # Responde con los grupos en que está compartido el libro y si está compartido con todos
+    if request.is_ajax():
+        id_libro_disponible = request.GET.get('id_libro_disponible')
+        libro_disponible = LibrosDisponibles.objects.get(id=id_libro_disponible)
 
-            data_response = [libro_disponible.abierto_comunidad]
-            
-            grupos = {}
-            grupos_libro = None
-            if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible).exists():
-                # Revisa si el libro esta prestado en algun Grupo en especifico
-                grupos_libro = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible, activo=True).select_related('grupo')
-                for g in grupos_libro:
-                    grupos[g.grupo.id] = [g.grupo.nombre]
-            
-            data_response.append(grupos)            
+        data_response = [libro_disponible.abierto_comunidad]
 
-            return HttpResponse(json.dumps(data_response), status=200)
+        grupos = {}
+        grupos_libro = None
+        if LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible).exists():
+            # Revisa si el libro esta prestado en algun Grupo en especifico
+            grupos_libro = LibroDisponibleGrupo.objects.filter(libro_disponible=libro_disponible,
+                                                               activo=True).select_related('grupo')
+            for g in grupos_libro:
+                grupos[g.grupo.id] = [g.grupo.nombre]
 
-        else:
-            return HttpResponse(status=400)
+        data_response.append(grupos)
+
+        return HttpResponse(json.dumps(data_response), status=200)
+
+    else:
+        return HttpResponse(status=400)
 
 
 def compartir_con_grupo_ajax(request):
@@ -917,7 +994,6 @@ def compartir_con_grupo_ajax(request):
 
 
 def no_compartir_grupo_ajax(request):
-
     if request.is_ajax():
         grupo_id = request.POST.get('grupo_id')
         libro_disp_id = request.POST.get('libro_disp_id')
@@ -925,7 +1001,8 @@ def no_compartir_grupo_ajax(request):
         grupo = Grupo.objects.get(id=grupo_id)
         libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
 
-        update = LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible).update(activo=False)
+        update = LibroDisponibleGrupo.objects.filter(grupo=grupo, libro_disponible=libro_disponible).update(
+            activo=False)
         # update guarda el numero de fields que fueron hechos update, posiblemente mandar una señal 
         # o un loggin si es mayor a 1, significa que hay datos duplicados
 
@@ -937,7 +1014,6 @@ def no_compartir_grupo_ajax(request):
 
 
 def compartir_todos_ajax(request):
-
     if request.is_ajax():
         libro_disp_id = request.POST.get('libro_disp_id', "")
         libro_disponible = LibrosDisponibles.objects.get(id=libro_disp_id)
@@ -951,8 +1027,9 @@ def compartir_todos_ajax(request):
             # crear notificaciones
             Notificacion.objects.compartio_libro_abierto(perfil_usuario, libro_disponible.libro)
 
-            if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():                
-                usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related("grupo")
+            if UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).exists():
+                usuarios_grupo_obj = UsuariosGrupo.objects.filter(perfil=perfil_usuario, activo=True).select_related(
+                    "grupo")
                 for u_grupo in usuarios_grupo_obj:
                     Notificacion.objects.compartio_libro_grupo(perfil_usuario, libro_disponible.libro, u_grupo.grupo)
 
@@ -971,14 +1048,15 @@ def compartir_todos_ajax(request):
 
 
 def pedir_bcompartida_ajax(request):
-
     if request.is_ajax():
 
         if request.method == "POST":
             id_libro_disp = int(request.POST.get('id_libro_disp', ""))
-            libro_disponible = LibrosBibliotecaCompartida.objects.select_related("biblioteca_compartida").get(id=id_libro_disp)
+            libro_disponible = LibrosBibliotecaCompartida.objects.select_related("biblioteca_compartida").get(
+                id=id_libro_disp)
             perfil_usuario = obtener_perfil(request.user)
-            request_libro = LibrosRequestBibliotecaCompartida.objects.create(libro_disponible=libro_disponible, perfil_envio=perfil_usuario)
+            request_libro = LibrosRequestBibliotecaCompartida.objects.create(libro_disponible=libro_disponible,
+                                                                             perfil_envio=perfil_usuario)
 
             # enviar mail a admin de la biblioteca
             mail_pedir_libro_bcompartida(request_libro, libro_disponible.biblioteca_compartida)
@@ -1004,7 +1082,8 @@ def request_existente_bcompartida_ajax(request):
         libro_disponible = LibrosBibliotecaCompartida.objects.get(id=id_libro_disp)
         perfil_usuario = obtener_perfil(request.user)
 
-        if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible=libro_disponible, perfil_envio=perfil_usuario, aceptado=False).exists():
+        if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible=libro_disponible,
+                                                            perfil_envio=perfil_usuario, aceptado=False).exists():
             return HttpResponse(status=403)
         else:
             return HttpResponse(status=200)
@@ -1065,16 +1144,18 @@ def retiro_libro_bcompartida_ajax(request):
 
         id_request = int(request.POST.get('id_request', ""))
 
-        libro_request = LibrosRequestBibliotecaCompartida.objects.filter(id=id_request).select_related("libro_disponible").first()
+        libro_request = LibrosRequestBibliotecaCompartida.objects.filter(id=id_request).select_related(
+            "libro_disponible").first()
         libro_request.retirado = True
         libro_request.save()
 
-        LibrosPrestadosBibliotecaCompartida.objects.create(libro=libro_request.libro_disponible.libro, perfil_prestamo=libro_request.perfil_envio,
-            biblioteca_compartida=libro_request.libro_disponible.biblioteca_compartida)
+        LibrosPrestadosBibliotecaCompartida.objects.create(libro=libro_request.libro_disponible.libro,
+                                                           perfil_prestamo=libro_request.perfil_envio,
+                                                           biblioteca_compartida=libro_request.libro_disponible.biblioteca_compartida)
 
         # crear notificacion
-        Notificacion.objects.bcompartida_presto(libro_request.libro_disponible.biblioteca_compartida, 
-            libro_request.perfil_envio, libro_request.libro_disponible.libro)
+        Notificacion.objects.bcompartida_presto(libro_request.libro_disponible.biblioteca_compartida,
+                                                libro_request.perfil_envio, libro_request.libro_disponible.libro)
 
         return HttpResponse(status=200)
 
@@ -1083,7 +1164,6 @@ def retiro_libro_bcompartida_ajax(request):
 
 
 def cheat_libros(request):
-    
     import requests as r
 
     datos = r.get("https://safe-scrubland-1751.herokuapp.com/libros/cheat_disponibles/")
@@ -1095,10 +1175,11 @@ def cheat_libros(request):
         libro, creado = Libro.objects.get_or_create(titulo=k, autor=v[2], descripcion=v[3])
         if v[0]:
             casa_ku = BibliotecaCompartida.objects.get(id=1)
-            ldc, creadoldc = LibrosBibliotecaCompartida.objects.get_or_create(libro=libro, biblioteca_compartida=casa_ku)
+            ldc, creadoldc = LibrosBibliotecaCompartida.objects.get_or_create(libro=libro,
+                                                                              biblioteca_compartida=casa_ku)
         else:
             try:
-                perfil = Perfil.objects.get(usuario__username=v[1])         
+                perfil = Perfil.objects.get(usuario__username=v[1])
                 ld, creadold = LibrosDisponibles.objects.get_or_create(libro=libro, perfil=perfil, ciudad=quito)
             except:
                 print "PERFIL ERROR: %s" % (v[1])

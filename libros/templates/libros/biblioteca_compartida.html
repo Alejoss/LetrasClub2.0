@@ -11,7 +11,7 @@
 -->
 <div class = "row">
 	<div class = "col-md-12">
-	<div id="gmap" class="grayscale"><!-- map container --></div>
+	<div id="gmap"><!-- map container --></div>
 	<script type="text/javascript">
 		var	$googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}"),
 			$googlemap_longitude	= parseFloat("{{punto_gmaps.1|safe}}"),
@@ -115,9 +115,13 @@
 			<div class="box-content text-center">	
 				<img class="img-responsive thumbnail" src="{{biblioteca_compartida.imagen}}" alt=""/>
 				<h3>
-					<span>{{biblioteca_compartida.nombre}}</span> 
-					<a target="_blank" title="{{biblioteca_compartida.direccion_web}}" href="{{biblioteca_compartida.direccion_web}}">
-					<i class="fa fa-external-link"></i> <br/></a>						
+					<span>{{biblioteca_compartida.nombre}}</span>
+                    {% if biblioteca_compartida.direccion_web %}
+                        <br>
+                            <a target="_blank" title="{{biblioteca_compartida.direccion_web}}" href="{{biblioteca_compartida.direccion_web}}">
+                            <i class="fa fa-external-link"></i> <br/></a>
+                        </br>
+                    {% endif %}
 					<small>{{biblioteca_compartida.ciudad.name}}</small>
 				</h3>		
 			</div>

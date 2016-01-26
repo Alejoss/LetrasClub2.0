@@ -48,6 +48,7 @@ urlpatterns = [
     url(r'^marcar_no_disponible/$', views.marcar_no_disponible),
     url(r'^marcar_disponible/$', views.marcar_disponible),
     url(r'^marcar_devuelto/$', views.marcar_devuelto),
+    url(r'^cinco_libros_bcompartida/$', views.cinco_libros_bcompartida, name='cinco_bcompartida'),
 
     # Mi Biblioteca Ajax calls
     url(r'^info_grupos_libro_ajax/$', views.info_libro_grupos_ajax, name="info_grupos_libro"),

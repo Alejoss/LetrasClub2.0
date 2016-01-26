@@ -35,6 +35,8 @@
 </div>
 <!-- /Top Nav -->
 
+<div id="mapa_ciudad" data-url-cincobcompartida="{% url 'libros:cinco_bcompartida' %}" class=""><!-- map container --></div>
+
 <div class = "col-md-8">
 	<!--
 	<a href="{% url 'libros:buscar_ciudad' %}" class="pull-right">Buscar libros en otra ciudad <i class="fa fa-external-link-square"></i></a>
@@ -89,16 +91,26 @@
 			<div class="row">
 				<div class="col-md-9 col-sm-9"><!-- left text -->
 					<h4><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}} </h4>
-					<a href="{% url 'perfiles:perfil_usuario' l.perfil.usuario.username %}">
-						<i class = "fa fa-user"></i>{{l.perfil.usuario.username}}
-					</a>
-				</div><!-- /left text -->
-				
-				{% if l.perfil != perfil_usuario and user.is_authenticated %}
-				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-					<a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-default btn-lg">Pedir Libro</a>
-				</div><!-- /right btn -->
-				{% endif %}
+
+                    {% if l.biblioteca_compartida %}
+                        <a href="{% url 'libros:biblioteca_compartida' l.biblioteca_compartida.slug %} ">{{ l.biblioteca_compartida.nombre }}</a>
+                    {% else %}
+                        <a href="{% url 'perfiles:perfil_usuario' l.perfil.usuario.username %}">
+                            <i class = "fa fa-user"></i>{{l.perfil.usuario.username}}
+                        </a>
+                    {% endif %}
+				</div>
+
+                {% if l.biblioteca_compartida %}
+
+                {% else %}
+                    {% if l.perfil != perfil_usuario and user.is_authenticated %}
+                    <!-- Si el usuario es dueño de su libro no puede pedirlo prestado -->
+                    <div class="col-md-3 col-sm-3 text-right">
+                        <a href="{% url 'libros:pedir_libro' l.id %}" rel="nofollow" target="_blank" class="btn btn-default btn-lg">Pedir Libro</a>
+                    </div>
+                    {% endif %}
+                {% endif %}
 			</div>
 		</div>
 	{% endfor %}
@@ -178,18 +190,11 @@
 	<p class ="well">
 	Actualmente hay <strong>{{num_libros_disponibles}}</strong> libros compartidos en {{ciudad.name}}.
 
-	{% if user.is_authenticated %}
-		<a href="{% url 'libros:nuevo_libro' 'perfil' user.username %}">Comparte</a>
-	{% else %}
-		<a href="{% url 'libros:main' %}">Comparte</a>
-	{% endif %} un libro tuyo y ten acceso a todos ellos.
 	</p>
 
-	<p class ="well">
-	<i class ="fa fa-info-circle"></i>
-	Los libros compartidos son libros <strong>físicos</strong> (no digitales) que los miembros de la comunidad han aceptado prestar. <br>
-	Para <strong>compartir</strong> un libro solamente necesitas escribir el título y el autor. <br> 
-	Para <strong>pedir prestado</strong> un libro, elige el libro y da click en Pedir Libro. El dueño del libro podrá decidir si prestarte basándose en la información de tu perfil: ¿Has prestado libros? ¿Has devuelto los libros que te han prestado?. <i class ="fa fa-thumbs-o-up"></i>
+	<p class ="well alert-info">
+        <i class ="fa fa-info-circle"></i>
+        Los libros compartidos son libros <strong>físicos</strong> (no digitales) que los miembros de la comunidad han aceptado cambiar o prestar. <br>
 	</p>
 
 	<!-- facebook -->
@@ -197,3 +202,96 @@
 	
 </div>
 {% endblock content %}
+
+
+{% block extra_javascript %}
+    <script src="http://maps.googleapis.com/maps/api/js?v=3"></script>
+    <script>
+
+        var gmaps_bcompartidas = JSON.parse('{{ gmap_bcompartidas|safe }}');
+
+        markers = [];
+        $.each(gmaps_bcompartidas, function(index, value){
+            marker = [value[0], value[1], value[2], value[3]];
+            markers.push(marker);
+        });
+
+        var map_center = new google.maps.LatLng(-0.179041, -78.499211);
+
+        var map_options = {
+            zoom: 13,
+            center: map_center,
+            disableDefaultUI: false,
+            navigationControl: false,
+            mapTypeControl: false,
+            scrollwheel: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('mapa_ciudad'), map_options);
+            marker_objects = [];
+
+            function AutoCenter() {
+                var bounds = new google.maps.LatLngBounds();
+                $.each(marker_objects, function (index, marker) {
+                    bounds.extend(marker.position)
+                });
+                map.fitBounds(bounds);
+            }
+
+            function sumarMensaje(marker, biblioteca_slug) {
+                var infowindow = new google.maps.InfoWindow();
+                var contenido_infowindow = "Biblioteca Compartida";
+
+                marker.addListener('click', function () {
+                    var url_target = $("#mapa_ciudad").data("url-cincobcompartida");
+
+                    $.ajax({
+                        method: "GET",
+                        url: url_target,
+                        data: {'bcompartida_slug': biblioteca_slug},
+                        success: function(response){
+                            var respuesta = JSON.parse(response);
+                            console.log(respuesta);
+                            contenido_infowindow = '<div> <ul>';
+                            $.each(respuesta.libros, function(key, value){
+                                contenido_infowindow += '<li>' + value + '</li>';
+                            });
+                            contenido_infowindow += '</ul>';
+                            var datos_bcompartida = respuesta.datos_bcompartida;
+                            contenido_infowindow += '<a class = "pull-right" href='+datos_bcompartida[0]+'>'+datos_bcompartida[1]+'</a>';
+
+                            infowindow.setContent(contenido_infowindow);
+                            infowindow.open(map, marker);
+                        },
+                        error: function(response){
+                            console.log(response);
+                        }
+                    });
+                });
+            }
+
+            for (i = 0; i < markers.length; i++) {
+                console.log(markers[i]);
+                marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(markers[i][1], markers[i][2]),
+                    map: map,
+                    title: markers[i][0]
+                });
+
+                sumarMensaje(marker, markers[i][3]);
+                marker_objects.push(marker);
+            }
+
+            AutoCenter();
+            }
+
+            /*
+
+            */
+
+        initMap();
+
+    </script>
+{% endblock extra_javascript %}

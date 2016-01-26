@@ -16,7 +16,7 @@ SECRET_KEY = os.environ['LIBROS_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 HEROKU = True
-LOCAL_DB = True
+HEROKU_DB = True
 AMAZON_S3 = True
 
 ALLOWED_HOSTS = ["*"]
@@ -89,7 +89,7 @@ SOCIAL_AUTH_PIPELINE = (
 
 DATABASES = {}
 
-if not LOCAL_DB:  
+if HEROKU_DB:
     DATABASES['default'] = dj_database_url.config()
 
 else:

@@ -480,7 +480,7 @@ def cinco_libros_bcompartida(request):
         biblioteca_compartida = get_object_or_404(BibliotecaCompartida, slug=biblioteca_slug)
         libros = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=biblioteca_compartida, disponible=True,
                                                            eliminado=False, prestado=False).select_related('libro')[:5]
-        lista_libros = [l.libro.titulo for l in libros]
+        lista_libros = [(l.libro.titulo).title() for l in libros]
         bcompartida_url = reverse('libros:biblioteca_compartida',
                                        kwargs={'slug_biblioteca_compartida': unicode(biblioteca_compartida.slug)})
         libros_json = json.dumps(

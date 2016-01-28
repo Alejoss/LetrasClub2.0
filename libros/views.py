@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
 import json
-from django.db.models import Q
 
 from datetime import datetime
 from itertools import chain
@@ -13,6 +11,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.html import strip_tags
+from django.views.decorators.csrf import csrf_exempt
 
 from cities_light.models import City
 from libros.models import LibrosDisponibles, LibrosPrestados, Libro, LibrosRequest, BibliotecaCompartida, \
@@ -1185,3 +1184,61 @@ def cheat_libros(request):
                 print "PERFIL ERROR: %s" % (v[1])
 
     return HttpResponse("datos imprimidos")
+
+
+@csrf_exempt
+def crear_libros_bcompartida(request):
+
+    print "request %s" % request
+
+    json_enviado = request.body
+
+    print "request.body %s" % request.body
+
+    if not json_enviado:
+        return HttpResponse("No json en el request.body", status=404)
+
+    json_enviado = json.loads(json_enviado)
+    json_enviado = json_enviado['libros_json']
+
+    try:
+        biblioteca_compartida_nombre = json_enviado['biblioteca_compartida_nombre']
+    except KeyError:
+        return HttpResponse("No biblioteca_compartida_nombre en el json ", status=404)
+
+    # print "biblioteca compartida nombre %s:" % (json_enviado['biblioteca_compartida_nombre'])
+    if BibliotecaCompartida.objects.filter(nombre=biblioteca_compartida_nombre).exists():
+        bcompartida = BibliotecaCompartida.objects.get(nombre=biblioteca_compartida_nombre)
+    else:
+        return HttpResponse("No se encontro una Biblioteca Compartida con ese nombre", status=404)
+
+    libros_creados = []
+    libros = json_enviado['libros']
+    print "libros: %s" % libros
+    for num, libro in libros.iteritems():
+        print "num-libro: %s - %s" % (num, libro)
+        libro_enviado = [libro['titulo']]
+        if Libro.objects.filter(titulo=libro['titulo'], autor=libro['autor']).exists():
+            print "Ya existe"
+            libro_enviado.append("Libro ya existe")
+            libro = Libro.objects.get(titulo=libro['titulo'], autor=libro['autor'])
+        else:
+            libro = Libro.objects.create(titulo=libro['titulo'], autor=libro['autor'], descripcion=libro['descripcion'])
+            libro_enviado.append("Libro creado")
+            print "Libro creado"
+
+        print "libro.titulo: %s" % libro.titulo
+
+        if LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida, libro=libro).exists():
+            print "LibroBCompartida YA EXISTE"
+            libro_enviado.append("LibroBCompartida YA EXISTE")
+        else:
+            LibrosBibliotecaCompartida.objects.create(biblioteca_compartida=bcompartida, libro=libro)
+            print "LibroBCompartida CREADO"
+            libro_enviado.append("LibroBCompartida CREADO")
+
+        libros_creados.append(libro_enviado)
+
+    print "libros_creados: %s" % libros_creados
+    # TODO ENVIAR DATOS A ESTE PUNTO DE ENTRADA DESDE SCRIPT QUE LEA CSV
+    return HttpResponse(json.dumps(libros_creados), status=201)

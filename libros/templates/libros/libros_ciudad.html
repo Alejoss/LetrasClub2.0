@@ -207,7 +207,6 @@
 {% block extra_javascript %}
     <script src="http://maps.googleapis.com/maps/api/js?v=3"></script>
     <script>
-
         var gmaps_bcompartidas = JSON.parse('{{ gmap_bcompartidas|safe }}');
 
         markers = [];
@@ -284,12 +283,14 @@
                 marker_objects.push(marker);
             }
 
+            google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
+              if (this.getZoom() > 14) {
+                this.setZoom(14);
+              }
+            });
+
             AutoCenter();
             }
-
-            /*
-
-            */
 
         initMap();
 

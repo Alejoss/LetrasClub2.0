@@ -34,8 +34,10 @@ with open(archivo, 'rb') as archivo_csv:
             'descripcion': descripcion
         }
 
-    # http://www.letras.club/libros/crear_libros_bcompartida/
-    respuesta = requests.post("http://localhost:8000/libros/crear_libros_bcompartida/", json=(diccionario_enviar))
+    print "diccionario enviado: %s" % diccionario_enviar
+
+    # http://localhost:8000/libros/crear_libros_bcompartida/
+    respuesta = requests.post("http://www.letras.club/libros/crear_libros_bcompartida/", json=(diccionario_enviar))
 
     print respuesta
     for l in json.loads(respuesta.content):

@@ -1199,7 +1199,7 @@ def crear_libros_bcompartida(request):
         return HttpResponse("No json en el request.body", status=404)
 
     json_enviado = json.loads(json_enviado)
-    json_enviado = json_enviado['libros_json']
+    json_enviado = unicode(json_enviado['libros_json'])
 
     try:
         biblioteca_compartida_nombre = json_enviado['biblioteca_compartida_nombre']

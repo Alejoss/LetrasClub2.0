@@ -1229,7 +1229,6 @@ def crear_libros_bcompartida(request):
             libro_enviado.append("Libro creado")
             print "LIBRO creado"
 
-        print "libro.titulo: %s" % libro.titulo
 
         if LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida, libro=libro).exists():
             print "LibroBCompartida ya existe"

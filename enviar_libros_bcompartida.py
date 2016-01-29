@@ -3,11 +3,10 @@ import json
 import csv
 import requests
 
-#archivo = raw_input("Nombre del Archivo csv (completo): ")
-#bcompartida = raw_input("Nombre de la biblioteca compartida (exacto): ")
+archivo = raw_input("Nombre del Archivo csv (completo): ")
+bcompartida = raw_input("Nombre de la biblioteca compartida (exacto): ")
 
-archivo = "mercado_libros.csv"
-bcompartida = "Biblioteca 2"
+archivo = "archivo_libros/"+archivo
 
 with open(archivo, 'rb') as archivo_csv:
     csv_reader = csv.reader(archivo_csv)
@@ -35,7 +34,9 @@ with open(archivo, 'rb') as archivo_csv:
             'descripcion': descripcion
         }
 
+    # http://www.letras.club/libros/crear_libros_bcompartida/
     respuesta = requests.post("http://localhost:8000/libros/crear_libros_bcompartida/", json=(diccionario_enviar))
 
+    print respuesta
     for l in json.loads(respuesta.content):
         print "-------------------------------------------------------".join(l)

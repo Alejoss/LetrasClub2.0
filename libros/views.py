@@ -1189,11 +1189,11 @@ def cheat_libros(request):
 @csrf_exempt
 def crear_libros_bcompartida(request):
 
-    print "request %s" % request
+    # print "request %s" % request
 
     json_enviado = request.body
 
-    print "request.body %s" % request.body
+    # print "request.body %s" % request.body
 
     if not json_enviado:
         return HttpResponse("No json en el request.body", status=404)
@@ -1225,17 +1225,21 @@ def crear_libros_bcompartida(request):
         else:
             libro = Libro.objects.create(titulo=libro['titulo'], autor=libro['autor'], descripcion=libro['descripcion'])
             libro_enviado.append("Libro creado")
-            print "Libro creado"
+            print "LIBRO creado"
 
         print "libro.titulo: %s" % libro.titulo
 
         if LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida, libro=libro).exists():
-            print "LibroBCompartida YA EXISTE"
+            print "LibroBCompartida ya existe"
             libro_enviado.append("LibroBCompartida YA EXISTE")
         else:
-            LibrosBibliotecaCompartida.objects.create(biblioteca_compartida=bcompartida, libro=libro)
-            print "LibroBCompartida CREADO"
+            libro_disponible_obj = LibrosBibliotecaCompartida.objects.create(biblioteca_compartida=bcompartida, libro=libro)
+            print "LIBRO_BCOMPATIDA CREADO"
+
+            Notificacion.objects.bcompartida_compartio(bcompartida, libro_disponible_obj.libro)
+            print "NOTIFICACION CREADA"
             libro_enviado.append("LibroBCompartida CREADO")
+
 
         libros_creados.append(libro_enviado)
 

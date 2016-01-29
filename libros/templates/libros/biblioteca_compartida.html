@@ -224,6 +224,9 @@
 						con el usuario <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a>
 						{% endif %}
 						</p>
+                    {% elif act.0.tipo == "bcompartida_compartio" %}
+                        <p> Compartió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong>
+						</p>
 					{% endif %}
 					<div class = "hidden comments">
 						<br>

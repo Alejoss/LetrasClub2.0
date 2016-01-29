@@ -65,6 +65,18 @@
 						</div>
 					</div>
 
+                    {% elif n.tipo == "bcompartida_compartio" %}
+
+					<div class="alert callout alert-default">
+						<div class="row">
+							<p> <a target="blank" href="{% url 'libros:biblioteca_compartida' n.biblioteca_compartida.slug %}">
+                                {{n.biblioteca_compartida.nombre}}</a> compartió el libro
+								<strong> {{n.libro.titulo}} </strong> de <strong> {{n.libro.autor}}</strong>
+							    con la comunidad de {{n.biblioteca_compartida.ciudad.name}}.
+							</p>
+						</div>
+					</div>
+
 					{% elif n.tipo == "comenzo_leer" %}
 					<div class="alert callout alert-default">
 						<div class="row">						

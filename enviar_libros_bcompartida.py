@@ -41,5 +41,10 @@ with open(archivo, 'rb') as archivo_csv:
     respuesta = requests.post("http://www.letras.club/libros/crear_libros_bcompartida/", json=(diccionario_enviar))
 
     print respuesta
-    for l in json.loads(respuesta.content):
-        print "-------------------------------------------------------".join(l)
+
+    try:
+        respuesta_content = json.loads(respuesta.content)
+        for l in json.loads(respuesta.content):
+            print "-------------------------------------------------------".join(l)
+    except ValueError:
+        print respuesta.content

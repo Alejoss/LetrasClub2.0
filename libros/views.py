@@ -1189,8 +1189,6 @@ def cheat_libros(request):
 @csrf_exempt
 def crear_libros_bcompartida(request):
 
-    # print "request %s" % request
-
     json_enviado = request.body
 
     print "request.body %s" % request.body
@@ -1229,7 +1227,6 @@ def crear_libros_bcompartida(request):
             libro_enviado.append("Libro creado")
             print "LIBRO creado"
 
-
         if LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida, libro=libro).exists():
             print "LibroBCompartida ya existe"
             libro_enviado.append("LibroBCompartida YA EXISTE")
@@ -1247,3 +1244,4 @@ def crear_libros_bcompartida(request):
     print "libros_creados: %s" % libros_creados
     # TODO ENVIAR DATOS A ESTE PUNTO DE ENTRADA DESDE SCRIPT QUE LEA CSV
     return HttpResponse(json.dumps(libros_creados), status=201)
+

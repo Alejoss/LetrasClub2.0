@@ -4,14 +4,9 @@
 {% block content %}
 
 {% if punto_gmaps %}
-<!-- GOOGLE MAP 
-	var	$googlemap_latitude 	= -37.812344,
-	$googlemap_longitude	= 144.968900,
-	$googlemap_zoom			= 13;
--->
 <div class = "row">
 	<div class = "col-md-12">
-	<div id="gmap"><!-- map container --></div>
+	<div id="mapa_ciudad"><!-- map container --></div>
 	<script type="text/javascript">
 		var	$googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}"),
 			$googlemap_longitude	= parseFloat("{{punto_gmaps.1|safe}}"),
@@ -269,18 +264,46 @@
 {% block extra_javascript %}
 <script type="text/javascript" src="{% static 'assets/js/jquery-ui-fold.js' %}"></script>
 <script type="text/javascript" src="{% static 'assets/js/jquery.validate.js' %}"></script>
+<script src="http://maps.googleapis.com/maps/api/js?v=3"></script>
 
 <script type="text/javascript">
-	$(document).ready(function(){		
+	$(document).ready(function(){
 
-		var	googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}");
+        // Google Map
+        var	googlemap_latitude 	= parseFloat("{{punto_gmaps.0|safe}}");
 		var	googlemap_longitude	= parseFloat("{{punto_gmaps.1|safe}}");
+        var map_center = new google.maps.LatLng(googlemap_latitude, googlemap_longitude);
+
+        var map_options = {
+            zoom: 14,
+            center: map_center,
+            disableDefaultUI: false,
+            navigationControl: false,
+            mapTypeControl: false,
+            scrollwheel: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById('mapa_ciudad'), map_options);
+
+        var marker = new google.maps.Marker({
+            position: map_center,
+            map: map,
+            title: "{{ biblioteca_compartida.nombre }}"
+        });
+
+        var infowindow = new google.maps.InfoWindow()
+        marker.addListener('click', function(){
+           contenido_infowindow = "<div><p>"+"{{ biblioteca_compartida.direccion }}"+"<br><strong>"+
+                   "{{ biblioteca_compartida.nombre }}"+"</strong></p></div>";
+           infowindow.setContent(contenido_infowindow);
+           infowindow.open(map, marker)
+        });
 
 		$(".pedir_libro").on("click", function(){
-			$("#pedir_libro_submit").html('<i class="fa fa-cog fa-spin"></i>')
+			$("#pedir_libro_submit").html('<i class="fa fa-cog fa-spin"></i>');
 			$("#modal_label_pedir_libro").text("Pedir libro: " + $(this).data("titulo"));
 			var id_libro_disp = $(this).attr("data-id");	
-			var data = {'id_libro_disp': id_libro_disp}
+			var data = {'id_libro_disp': id_libro_disp};
 			var url_ajax = $(this).data("url-ajax");
 
 			$.ajax({
@@ -288,7 +311,7 @@
 				url: url_ajax,
 				data: data,
 				success: function(){
-					$("#pedir_libro_submit").html('Pedir Libro')
+					$("#pedir_libro_submit").html('Pedir Libro');
 					$("#pedir_libro_submit").attr("data-id", id_libro_disp)
 				},
 				error: function(){
@@ -415,7 +438,7 @@
 		setTimeout(function(){
 			objeto.text(texto_original);
 		}, 2000);
-	}
+	};
 
 	$(".enviar_respuesta").on("click", function(e){
 		e.preventDefault();
@@ -489,7 +512,7 @@
 	$(".form_comentario").validate({
 		rules: {
 			comentario: {
-				required: true,
+				required: true
 			}
 		},
 		messages: {

@@ -207,9 +207,13 @@
 {% block extra_javascript %}
     <script src="http://maps.googleapis.com/maps/api/js?v=3"></script>
     <script>
+
+    $(document).ready(function(){
+
         var gmaps_bcompartidas = JSON.parse('{{ gmap_bcompartidas|safe }}');
 
         markers = [];
+
         $.each(gmaps_bcompartidas, function(index, value){
             marker = [value[0], value[1], value[2], value[3]];
             markers.push(marker);
@@ -233,7 +237,7 @@
 
             function AutoCenter() {
                 var bounds = new google.maps.LatLngBounds();
-                $.each(marker_objects, function (index, marker) {
+                $.each(marker_objects, function (index, marker){
                     bounds.extend(marker.position)
                 });
                 map.fitBounds(bounds);
@@ -252,7 +256,6 @@
                         data: {'bcompartida_slug': biblioteca_slug},
                         success: function(response){
                             var respuesta = JSON.parse(response);
-                            console.log(respuesta);
                             contenido_infowindow = '<div> <ul>';
                             $.each(respuesta.libros, function(key, value){
                                 contenido_infowindow += '<li>' + value + '</li>';
@@ -293,6 +296,8 @@
             }
 
         initMap();
+
+    });
 
     </script>
 {% endblock extra_javascript %}

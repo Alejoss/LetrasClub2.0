@@ -121,7 +121,9 @@ USE_TZ = True
 
 TEMPLATE_DIRS = (BASE_DIR + "/templates/",)
 FIXTURE_DIRS = (BASE_DIR + "/fixtures/",)
+
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+STATIC_URL = '/static/'
 STATIC_ROOT = '/'
 
 if AMAZON_S3:
@@ -132,9 +134,6 @@ if AMAZON_S3:
     S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
     STATIC_URL = S3_URL
     STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-
-else:
-    STATIC_URL = '/static/'
 
 # Heroku
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()

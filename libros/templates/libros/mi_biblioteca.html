@@ -305,8 +305,6 @@ $(document).ready(function(){
 		var libro_disp_id = $(this).data("id");
 		var url_ajax = $(this).data("url-target");
 		var data = {'libro_disp_id': libro_disp_id, 'csrfmiddlewaretoken': '{{csrf_token}}'}
-		console.log(libro_disp_id);
-		console.log(data)
 
 		$.ajax({
 			method: "POST",

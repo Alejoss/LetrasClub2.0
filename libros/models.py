@@ -103,7 +103,17 @@ class LibrosRequest(models.Model):
         self.libro.titulo, self.perfil_envio.usuario, self.perfil_recepcion.usuario)
 
 
-# Lo siguiente no esta en uso, Bibliotecas Compartidas
+class TipoBCompartidas(models.Model):
+    """
+    Define las reglas que se imprimirán en la Biblioteca Compartida
+    """
+    nombre = models.CharField(max_length=150)
+    eliminado = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.nombre
+
+
 class BibliotecaCompartida(models.Model):
     nombre = models.CharField(max_length=150, blank=True, unique=True)
     slug = models.SlugField(blank=True)
@@ -114,6 +124,9 @@ class BibliotecaCompartida(models.Model):
     imagen = models.URLField(blank=True)
     eliminada = models.BooleanField(default=False)
     direccion_web = models.URLField(blank=True)
+    horario_apertura = models.CharField(max_length=100, blank=True)
+    tipo = models.ForeignKey(TipoBCompartidas, null=True)
+    reglas_extra = models.CharField(max_length=500, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -174,3 +187,5 @@ class LibrosRequestBibliotecaCompartida(models.Model):
 
     def __unicode__(self):
         return "Request prestamo biblioteca compartida: %s - %s" % (self.perfil_envio, self.libro_disponible)
+
+

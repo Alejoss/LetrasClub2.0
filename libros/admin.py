@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.shortcuts import redirect
 
 from libros.models import Libro, LibrosRequest, BibliotecaCompartida, LibrosBibliotecaCompartida, LibrosDisponibles, \
-	LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo
+	LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo, TipoBCompartidas
 
 
 def cambiar_dueno(modelAdmin, request, queryset):
@@ -30,3 +30,4 @@ admin.site.register(LibrosBibliotecaCompartida)
 admin.site.register(LibrosDisponibles, LibroDisponibleAdmin)
 admin.site.register(LibrosPrestadosBibliotecaCompartida)
 admin.site.register(LibroDisponibleGrupo)
+admin.site.register(TipoBCompartidas)

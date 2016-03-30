@@ -9,7 +9,8 @@
 <div class = "col-md-6 col-md-offset-1">
 	<br>
 	{% if libro_disponible %}
-		<form id="form_compartir_libro" class="form-horizontal" action="{% url 'libros:cambiar_libro_bcompartida' biblioteca_compartida.id libro_disponible.id %}" method="post">
+		<form id="form_compartir_libro" class="form-horizontal"
+              action="{% url 'libros:cambiar_libro_bcompartida' biblioteca_compartida.id libro_disponible.id %}" method="post">
 	{% else %}
 		<form id="form_compartir_libro" class="form-horizontal" action="{% url 'libros:cambiar_libro_bcompartida_g' biblioteca_compartida.id %}" method="post">
 	{% endif %}
@@ -17,10 +18,12 @@
 			<fieldset>
 				{{form.non_field_errors}}
 
+{% comment %}
 				<select class="form-control" id="tipo_de_cambio" name="tipo_cambio">
 					<option id="cambiar_sin_usuario" value="0">Cambiar con una persona que no es miembro de Letras.Club</option>
 					<option id="cambiar_con_usuario" value="1">Cambiar con un usuario de Letras.Club</option>
 				</select>
+{% endcomment %}
 
 				{{form.titulo_inicial.errors}}
 				{{form.titulo_inicial.label}}
@@ -41,10 +44,15 @@
 				{{form.usuario_cambiar.label}}
 				{{form.usuario_cambiar}}
 				</div>
+             </fieldset>
 			<br>
 			<input class = "btn btn-success pull-right" type="submit" value="Cambiar">
 		</form>
 	<hr class = "invisible">
+</div>
+<div class = "col-md-4">
+    <hr class = "half-margins invisible">
+    <img src="{{ biblioteca_compartida.imagen}} " class = "thumbnail img-responsive" alt="">
 </div>
 {% endblock content %}
 
@@ -58,6 +66,7 @@ $(document).ready(function(){
 	$("#div_usuario_cambiar").removeClass("hidden");
 
 	// setear opcion 0 como default en el form
+    {% comment %}
 	$("#cambiar_sin_usuario").attr("selected", "selected")
 	
 	$("#tipo_de_cambio").on("change", function(){
@@ -68,8 +77,9 @@ $(document).ready(function(){
 			$("#div_usuario_cambiar").hide("fold");
 		}
 	});
+    {% endcomment %}
 
-	var dict_autocomplete = JSON.parse('{{titulos_autocomplete|safe}}')
+    var dict_autocomplete = JSON.parse('{{titulos_autocomplete|safe}}')
 	list_autocomplete = []
 	
 	$.each(dict_autocomplete, function(key, value){

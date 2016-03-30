@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django.utils.text import slugify
+from django.contrib.auth.models import User
 
 from cities_light.models import City
 from perfiles.models import Perfil
@@ -107,7 +108,7 @@ class TipoBCompartidas(models.Model):
     """
     Define las reglas que se imprimirán en la Biblioteca Compartida
     """
-    nombre = models.CharField(max_length=150)
+    nombre = models.CharField(max_length=150, unique=True)
     eliminado = models.BooleanField(default=False)
 
     def __unicode__(self):
@@ -117,7 +118,6 @@ class TipoBCompartidas(models.Model):
 class BibliotecaCompartida(models.Model):
     nombre = models.CharField(max_length=150, blank=True, unique=True)
     slug = models.SlugField(blank=True)
-    perfil_admin = models.ForeignKey(Perfil)
     ciudad = models.ForeignKey(City)
     punto_google_maps = models.CharField(max_length=500, blank=True)  # [latitude, longitude]
     direccion = models.CharField(max_length=500, blank=True)
@@ -146,7 +146,16 @@ class BibliotecaCompartida(models.Model):
             return None
 
     def __unicode__(self):
-        return "Biblioteca Compartida: %s" % (self.nombre)
+        return self.nombre
+
+
+class AdminsBibliotecaCompartida(models.Model):
+    biblioteca_compartida = models.OneToOneField(BibliotecaCompartida)
+    perfil = models.OneToOneField(Perfil, null=True)
+    activo = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return "%s admin de %s" % (self.perfil.usuario.username,  self.biblioteca_compartida.nombre)
 
 
 class LibrosBibliotecaCompartida(models.Model):
@@ -187,5 +196,3 @@ class LibrosRequestBibliotecaCompartida(models.Model):
 
     def __unicode__(self):
         return "Request prestamo biblioteca compartida: %s - %s" % (self.perfil_envio, self.libro_disponible)
-
-

@@ -1,11 +1,12 @@
 from django.conf.urls import url
 import views
 
-urlpatterns = [    
+urlpatterns = [
     url(r'^main/$', views.main, name="main"),
-    url(r'^nuevo_libro/(?P<tipo_dueno>\w+)/(?P<username>[-\w.]+)/$', views.nuevo_libro, name="nuevo_libro"),
+    url(r'^nuevo_libro/(?P<tipo_dueno>\w+)/(?P<slug_biblioteca_compartida>[-\w]+)/$', views.nuevo_libro, name="nuevo_libro"),
     url(r'^mi_biblioteca/$', views.mi_biblioteca, name="mi_biblioteca"),
-    url(r'^ciudad/(?P<slug_ciudad>\w+)/(?P<id_ciudad>\d+)/(?P<filtro>\w+)/$', views.libros_ciudad, name="libros_ciudad"),
+    url(r'^ciudad/(?P<slug_ciudad>\w+)/(?P<id_ciudad>\d+)/$', views.libros_ciudad, name="libros_ciudad"),
+    url(r'^lista_libros/(?P<slug_ciudad>\w+)/(?P<filtro>\w+)/$', views.lista_libros_ciudad, name="lista_libros_ciudad"),
     url(r'^buscar_ciudad/$', views.buscar_ciudad, name="buscar_ciudad"),
 
     url(r'^libro/(?P<slug_libro>\w+)/(?P<id_libro>\d+)/$', views.libro, name="libro"),
@@ -39,10 +40,9 @@ urlpatterns = [
     url(r'^cancelar_pedido_bcompartida/$', views.cancelar_pedido_bcompartida, 
         name="cancelar_pedido_bcompartida"),
 
-    url(r'^buscar/(?P<slug_ciudad>\w+)/(?P<filtro>\w+)/$', views.buscar, name='buscar'),
+    # url(r'^buscar/(?P<id_ciudad>\w+)/$', views.buscar, name='buscar'),  No esta en uso
+    url(r'^buscar_ajax/(?P<id_ciudad>\w+)/$', views.buscar_ajax, name='buscar_ajax'),
     url(r'^cambiar_dueno_libros/$', views.cambiar_dueno_libros, name="cambiar_dueno_libros"),
-
-    url(r'^cheat_libros/$', views.cheat_libros, name="cheat_libros"),
 
     # Ajax calls
     url(r'^marcar_no_disponible/$', views.marcar_no_disponible),
@@ -50,6 +50,8 @@ urlpatterns = [
     url(r'^marcar_devuelto/$', views.marcar_devuelto),
     url(r'^cinco_libros_bcompartida/$', views.cinco_libros_bcompartida, name='cinco_bcompartida'),
     url(r'^crear_libros_bcompartida/$', views.crear_libros_bcompartida),
+    url(r'^info_bcompartida/$', views.info_bcompartida, name='info_bcompartida'),
+
 
     # Mi Biblioteca Ajax calls
     url(r'^info_grupos_libro_ajax/$', views.info_libro_grupos_ajax, name="info_grupos_libro"),

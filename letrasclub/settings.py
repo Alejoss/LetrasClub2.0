@@ -25,11 +25,13 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ['es']
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['EC']
 
 # Context Processors
-TEMPLATE_CONTEXT_PROCESSORS += ('perfiles.context_processors.procesar_ciudad',
-                                'perfiles.context_processors.procesar_perfil',
-                                'perfiles.context_processors.notificaciones',
-                                'social.apps.django_app.context_processors.backends', 
-                                'social.apps.django_app.context_processors.login_redirect')
+TEMPLATE_CONTEXT_PROCESSORS += (
+    # 'perfiles.context_processors.procesar_ciudad',
+    # 'perfiles.context_processors.procesar_perfil',
+    # 'perfiles.context_processors.notificaciones'
+    'perfiles.context_processors.admins_bcompartidas',  # unico context procesor mientras no haya perfiles abiertos
+    'social.apps.django_app.context_processors.backends',
+    'social.apps.django_app.context_processors.login_redirect')
 
 # Application definition
 INSTALLED_APPS = (
@@ -63,7 +65,6 @@ ROOT_URLCONF = 'letrasclub.urls'
 
 WSGI_APPLICATION = 'letrasclub.wsgi.application'
 
-
 # python social auth
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 
@@ -85,7 +86,6 @@ SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.user.user_details',
     'letrasclub.utils.crear_perfil'
 )
-
 
 DATABASES = {}
 
@@ -114,7 +114,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
@@ -146,7 +145,7 @@ LOGIN_REDIRECT_URL = "/perfil/mi_perfil/"
 if HEROKU:
     SOCIAL_AUTH_FACEBOOK_KEY = os.environ["SOCIAL_AUTH_FACEBOOK_KEY"]
     SOCIAL_AUTH_FACEBOOK_SECRET = os.environ["SOCIAL_AUTH_FACEBOOK_SECRET"]
-    
+
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_SECRET"]
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_KEY"]
 

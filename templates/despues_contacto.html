@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<div class = "row">
+    <hr class = "half-margins invisible">
+
+    {% if razon_contacto == "donacion" %}
+        <h2>Gracias por contarnos tu interés en donar tus libro!</h2>
+        <br>
+        <p>Seguramente muchas personas estarán felices de encontrarlos y leerlos</p>
+        <p>Nos pondremos en contacto contigo lo antes posible, <br>
+        te enviaremos un correo a <strong>{{ correo_contacto }}</strong></p>
+    {% elif razon_contacto == "registrar_biblioteca" %}
+        <h2>Gracias por contarnos tu interés en crear una biblioteca compartida!</h2>
+        <br>
+        <p>Nos alegra saber que cada vez más lugares se suman al intercambio de libros.</p>
+        <p>Nos pondremos en contacto contigo lo antes posible, <br>
+        te enviaremos un correo a <strong>{{ correo_contacto }}</strong></p>
+    {% else %}
+        <h2>Muchas gracias por contactarnos, te responderemos lo antes posible.</h2>
+    {% endif %}
+
+    <a class = "btn btn-primary" href="{% url 'libros:libros_ciudad' 'quito' '18' %}">Regresar a Quito</a>
+</div>
+{% endblock content %}

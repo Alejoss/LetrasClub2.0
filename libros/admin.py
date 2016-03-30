@@ -3,25 +3,27 @@ from django.contrib import admin
 from django.shortcuts import redirect
 
 from libros.models import Libro, LibrosRequest, BibliotecaCompartida, LibrosBibliotecaCompartida, LibrosDisponibles, \
-	LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo, TipoBCompartidas
+    LibrosPrestadosBibliotecaCompartida, LibroDisponibleGrupo, TipoBCompartidas, AdminsBibliotecaCompartida
 
 
 def cambiar_dueno(modelAdmin, request, queryset):
-	selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
 
-	request.session['libros'] = selected
+    request.session['libros'] = selected
 
-	return redirect('libros:cambiar_dueno_libros')
+    return redirect('libros:cambiar_dueno_libros')
+
 
 cambiar_dueno.short_description = "Cambiar Dueno"
 
 
 class LibroDisponibleAdmin(admin.ModelAdmin):
-	actions = [cambiar_dueno]
+    actions = [cambiar_dueno]
 
 
 class BibliotecaCompartidaAdmin(admin.ModelAdmin):
-	exclude = ('slug',)
+    exclude = ('slug',)
+
 
 admin.site.register(Libro)
 admin.site.register(LibrosRequest)
@@ -31,3 +33,4 @@ admin.site.register(LibrosDisponibles, LibroDisponibleAdmin)
 admin.site.register(LibrosPrestadosBibliotecaCompartida)
 admin.site.register(LibroDisponibleGrupo)
 admin.site.register(TipoBCompartidas)
+admin.site.register(AdminsBibliotecaCompartida)

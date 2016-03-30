@@ -4,10 +4,20 @@
 {% block content %}
 <!-- WELCOME -->
 <section>
+
+    <div style="width: 1000px; height: 500px;" id="video_libros"
+      data-vide-bg="{% static 'assets/video/prueba.mp4' %}"
+      data-vide-options="loop: true, muted: false, position: 0% 0%">
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="{% static 'assets/js/jquery.vide.js' %}"></script>
+
+
 	<div class="container">	
 		<div class="row">
 			<div class="col-md-6">
-				<h1> Club de Libros Compartidos en Quito </h1>
+				<h1> Club de Libros Compartidos en <a href="{% url 'libros:libros_ciudad' 'quito' '18' %}">Quito</a></h1>
 				<p class="lead">Deja que ese libro al fondo de tu escritorio sea leído una vez más, 
 				<em class="styleColor">y ten acceso a los libros de otros miembros del club.</em></p>
 
@@ -27,7 +37,6 @@
 				<br>
 			</div>
 			<div class="col-md-6 text-center">
-				<img class="img-responsive animate_fade_in" src="{% static 'assets/images/letrasclub/booksmain.jpg' %}" alt=""/>
 
 				<hr class="half-margins invisible" /><!-- divider 30px -->
 
@@ -102,3 +111,9 @@
 </section>
 <!-- /WELCOME -->
 {% endblock content %}
+
+{% block extra_javascript %}
+<script src="{% static 'assets/js/jquery.vide.js' %}"></script>
+<script>
+</script>
+{% endblock extra_javascript %}

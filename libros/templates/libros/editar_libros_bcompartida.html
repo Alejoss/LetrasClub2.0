@@ -17,6 +17,7 @@
 	</div>
 </div>
 
+{% comment %}
 {% if libros_no_retirados %}
 <div class ="row">
 	<div class = "col-md-10 col-md-offset-1">
@@ -31,7 +32,9 @@
 	</div>
 </div>
 {% endif %}
+{% endcomment %}
 
+{% comment %}
 {% if libros_requests %}
 	<div class ="row">
 		<div class = "col-md-10 col-md-offset-1">
@@ -64,6 +67,7 @@
 		</div>
 	</div>	
 {% endif %}
+{% endcomment %}
 
 <div class = "row">
 	<div id ="libros_biblioteca" class = "col-md-10 col-md-offset-1">
@@ -80,9 +84,9 @@
 					</div>
 					<div id="acordion{{forloop.counter}}" class="collapse">
 						<div class="panel-body opciones_libro_disponible">
-							<a href="{% url 'libros:prestar_libro_bcompartida' l.id %}" rel="nofollow" target="_blank" class="btn btn-success btn-lg" data-id="{{l.id}}">
+							{% comment %}<a href="{% url 'libros:prestar_libro_bcompartida' l.id %}" rel="nofollow" target="_blank" class="btn btn-success btn-lg" data-id="{{l.id}}">
 							Prestar Libro
-							</a>
+							</a>{% endcomment %}
 							<a href="{% url 'libros:cambiar_libro_bcompartida' biblioteca_compartida.id l.id %}" rel="nofollow" target="_blank" class="btn btn-info btn-lg" data-id="{{l.id}}">
 							Cambiar Libro
 							</a>
@@ -123,6 +127,7 @@
 	</div>
 </div>
 
+{% comment %}
 <div class = "row">
 	<div class = "col-md-10 col-md-offset-1">
 		<br>
@@ -168,6 +173,7 @@
 		{% endfor %}	
 	</div>
 </div>
+{% endcomment %}
 
 <hr class = "half-margins invisible">
 
@@ -215,6 +221,7 @@ $(document).ready(function(){
 		});
 	});
 
+    {% comment %}
 	$(".marcar_devuelto").on("click", function(e){
 		e.preventDefault();
 		var id_libro = $(this).data("id");
@@ -284,7 +291,7 @@ $(document).ready(function(){
 				alert("Hubo un error al marcar el libro como retirado. Disculpa las molestias")
 			}
 		});
-	});
+	});{% endcomment %}
 });
 </script>
 {% endblock content %}

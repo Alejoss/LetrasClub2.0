@@ -25,7 +25,6 @@
 	<link href="{% static 'assets/css/sky-forms.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/weather-icons.min.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/line-icons.css' %}" rel="stylesheet" type="text/css" />
-	<link href="{% static 'assets/plugins/owl-carousel/owl.pack.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/plugins/magnific-popup/magnific-popup.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/animate.css' %}" rel="stylesheet" type="text/css" />
 
@@ -36,7 +35,7 @@
 	<link href="{% static 'assets/css/footer-default.css' %}" rel="stylesheet" type="text/css" />
 	<link href="{% static 'assets/css/color_scheme/brown.css' %}" rel="stylesheet" type="text/css" id="color_scheme" />
 
-	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/letrasclub/extra_css.css' %} ">
+	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/letrasclub/extra.css' %} ">
 
 	{% block extra_css %}
 	{% endblock extra_css %}
@@ -73,14 +72,81 @@
 </script>
 	
 	<div id="wrapper">
-	
-	{% include 'menu.html' %}
 
-	{% block content %}
+        <div id="header"> <!-- class="sticky" for sticky menu -->
+            <!-- Top Nav -->
+            <header id="topNav">
+                <div class="container">
 
-	{% endblock content %}
+                    <!-- Logo -->
+                    <a class="logo" href="{% url 'libros:main' %}" style="{}">
+                        <img src="{% static 'assets/images/letrasclub/logo_completo.png' %}" height="50" alt="" />
+                    </a>
 
-	</div>
+                    <!-- Mobile Menu Button -->
+                    <button class="btn btn-mobile" data-toggle="collapse" data-target=".nav-main-collapse">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- Top Nav -->
+                    <div class="navbar-collapse nav-main-collapse collapse pull-right">
+                        <nav class="nav-main">
+                            <ul id="topMain" class="nav nav-pills nav-main">
+
+                                <!--  PERFILES DESACTIVADOS
+                                <li class="dropdown hidden-sm hidden-xs">
+                                        <a class="dropdown-toggle hidden-sm hidden-xs" href="">
+                                        {% if notificaciones %}
+                                            <span class="badge notificaciones">{{notificaciones}}</span>
+                                        {% endif %}
+                                        {{user.username}}
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="{% url 'perfiles:perfil_propio' %}"><i class = "fa fa-user"></i> Perfil</a></li>
+                                            <li><a href="{% url 'libros:mi_biblioteca' %}"><i class="fa fa-th"></i> Biblioteca</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href="{% url 'perfiles:editar_perfil' %}"><i class="fa fa-edit"></i> Editar Perfil</a></li>
+                                            <li><a href="{% url 'perfiles:logout' %}"><i class="fa fa-power-off"></i> Logout</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="hidden-md hidden-lg"><a href="{% url 'perfiles:perfil_propio' %}"><i class = "fa fa-user"></i> Perfil</a></li>
+                                    <li class="hidden-md hidden-lg"><a href="{% url 'libros:mi_biblioteca' %}"><i class="fa fa-th"></i> Biblioteca</a></li>
+                                    <li class="divider hidden-md hidden-lg">
+                                    <li class="hidden-md hidden-lg"><a href="{% url 'perfiles:editar_perfil' %}"><i class="fa fa-edit"></i> Editar Perfil</a></li>
+                                    <li class="hidden-md hidden-lg"><a href="{% url 'perfiles:logout' %}"><i class="fa fa-power-off"></i> Logout</a></li>
+                                -->
+
+                                <li><a href="{% url 'perfiles:sobre_nosotros' %}">Sobre Nosotros
+                                </a></li>
+
+                                {# Catalogo de Quito remover cuando se abra a mas ciudades#}
+                                <li><a href="{% url 'libros:lista_libros_ciudad' 'quito' 'autor' %}"><i class = "fa fa-list-ul"></i> Catálogo</a></li>
+
+                                <li><a href="{% url 'libros:libros_ciudad' 'quito' '18' %}"><i class="fa fa-map-o"></i> Quito</a></li>
+
+                                {% if user.is_authenticated %}
+                                    {% if bcompartida_administrada %}
+                                        <li class=""><a href="{% url 'libros:biblioteca_compartida' bcompartida_administrada.biblioteca_compartida.slug %}">
+                                            <i class = "fa fa-map-marker"></i> {{ bcompartida_administrada.biblioteca_compartida.nombre }}</a>
+                                        </li>
+                                        <li><a href="{% url 'perfiles:logout' %}"><i class="fa fa-power-off"></i> Salir</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    <!-- /Top Nav -->
+
+                </div><!-- /.container -->
+            </header>
+            <!-- /Top Nav -->
+        </div>
+
+
+        {% block content %}
+        {% endblock content %}
+
+    </div> <!-- wrapper -->
 
 	<!-- JAVASCRIPT FILES -->
 	<script type="text/javascript" src="{% static 'assets/plugins/jquery-2.1.1.min.js' %}"></script>

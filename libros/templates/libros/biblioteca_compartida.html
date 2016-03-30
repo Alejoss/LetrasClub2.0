@@ -20,31 +20,45 @@
 <div class = "col-md-8">
 
 <br>
-<div class = "well">
-	<p>
-		<strong>
-			Reglas:<br>
-		</strong>
-        El administrador de la Biblioteca Compartida <strong>debe aceptar</strong> cualquier cambio.<br>
-        {% if biblioteca_compartida.tipo.nombre == "biblioteca_cerrada" %}
-            <br>Ésta es una <strong>Biblioteca Cerrada</strong>. Es decir, no tiene un local constantemente abierto,
-            debes <strong>contactarte</strong> con el administrador antes de intercambiar un libro. <br>
-            <strong>No dudes</strong> en llamarle o enviarle un mensaje!
-            el administrador estará feliz de realizar un intercambio.
-        {% elif biblioteca_compartida.tipo.nombre == "andoteca" %}
-            <br>Ésta es una <strong>Andoteca</strong>. Es decir, está abierta a que cualquier persona tome un libro sin
-            dejar uno a cambio, y también a que cualquier persona deje un libro como donación <i class = "fa fa-smile-o"></i>. Se <strong>actualizan</strong>
-            los títulos disponibles periódicamente.
+<div class = "row">
+    <div class = "col-md-3 col-sm-3">
+        {% if biblioteca_compartida.tipo == "andoteca" %}
+            <img class = "img-responsive thumbnail" src="{% static 'assets/images/letrasclub/marker_andotecas_grande.png' %} " alt="">
+        {% elif biblioteca_compartida.tipo == "biblioteca_cerrada" %}
+            <img class = "img-responsive thumbnail" src="{% static 'assets/images/letrasclub/marker_bcerrada_grande.png' %} " alt="">
         {% else %}
-            <br>Ésta es una <strong>Biblioteca Abierta</strong>. Es decir, es un <i class = "fa fa-thumbs-o-up"></i> lugar que se ha unido
-            a la red de libros compartidos.
+            <img class = "img-responsive thumbnail" src="{% static 'assets/images/letrasclub/marker_letras_grande.png' %}" alt="">
         {% endif %}
+    </div>
+    <div class = "col-md-9 col-sm-9">
+        <div class = "well">
+            <p>
+                <strong>
+                    Reglas:<br>
+                </strong>
+                {% if biblioteca_compartida.tipo.nombre == "biblioteca_cerrada" %}
+                    El administrador de la Biblioteca Compartida <strong>debe aceptar</strong> cualquier cambio.<br>
+                    <br>Ésta es una <strong>Biblioteca Cerrada</strong>. Es decir, no tiene un local constantemente abierto,
+                    debes <strong>contactarte</strong> con el administrador antes de intercambiar un libro. <br>
+                    <strong>No dudes</strong> en llamarle o enviarle un mensaje!
+                    el administrador estará feliz de realizar un intercambio.
+                {% elif biblioteca_compartida.tipo.nombre == "andoteca" %}
+                    <br>Ésta es una <strong>Andoteca</strong>. Es decir, está abierta a que cualquier persona tome un libro sin
+                    dejar uno a cambio, y también a que cualquier persona deje un libro como donación <i class = "fa fa-smile-o"></i>. Se <strong>actualizan</strong>
+                    los títulos disponibles periódicamente.
+                {% else %}
+                    <br>El administrador de la Biblioteca Compartida <strong>debe aceptar</strong> cualquier cambio.<br>
+                    <br>Ésta es una <strong>Biblioteca Abierta</strong>. Es decir, es un <i class = "fa fa-thumbs-o-up"></i> lugar que se ha unido
+                    a la red de libros compartidos.
+                {% endif %}
 
-        {% if biblioteca_compartida.reglas_extra %}
-            <br><br>
-            <i class = "fa fa-comment"></i> {{ biblioteca_compartida.reglas_extra }}
-            {% endif %}
-	</p>
+                {% if biblioteca_compartida.reglas_extra %}
+                    <br><br>
+                    <i class = "fa fa-comment"></i> {{ biblioteca_compartida.reglas_extra }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
 </div>
 <h1> Libros </h1>
 
@@ -55,64 +69,28 @@
 					<strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
 				</div>
 				<div class="col-md-3 col-sm-3 text-right"><!-- right btn -->
-					{% if user.is_authenticated %}
-						<a href="" rel="nofollow" data-toggle="modal" data-target="#modal_pedir_libro" data-id="{{l.id}}" class="btn btn-default btn-lg pedir_libro"
-						data-url-ajax="{% url 'libros:request_existente_bcompartida_ajax' %}" data-titulo="{{l.libro.titulo}}">Pedir Libro</a>
-					{% else %}
-						<a href="{% url 'libros:main' %}" class="btn btn-default btn-lg" title="Necesitas hacer Login para pedir este libro"><i class="fa fa-lock"></i></a>
-					{% endif %}
 				</div><!-- /right btn -->
 			</div>
 		</div>
 	{% endfor %}
 
-	<!-- Modal pedir libros BCompartida -->
-	<div id="modal_pedir_libro" class="modal fade bs-example-modal-md" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-md">
-			<div class="modal-content">
-
-				<div class="modal-header"><!-- modal header -->
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4 class="modal-title" id="modal_label_pedir_libro">Pedir libro</h4>
-				</div><!-- /modal header -->
-
-				<!-- modal body -->
-				<div class="modal-body">
-					<p>
-					<br>
-					Al pedir un libro a <strong>{{biblioteca_compartida.nombre}}</strong>, se enviará una notificación al administrador. Si él revisa tu perfil
-					y acepta prestarte el libro, puedes ir a recogerlo a la dirección: <strong>'{{biblioteca_compartida.direccion}}'</strong>. Recuerda que también puedes visitar el lugar y cambiar el libro por otro (siempre y cuando el administrador esté de acuerdo con el cambio).
-					<br>
-					<br>
-					Gracias por ser parte de ésta genial comunidad! <i class="fa fa-smile-o"></i> No olvides comentarlo con tus amigos.
-				</div>
-				<!-- /modal body -->
-
-				<div class="modal-footer"><!-- modal footer -->
-					<button class="btn btn-default" data-dismiss="modal">Cancelar</button>
-					<button id="pedir_libro_submit" class="btn btn-primary" data-id="" data-url-ajax="{% url 'libros:pedir_bcompartida_ajax' %}">
-						Pedir Libro 
-					</button>
-				</div><!-- /modal footer -->
-
-			</div>
-		</div>
-	</div>
 </div>
 
 <div class = "col-md-4">
 	<br>
-	{% if usuario_es_administrador %}	
-	<div class = "col-md-8">
-		<div class="featured-box noborder"><!-- add .transparent for no background color -->
-			<i class="fa fa-cogs"></i>
-			<div class = "row">
-				<a href="{% url 'libros:editar_libros_bcompartida' biblioteca_compartida.slug  %}"><small>Administrar libros</small></a><br>
-				<a href="{% url 'libros:editar_info_bcompartida' biblioteca_compartida.slug %}"><small>Editar información</small></a>
-			</div>
-		</div>
-	<hr class="invisible">
-	</div>
+	{% if usuario_es_administrador %}
+    <div class = "row">
+		<div class = "col-md-10 col-md-offset-1">
+            <div class="featured-box noborder"><!-- add .transparent for no background color -->
+                <div class = "row">
+                    <a href="{% url 'libros:editar_libros_bcompartida' biblioteca_compartida.slug  %}"><i class="fa fa-cogs"></i><br>
+                        <small>Administrar libros</small></a><br>
+                    <a href="{% url 'libros:editar_info_bcompartida' biblioteca_compartida.slug %}"><small>Editar información</small></a>
+                </div>
+            </div>
+            <hr class="half-margins invisible">
+        </div>
+     </div>
 	{% endif %}
 	<div class = "row">
 		<div class = "col-md-10 col-md-offset-1">			
@@ -153,7 +131,7 @@
 	<div class = "row">
 	<div class = "col-md-12">
 	{% if user.is_authenticated %}
-		<!-- Comment form -->	
+		<!-- Comment form
 		<form action="{% url 'comments:comentar_bcompartida' biblioteca_compartida.slug %}" method="post" class="sky-form boxed form_comentario">
 			{% csrf_token %}
 			<fieldset>							
@@ -168,7 +146,8 @@
 				<button type="submit" class="button">Publicar</button>
 			</footer>
 			<br>
-		</form>	
+		</form>
+		-->
 	{% endif %}
 	<!-- Actividad -->
 	{% for act in actividad %}
@@ -181,18 +160,18 @@
 					<p>
 						&nbsp {{act.0.texto}}
 					</p>
-					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_bcompartida_ajax' %}" data-clicked="0"
+					{% comment %}<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_bcompartida_ajax' %}" data-clicked="0"
 					class="show_respuestas_comment cerrado pull-right" href="">
 						<i class = "fa fa-comment"></i>
 						{{act.0.num_respuestas|default:""}}							
-					</a>
-					<div class = "hidden comments">
+					</a>{% endcomment %}
+					{% comment %}<div class = "hidden comments">
 						<br>
 						<div class = "col-md-offset-1 div_respuestas">
 							<div class = "respuestas_comment">
 							</div>
 							{% if user.is_authenticated %}
-							<!-- Comment form -->	
+							<!-- Comment form -->
 							<form action="" method="post" class="sky-form">
 								{% csrf_token %}
 								<fieldset>
@@ -209,18 +188,18 @@
 							</form>
 							{% endif %}
 						</div>
-					</div>
+					</div>{% endcomment %}
 				</div>
 			</div>
 		{% else %}
 			<!-- es un objeto Notificacion -->
 			<div class="alert callout alert-default">
 				<div class="row">
-					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
+					{% comment %}<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
 					class="show_comments_notificacion cerrado pull-right" href="">
 						<i class = "fa fa-comment"></i>
 						{{act.0.num_respuestas|default:""}}
-					</a>
+					</a>{% endcomment %}
 					{% if act.0.tipo == "bcompartida_presto" %}
 						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> tomó prestado el libro
 						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>
@@ -235,7 +214,7 @@
                         <p> Compartió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong>
 						</p>
 					{% endif %}
-					<div class = "hidden comments">
+					{% comment %}<div class = "hidden comments">
 						<br>
 						<div class = "col-md-offset-1 div_respuestas">
 							<div class = "respuestas_comment">
@@ -261,7 +240,7 @@
 								<p class="pull-right" title="Necesitas estar registrado para poder comentar"><i class="fa fa-lock"></i></p>
 							{% endif %}
 						</div>
-					</div>
+					</div>{% endcomment %}
 				</div>
 			</div>
 		{% endif %}
@@ -303,7 +282,7 @@
             title: "{{ biblioteca_compartida.nombre }}"
         });
 
-        var infowindow = new google.maps.InfoWindow()
+        var infowindow = new google.maps.InfoWindow();
         marker.addListener('click', function(){
            contenido_infowindow = "<div><p>"+"{{ biblioteca_compartida.direccion }}"+"<br><strong>"+
                    "{{ biblioteca_compartida.nombre }}"+"</strong></p></div>";
@@ -334,7 +313,7 @@
 
 		$("#pedir_libro_submit").on("click", function(){
 			var id_libro_disp = $(this).data("id");
-			var url_ajax = $(this).data("url-ajax")
+			var url_ajax = $(this).data("url-ajax");
 			var data = {'id_libro_disp': id_libro_disp, 'csrfmiddlewaretoken': '{{csrf_token}}'};
 
 			$.ajax({

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+
+<div class = "col-md-6 col-md-offset-1">
+    <br><br>
+    <h2>Eres administrador de una Biblioteca Compartida?</h2>
+
+	<hr class ="half-margins invisible">
+
+    <h3><small>Entra con tu clave y contraseña o con tu cuenta de Facebook:</small></h3>
+    <div class="divider">
+		<i class="fa fa-chevron-circle-down"></i>
+	</div>
+
+	<form class="form-horizontal" action="{% url 'perfiles:login' %}" method="post">
+	{% csrf_token %}		
+		<fieldset>
+			{{form}}
+		</fieldset>
+		<br>
+		<input class = "btn btn-success pull-right" type="submit" value="Entrar">
+	</form>
+
+    <div class="divider">
+		<i class="fa fa-facebook"></i>
+	</div>
+
+    <div class = "row">
+        <a href="{% url 'social:begin' 'facebook' %}" class="btn btn-facebook login_fb_admin">
+            <i class="fa fa-facebook"></i> Entra con Facebook
+        </a>
+    </div>
+
+    <hr class = "invisible">
+</div>
+
+<div class = "col-md-5">
+    <hr class = "half-margins invisible">
+    <div class = "col-md-6 col-md-offset-3">
+        <img id = "marker_up" src="{% static 'assets/images/letrasclub/marker_letras_grande.png' %}" class="img-responsive">
+    </div>
+    <div>
+        <div id = "logos_abajo">
+            <div class = "col-md-6 col-md-offset-3">
+                <img id = "marker_bcerrada" src="{% static 'assets/images/letrasclub/marker_bcerrada_grande.png' %}" class="img-responsive">
+            </div>
+            <div class = "col-md-6 col-md-offset-3">
+                <img id = "marker_andoteca" src="{% static 'assets/images/letrasclub/marker_andotecas_grande.png' %}" class="img-responsive">
+            </div>
+        </div>
+        <div id = "foto_bcompartida">
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+
+{% block extra_javascript %}
+<script>
+$(document).ready(function(){
+    $("#bcompartida").on("change", function(){
+        var id_bcompartida = $("#bcompartida").val();
+
+        $.ajax({
+            method: "get",
+            url: "{% url 'libros:info_bcompartida' %}",
+            data: {'id_bcompartida': id_bcompartida},
+            success: function(r){
+                var respuesta = JSON.parse(r);
+                var imagen_bcompartida = respuesta['imagen'];
+                var tipo_bcompartida = respuesta['tipo'];
+                var marker_abierta = "{% static 'assets/images/letrasclub/marker_letras_grande.png' %}";
+                var marker_cerrada = "{% static 'assets/images/letrasclub/marker_bcerrada_grande.png' %}";
+                var marker_andoteca = "{% static 'assets/images/letrasclub/marker_andotecas_grande.png' %}";
+                console.log(tipo_bcompartida);
+
+                if (tipo_bcompartida=="andoteca"){
+                    $("#marker_up").attr("src", marker_andoteca);
+                } else if (tipo_bcompartida=="biblioteca_cerrada") {
+                    $("#marker_up").attr("src", marker_cerrada);
+                } else if (tipo_bcompartida=="biblioteca_abierta"){
+                    $("#marker_up").attr("src", marker_abierta)
+                }
+
+                $("#logos_abajo").hide();
+
+                $("#foto_bcompartida").html("<div class='divider invisible'></div>" +
+                        "<img class = 'thumbnail img-responsive' src='" + imagen_bcompartida + "'>");
+            },
+            error: function(e){
+                console.log(e);
+            }
+        });
+    });
+})
+</script>
+{% endblock extra_javascript %}

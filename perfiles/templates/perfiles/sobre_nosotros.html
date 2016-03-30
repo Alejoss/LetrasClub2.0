@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class = "col-md-10 col-md-offset-1">
+        <hr class = "half-margins invisible">
+        <h4 class = "">
+            Creemos que los libros apilados en tu escritorio o los libros empolvados en tu estudio, esos que
+            no vas a volver a leer, pueden rotar de manos y traerte nuevas experiencias.
+
+            <div class = "row">
+                <div class = "col-md-6">
+                    <br> <br>Un mes tendrás
+                    <span class="word-rotator"><!-- word rotator -->
+                        <span class="items bold">
+                            <span>Rayuela</span>
+                            <span>100 Años de Soledad</span>
+                            <span>El Alquimista</span>
+                            <span>2666</span>
+                            <span>Ángeles y Demonios</span>
+                            <span>Caballo de Troya</span>
+                            <span>Desgracia</span>
+                            <span>El Arte de la Guerra</span>
+                            <span>El Hacedor</span>
+                            <span>El Extranjero</span>
+                            <span>El lobo estepario</span>
+                        </span>
+                    </span><!-- /word rotator -->
+                </div>
+
+                <div class = "col-md-6">
+                    <br><br>Otro mes,
+                    <span class="word-rotator"><!-- word rotator -->
+                        <span class="items bold">
+                            <span>El Código da Vinci</span>
+                            <span>El Conde de Montecristo</span>
+                            <span>El Señor de los Anillos</span>
+                            <span>A Paso de Cangrejo</span>
+                            <span>Amor en Tiempos de Cólera</span>
+                            <span>Bailando con Lobos</span>
+                            <span>Don Quijote</span>
+                            <span>El Color Púrpura</span>
+                            <span>El Astillero</span>
+                            <span>El Hombre Mediocre</span>
+                            <span>El Proceso</span>
+                        </span>
+                    </span><!-- /word rotator -->
+                </div>
+            </div>
+
+            <hr class = "half-margins invisible">
+
+            <div class = "row">
+                <div class = "col-md-8">
+                ... O cualquier libro que te interese, lo único necesario es que tengas una herramienta con la cual encontrarlos.
+                Sabemos que es mejor leer un libro físico, con páginas que puedes tocar y olor a realidad, que un archivo PDF en
+                una pantalla.<br><br>
+
+                Creemos en apoyar una alternativa para el lector que busca un libro: el intercambio.
+                Así, nuestro sitio web es una <span class="styleColor"> conexión entre lectores</span> y también
+                un <span class = "styleColor">reciclaje</span> <i class = "fa fa-leaf"></i>.
+                </div>
+                <div class = "col-md-4">
+                    <img class="logo_sobre_nosotros" src="{% static 'assets/images/letrasclub/logo_letras.png' %}">
+                </div>
+            </div>
+
+            <div class = "row">
+                <br><br>
+                <div class = "well">
+                    ¿Tienes muchos libros apilados en algún lado? ¿Quieres darles otra oportunidad de ser leídos y donarlos?
+                    Apoya nuestra iniciativa y <a href="{% url 'perfiles:contactanos' 'donacion' %}">dona tus libros <i class = "fa fa-gift"></i></a>
+                </div>
+                <br>
+            </div>
+
+            <i class="fa fa-group"></i> Somos un equipo de personas apasionadas por la lectura, algunos programadores, otros marketeros. Compartimos el objetivo
+            de hacer crecer esta maravillosa herramienta. <a href="{% url 'perfiles:contactanos' 'contacto' %}">Contáctanos <i class="fa fa-envelope-square"></i></a>
+
+            <hr class = "invisible">
+        </h4>
+    </div>
+{% endblock content %}

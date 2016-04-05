@@ -590,7 +590,7 @@ def contactanos(request, razon_contacto):
             perfil = obtener_perfil(request.user)
             ciudad = perfil.ciudad
 
-        return redirect('libros:libros_ciudad', slug_ciudad=ciudad.slug, id_ciudad=ciudad.id, filtro='titulo')
+            return redirect('perfiles:despues_contacto', razon_contacto=razon_contacto, correo_contacto=correo)
 
     else:
 

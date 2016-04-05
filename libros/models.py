@@ -24,6 +24,9 @@ class Libro(models.Model):
     def __unicode__(self):
         return self.slug
 
+    class Meta:
+        ordering = ["titulo"]
+
 
 class LibrosLeidos(models.Model):
     perfil = models.ForeignKey(Perfil)

@@ -587,9 +587,6 @@ def contactanos(request, razon_contacto):
 
             enviar_mail_contactanos(nombre, correo, tema, mensaje)
 
-            perfil = obtener_perfil(request.user)
-            ciudad = perfil.ciudad
-
             return redirect('perfiles:despues_contacto', razon_contacto=razon_contacto, correo_contacto=correo)
 
     else:
@@ -602,8 +599,7 @@ def contactanos(request, razon_contacto):
         elif razon_contacto == "donacion":
 
             form = ContactForm(initial={'tema': "Hacer una donación de libros"})
-            form.fields[
-                'mensaje'].placeholder = "Hola, deseo donar mis libros, quiero que alguien más pueda leerlos ..."
+            form.fields['mensaje'].placeholder = "Hola, deseo donar mis libros, quiero que alguien más pueda leerlos ..."
 
         else:
             form = ContactForm()

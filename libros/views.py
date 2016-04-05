@@ -2,9 +2,8 @@
 import json
 
 from datetime import datetime
-from itertools import chain
 
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
@@ -38,7 +37,7 @@ def main(request):
     template = "libros/inicio.html"
 
     ciudad = City.objects.get(pk=18)
-    bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad, eliminada=False)
+    bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad, eliminada=False)[:12]
 
     context = {'bibliotecas_compartidas': bibliotecas_compartidas}
     return render(request, template, context)

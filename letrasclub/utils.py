@@ -262,7 +262,7 @@ def enviar_mail_contactanos(nombre, correo, tema, mensaje):
     html_message = render_to_string("contactanos_mail.html",
                                     {'nombre': nombre, 'correo': correo, 'tema': tema, 'mensaje': mensaje})
 
-    receptores = [admin[1] for admin in settings.ADMINS]
+    receptores = settings.ADMINS[1]
 
     send_mail(
         subject=titulo,

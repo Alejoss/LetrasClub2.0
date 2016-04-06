@@ -3,6 +3,7 @@
 
 {% block content %}
 <div class = "row">
+    <div class = "col-md-11 col-md-offset-1">
     <hr class = "half-margins invisible">
 
     {% if razon_contacto == "donacion" %}
@@ -21,6 +22,9 @@
         <h2>Muchas gracias por contactarnos, te responderemos lo antes posible.</h2>
     {% endif %}
 
-    <a class = "btn btn-primary" href="{% url 'libros:libros_ciudad' 'quito' '18' %}">Regresar a Quito</a>
+    <a class = "btn btn-primary" href="{% url 'libros:libros_ciudad' 'quito' '18' %}">Regresar a la página de Quito</a>
+
+    <hr class = "invisible">
+    </div>
 </div>
 {% endblock content %}

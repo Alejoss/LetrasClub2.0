@@ -616,8 +616,8 @@ class DespuesContacto(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(DespuesContacto, self).get_context_data(**kwargs)
         context['razon_contacto'] = kwargs['razon_contacto']
-        url_restablecida = kwargs["correo_contacto"].replace("-", "@") + ".com"
-        context['correo_contacto'] = url_restablecida
+        email_restablecido = kwargs["correo_contacto"].replace("-", "@") + ".com"
+        context['correo_contacto'] = email_restablecido
 
         return context
 

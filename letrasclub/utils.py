@@ -268,7 +268,7 @@ def enviar_mail_contactanos(nombre, correo, tema, mensaje):
         subject=titulo,
         message=mensaje_texto,
         from_email="letras.club@no-reply.com",
-        recipient_list=receptores,
+        recipient_list=[receptores],
         fail_silently=True,
         html_message=html_message
     )

@@ -335,7 +335,7 @@ def redirigir_login(request):
         admin_bcompartida_obj = AdminsBibliotecaCompartida.objects.filter(
             perfil=perfil).select_related('biblioteca_compartida').first()
         bcompartida = admin_bcompartida_obj.biblioteca_compartida
-        redirect('libros:biblioteca_compartida', slug_biblioteca_compartida=bcompartida.slug)
+        return redirect('libros:biblioteca_compartida', slug_biblioteca_compartida=bcompartida.slug)
     else:
         return redirect('libros:libros_ciudad', slug_ciudad=perfil.ciudad.slug, id_ciudad=perfil.ciudad.id)
 

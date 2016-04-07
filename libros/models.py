@@ -153,8 +153,8 @@ class BibliotecaCompartida(models.Model):
 
 
 class AdminsBibliotecaCompartida(models.Model):
-    biblioteca_compartida = models.OneToOneField(BibliotecaCompartida)
-    perfil = models.OneToOneField(Perfil, null=True)
+    biblioteca_compartida = models.ForeignKey(BibliotecaCompartida)
+    perfil = models.ForeignKey(Perfil, null=True)
     activo = models.BooleanField(default=True)
 
     def __unicode__(self):
@@ -170,6 +170,9 @@ class LibrosBibliotecaCompartida(models.Model):
 
     def __unicode__(self):
         return "Libro BibliotecaCompartida: %s - %s" % (self.libro.titulo, self.biblioteca_compartida.nombre)
+
+    class Meta:
+        ordering = ['libro__titulo']
 
 
 class LibrosPrestadosBibliotecaCompartida(models.Model):

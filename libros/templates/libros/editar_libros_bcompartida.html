@@ -104,14 +104,14 @@
 				<div class="panel panel-default panel_info_disponible">
 					<div class="panel-heading">
 						<h4 class="panel-title">
-							<a data-id="{{l.id}}" data-toggle="collapse" data-parent="#accordion" href="#acordion3{{forloop.counter}}">
+							<a data-id="{{l.id}}" data-toggle="collapse" data-parent="#accordion" href="#acordion_nd{{forloop.counter}}">
 								<i style="color:red" class="fa fa-flag fa-flip-horizontal pull-left"></i>
 								<i class="fa fa-toggle-down pull-right"></i>
 								<h5><strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}</h5>
 							</a>
 						</h4>
 					</div>
-					<div id="acordion3{{forloop.counter}}" class="collapse">
+					<div id="acordion_nd{{forloop.counter}}" class="collapse">
 						<div class="panel-body opciones_libro_no_disponible">
 							{% if l.prestado %}
 								<p> Este libro fue prestado </p>
@@ -183,7 +183,7 @@ $(document).ready(function(){
 	$(".marcar_no_disponible").on("click", function(e){
 		e.preventDefault();
 		var id_libro_disp = $(this).data("id");
-		var marcar_button = $(this)
+		var marcar_button = $(this);
 		$.ajax({
 			url: "/libros/marcar_no_disponible/",
 			method: "POST",

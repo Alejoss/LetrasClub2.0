@@ -547,7 +547,7 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
 @login_required
 def editar_libros_bcompartida(request, slug_biblioteca_compartida):
     """
-    Esta view no está en uso, permite editar el estado de los libros de la biblioteca compartida
+    Permite editar los libros de la Biblioteca Compartida
     """
 
     template = "libros/editar_libros_bcompartida.html"
@@ -559,27 +559,10 @@ def editar_libros_bcompartida(request, slug_biblioteca_compartida):
     libros_no_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida,
                                                                       disponible=False,
                                                                       prestado=False, eliminado=False)
-    libros_prestados = LibrosPrestadosBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida,
-                                                                          fecha_devolucion=None)
 
-    libros_requests = libros_no_retirados = False
-    if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=bcompartida,
-                                                        aceptado=False, eliminado=False).exists():
-        libros_requests = LibrosRequestBibliotecaCompartida.objects.filter(
-            libro_disponible__biblioteca_compartida=bcompartida,
-            aceptado=False, eliminado=False).select_related("libro_disponible")
-
-    if LibrosRequestBibliotecaCompartida.objects.filter(libro_disponible__biblioteca_compartida=bcompartida,
-                                                        aceptado=True,
-                                                        retirado=False, eliminado=False).exists():
-        libros_no_retirados = LibrosRequestBibliotecaCompartida.objects.filter(
-            libro_disponible__biblioteca_compartida=bcompartida,
-            aceptado=True, retirado=False).select_related("libro_disponible")
-
-    context = {'biblioteca_compartida': bcompartida, 'libros_prestados': libros_prestados,
+    context = {'biblioteca_compartida': bcompartida,
                'libros_disponibles': libros_disponibles,
-               'libros_no_disponibles': libros_no_disponibles, 'libros_requests': libros_requests,
-               'libros_no_retirados': libros_no_retirados}
+               'libros_no_disponibles': libros_no_disponibles}
 
     return render(request, template, context)
 

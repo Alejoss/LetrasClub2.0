@@ -140,7 +140,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Login settings
 LOGIN_URL = "/libros/main/"
-LOGIN_REDIRECT_URL = "/perfil/mi_perfil/"
+LOGIN_REDIRECT_URL = "/perfil/redirigir_login/"
 
 if HEROKU:
     SOCIAL_AUTH_FACEBOOK_KEY = os.environ["SOCIAL_AUTH_FACEBOOK_KEY"]

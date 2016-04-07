@@ -151,6 +151,7 @@
 	{% endif %}
 	<!-- Actividad -->
 	{% for act in actividad %}
+        {% comment %}
 		{% if act.1 == "comment" %}
 			<div class="alert callout alert-default">
 				<div class="row parent_comment">
@@ -160,7 +161,7 @@
 					<p>
 						&nbsp {{act.0.texto}}
 					</p>
-					{% comment %}<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_bcompartida_ajax' %}" data-clicked="0"
+					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_comment_bcompartida_ajax' %}" data-clicked="0"
 					class="show_respuestas_comment cerrado pull-right" href="">
 						<i class = "fa fa-comment"></i>
 						{{act.0.num_respuestas|default:""}}							
@@ -188,31 +189,42 @@
 							</form>
 							{% endif %}
 						</div>
-					</div>{% endcomment %}
+					</div>
 				</div>
 			</div>
 		{% else %}
+		{% endcomment %}
 			<!-- es un objeto Notificacion -->
+            {% comment %}
 			<div class="alert callout alert-default">
 				<div class="row">
-					{% comment %}<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
+					<a data-id="{{ act.0.id }}" data-url-ajax="{% url 'comments:respuestas_notificacion_ajax' %}" data-clicked="0"
 					class="show_comments_notificacion cerrado pull-right" href="">
 						<i class = "fa fa-comment"></i>
 						{{act.0.num_respuestas|default:""}}
-					</a>{% endcomment %}
+					</a>
 					{% if act.0.tipo == "bcompartida_presto" %}
 						<p> <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a> tomó prestado el libro
 						<strong> {{act.0.libro.titulo}} </strong> de <strong> {{act.0.libro.autor}}</strong>
 						</p>
-					{% elif act.0.tipo == "bcompartida_cambio" %}
+					{% endcomment %}
+					{% if act.0.tipo == "bcompartida_cambio" %}
+                    <div class="alert callout alert-default">
+                        <div class="row">
 						<p> Cambió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong> por el libro <strong> {{act.0.segundo_libro.titulo}} </strong> de <strong> {{act.0.segundo_libro.autor}}</strong>
 						{% if act.0.perfil_actor %}
 						con el usuario <a target="blank" href="{% url 'perfiles:perfil_usuario' act.0.perfil_actor.usuario.username %}">{{act.0.perfil_actor.usuario.username}}</a>
 						{% endif %}
 						</p>
+                        </div>
+                    </div>
                     {% elif act.0.tipo == "bcompartida_compartio" %}
-                        <p> Compartió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong>
-						</p>
+                    <div class="alert callout alert-default">
+                        <div class="row">
+                            <p> Compartió el libro <strong>{{act.0.libro.titulo}}</strong> de <strong>{{act.0.libro.autor}}</strong>
+						    </p>
+                        </div>
+                    </div>
 					{% endif %}
 					{% comment %}<div class = "hidden comments">
 						<br>
@@ -240,11 +252,12 @@
 								<p class="pull-right" title="Necesitas estar registrado para poder comentar"><i class="fa fa-lock"></i></p>
 							{% endif %}
 						</div>
-					</div>{% endcomment %}
-				</div>
+					</div>
+					</div>
 			</div>
 		{% endif %}
-	{% endfor %}
+    {% endcomment %}
+    {% endfor %}
 	</div>
 	</div>
 </div>

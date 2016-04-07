@@ -10,6 +10,8 @@
             <h4>Para registrar una nueva Biblioteca Compartida, necesitamos conocernos: </h4>
         {% elif razon_contacto == "donacion" %}
             <h4>Gracias por donar tus libros!, hay miles de lectores que podrán encontrarlos nuevamente.</h4>
+        {% else %}
+            <h4>Gracias por contactarnos, te responderemos lo antes posible.</h4>
         {% endif %}
         <form class="form-horizontal" action="{% url 'perfiles:contactanos' razon_contacto %}" method="post">
             {% csrf_token %}
@@ -22,10 +24,6 @@
         </form>
     </div>
     <div class = "col-md-4">
-        <hr class = "invisible">
-        <p class = "gray">
-            Gracias por contactarnos, te responderemos lo antes posible.
-        </p>
     </div>
 </div>
 {% endblock content %}

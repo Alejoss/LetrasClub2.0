@@ -312,7 +312,7 @@ def login_admin_bcompartida(request):
                     else:
                         form.add_error(None, "Nombre de usuario o contraseña incorrecta")
                 else:
-                    form.add_error(None, "No existe un admin de esa biblioteca compartida con ese nombre")
+                    form.add_error(None, "No existe un administrador de esa biblioteca compartida con ese nombre")
             else:
                 form.add_error("nombre_usuario", "Nombre de usuario incorrecto")
     else:

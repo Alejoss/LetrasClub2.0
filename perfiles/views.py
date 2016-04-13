@@ -587,9 +587,7 @@ def contactanos(request, razon_contacto):
 
             enviar_mail_contactanos(nombre, correo, tema, mensaje)
 
-            correo_url = correo.split(".")[0].replace("@", "-")  # No hay como enviar un correo normal a la url
-
-            return redirect('perfiles:despues_contacto', razon_contacto=razon_contacto, correo_contacto=correo_url)
+            return redirect('perfiles:despues_contacto', razon_contacto=razon_contacto, correo_contacto=correo)
 
     else:
 
@@ -616,8 +614,7 @@ class DespuesContacto(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(DespuesContacto, self).get_context_data(**kwargs)
         context['razon_contacto'] = kwargs['razon_contacto']
-        email_restablecido = kwargs["correo_contacto"].replace("-", "@") + ".com"
-        context['correo_contacto'] = email_restablecido
+        context['correo_contacto'] = kwargs['correo_contacto']
 
         return context
 

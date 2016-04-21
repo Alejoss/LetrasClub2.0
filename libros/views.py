@@ -154,7 +154,7 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
     num_libros_disponibles = libros_disponibles.count()
     bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad)
 
-    # Muestra libros disponibles, un libro de cada bcompartida.
+    # Muestra libros disponibles, dos libro de cada bcompartida.
     lista_libros_disponibles = []
     for bcompartida in bibliotecas_compartidas:
         libro_bcompartida = libros_disponibles.filter(biblioteca_compartida=bcompartida, disponible=True).last()

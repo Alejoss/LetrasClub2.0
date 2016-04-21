@@ -87,7 +87,7 @@ class LibrosPrestados(models.Model):
 
     def __unicode__(self):
         return "Libro Prestado object: %s - %s - %s" % (
-        self.libro, self.perfil_dueno.usuario, self.perfil_receptor.usuario)
+            self.libro, self.perfil_dueno.usuario, self.perfil_receptor.usuario)
 
 
 class LibrosRequest(models.Model):
@@ -104,7 +104,7 @@ class LibrosRequest(models.Model):
 
     def __unicode__(self):
         return "Libro Request object: %s - %s - %s" % (
-        self.libro.titulo, self.perfil_envio.usuario, self.perfil_recepcion.usuario)
+            self.libro.titulo, self.perfil_envio.usuario, self.perfil_recepcion.usuario)
 
 
 class TipoBCompartidas(models.Model):
@@ -158,7 +158,7 @@ class AdminsBibliotecaCompartida(models.Model):
     activo = models.BooleanField(default=True)
 
     def __unicode__(self):
-        return "%s admin de %s" % (self.perfil.usuario.username,  self.biblioteca_compartida.nombre)
+        return "%s admin de %s" % (self.perfil.usuario.username, self.biblioteca_compartida.nombre)
 
 
 class LibrosBibliotecaCompartida(models.Model):

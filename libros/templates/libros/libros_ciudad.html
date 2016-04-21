@@ -84,7 +84,8 @@
         {% for l in lista_libros_disponibles %}
             <div class="alert callout alert-default">
                 <div class="row">
-                    <h6><a href="">{{ l.biblioteca_compartida.nombre }} </a> - <strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
+                    <h6><a href="{% url 'libros:biblioteca_compartida' l.biblioteca_compartida.slug %} ">
+                        {{ l.biblioteca_compartida.nombre }} </a> - <strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
                     </h6>
                 </div>
             </div>
@@ -111,23 +112,23 @@
         </p>
     </div>
 
-	{% if grupos_abiertos %}
-		<h4> Grupos abiertos en Quito </h4>
-		{% for grupo in grupos_abiertos %}
-			<a href="{% url 'grupos:main_grupo_actividad' grupo.id %}">{{grupo.nombre}}</a>
-			<br>
-		{% endfor %}
-	{% endif %}
-
-	<hr class = "half-margins invisible">
-
-	{% if grupos_usuario %}
-		<h4> Tus Grupos </h4>
-		{% for u_grupo in grupos_usuario %}
-			<a href="{% url 'grupos:main_grupo_actividad' u_grupo.grupo.id %}"> {{ u_grupo.grupo.nombre }} </a>
-			<br>
-		{% endfor %}
-	{% endif %}
+{#	{% if grupos_abiertos %}#}
+{#		<h4> Grupos abiertos en Quito </h4>#}
+{#		{% for grupo in grupos_abiertos %}#}
+{#			<a href="{% url 'grupos:main_grupo_actividad' grupo.id %}">{{grupo.nombre}}</a>#}
+{#			<br>#}
+{#		{% endfor %}#}
+{#	{% endif %}#}
+{##}
+{#	<hr class = "half-margins invisible">#}
+{##}
+{#	{% if grupos_usuario %}#}
+{#		<h4> Tus Grupos </h4>#}
+{#		{% for u_grupo in grupos_usuario %}#}
+{#			<a href="{% url 'grupos:main_grupo_actividad' u_grupo.grupo.id %}"> {{ u_grupo.grupo.nombre }} </a>#}
+{#			<br>#}
+{#		{% endfor %}#}
+{#	{% endif %}#}
 
 	<hr class="half-margins invisible" /><!-- divider 30px -->
 	

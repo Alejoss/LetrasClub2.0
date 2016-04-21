@@ -22,9 +22,9 @@
 <br>
 <div class = "row">
     <div class = "col-md-3 col-sm-3">
-        {% if biblioteca_compartida.tipo == "andoteca" %}
+        {% if biblioteca_compartida.tipo.nombre == "andoteca" %}
             <img class = "img-responsive thumbnail" src="{% static 'assets/images/letrasclub/marker_andotecas_grande.png' %} " alt="">
-        {% elif biblioteca_compartida.tipo == "biblioteca_cerrada" %}
+        {% elif biblioteca_compartida.tipo.nombre == "biblioteca_cerrada" %}
             <img class = "img-responsive thumbnail" src="{% static 'assets/images/letrasclub/marker_bcerrada_grande.png' %} " alt="">
         {% else %}
             <img class = "img-responsive thumbnail" src="{% static 'assets/images/letrasclub/marker_letras_grande.png' %}" alt="">

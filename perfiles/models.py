@@ -26,6 +26,9 @@ class Perfil(models.Model):
     def __unicode__(self):
         return "Perfil: %s" % (self.usuario.username)
 
+    class Meta:
+        ordering = ["-pk"]
+
 
 class UsuarioLeyendo(models.Model):
     perfil = models.ForeignKey(Perfil)
@@ -36,5 +39,3 @@ class UsuarioLeyendo(models.Model):
 
     def __unicode__(self):
         return "Usuario Leyendo: %s - %s" % (self.perfil.usuario.username, self.libro.titulo)
-
-

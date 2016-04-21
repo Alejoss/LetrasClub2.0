@@ -536,7 +536,8 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
             'nombre': bcompartida.nombre,
             'direccion': bcompartida.direccion,
             'imagen': bcompartida.imagen,
-            'direccion_web': bcompartida.direccion_web
+            'direccion_web': bcompartida.direccion_web,
+            'horario_apertura': bcompartida.horario_apertura,
         })
 
     context = {'biblioteca_compartida': bcompartida, 'form': form}

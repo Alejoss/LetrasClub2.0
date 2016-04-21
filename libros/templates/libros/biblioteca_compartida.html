@@ -113,7 +113,7 @@
 	<div class = "col-md-8">		
 		<div class="testimonial classic">
 			<p>{{biblioteca_compartida.direccion}}</p><br>
-            {% if biblioteca_compartida.tipo.nombre == "biblioteca_abierta" %}
+            {% if biblioteca_compartida.horario_apertura %}
                 <p>Horarios: {{ biblioteca_compartida.horario_apertura }} </p>
             {% endif %}
 		</div>

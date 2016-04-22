@@ -32,17 +32,58 @@
 
 <div class = "row">
     <hr class = "half-margins invisible">
+
+
     <div class = "col-md-8">
-        <div id="mapa_ciudad" data-url-cincobcompartida="{% url 'libros:cinco_bcompartida' %}" class=""><!-- map container --></div>
+
+        <!-- Mapa de la Ciudad -->
+        <div id="mapa_ciudad" data-url-cincobcompartida="{% url 'libros:cinco_bcompartida' %}" class="mapa_ciudad"><!-- map container --></div>
+
+        <!-- facebook -->
+        <div class = "visible-sm visible-xs">
+            <!-- Buscar -->
+            <div class = "visible-sm col-sm-6 col-sm-offset-1">
+                <hr class = "invisible">
+                <div class="btn-toolbar pull-right" role="toolbar">
+                    <div class="btn-group btn-group">
+                        <button id="elegir_autor" type="button" class="btn btn-default active">Autor</button>
+                        <button id="elegir_titulo" type="button" class="btn btn-default">Título</button>
+                    </div>
+                </div>
+
+                <form id="form_buscar" method="get" action="" class="input-group">
+                    <input id="busqueda_input" type="text" class="form-control"
+                           name="q" placeholder="Buscar por autor"/>
+                    <input id="busqueda_filtro" type="hidden" name="filtro" value="autor">
+                    <span class="input-group-btn">
+                        <button id="buscar_libro" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                    </span>
+                </form>
+            </div>
+            <div class = "col-sm-5 col-xs-offset-1 col-sm-offset-0">
+                <br><br>
+                    <div class="fb-page" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true"
+                     data-show-posts="false" data-height="500" data-width="300">
+                    <div class="fb-xfbml-parse-ignore">
+                        <blockquote cite="https://www.facebook.com/facebook">
+                        <a href="https://www.facebook.com/facebook">Facebook</a></blockquote>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div class = "col-md-4">
         <!-- facebook -->
-        <div class="fb-page" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true"
-         data-show-posts="false" height="600"
-         data-tabs="timeline">
-        <div class="fb-xfbml-parse-ignore">
-        <blockquote cite="https://www.facebook.com/facebook">
-        <a href="https://www.facebook.com/facebook">Facebook</a></blockquote></div></div>
+        <div class = "visible-md visible-lg">
+            <div class="fb-page" data-href="https://www.facebook.com/letras.club" data-hide-cover="false" data-show-facepile="true"
+             data-show-posts="false" data-height="600"
+             data-tabs="timeline">
+            <div class="fb-xfbml-parse-ignore">
+                <blockquote cite="https://www.facebook.com/facebook">
+                <a href="https://www.facebook.com/facebook">Facebook</a></blockquote>
+            </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -50,7 +91,8 @@
 
 	<hr class =" half-margins invisible">
 
-    <div>
+    <!-- Buscar -->
+    <div class = "hidden-sm">
         <div class="btn-toolbar pull-right" role="toolbar">
             <div class="btn-group btn-group">
                 <button id="elegir_autor" type="button" class="btn btn-default active">Autor</button>
@@ -76,6 +118,15 @@
 		<i class="fa fa-book"></i>
 	</div>
 
+    <div class = "visible-xs visible-sm row">
+        <button class = "btn pull-right btn-primary" onclick="window.location.href='{% url 'perfiles:login' %}';">
+        Administradores de Bibliotecas Compartidas <i class = "fa fa-sign-in"></i> </button>
+        <p class = "pull-right">
+            Tienes libros que quieras <a href="{% url 'perfiles:contactanos' 'donacion' %}">
+            <span class="styleColor"><strong>donar</strong><i class = "fa fa-send-o"></i></span></a>?
+        </p>
+    </div>
+
     <p id = "nota_lista_libros">Últimos libros compartidos:</p>
     <div id = "libros">
         <p><a class="pull-right" href="{% url 'libros:lista_libros_ciudad' ciudad.slug 'autor' %}">Ver todos los libros compartidos en Quito
@@ -92,19 +143,17 @@
         {% endfor %}
     </div>
 
-    <hr class = "invisible">
+    <hr class = "hidden-sm hidden-xs invisible">
 </div>
 
 <div class = "col-md-4">
 
-    <hr class="half-margins invisible" /><!-- divider 30px -->
+    <hr class="hidden-sm hidden-xs half-margins invisible" /><!-- divider 30px -->
 
-    <button class = "btn btn-primary" onclick="window.location.href='{% url 'perfiles:login' %}';">
+    <div class = "visible-lg visible-md">
+        <button class = "btn btn-primary" onclick="window.location.href='{% url 'perfiles:login' %}';">
         Administradores de Bibliotecas Compartidas <i class = "fa fa-sign-in"></i> </button>
 
-    <br>
-
-    <div>
         <br><br>
         <p>
             Tienes libros que quieras <a href="{% url 'perfiles:contactanos' 'donacion' %}">

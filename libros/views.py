@@ -164,9 +164,11 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
     # Puntos Goolge Maps
     gmap_bcompartidas = []
     for b in bibliotecas_compartidas:
-        latlong = b.punto_google_maps.split(", ")
-        marker_gmaps = [b.nombre, latlong[0].strip(), latlong[1].strip(), b.slug, b.tipo.nombre]
-        gmap_bcompartidas.append(marker_gmaps)
+        if b.punto_google_maps:
+            latlong = b.punto_google_maps.split(", ")
+            marker_gmaps = [b.nombre, latlong[0].strip(), latlong[1].strip(), b.slug, b.tipo.nombre]
+            gmap_bcompartidas.append(marker_gmaps)
+
     gmap_bcompartidas = json.dumps(gmap_bcompartidas)
 
     # Grupos abiertos de la ciudad

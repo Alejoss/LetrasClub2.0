@@ -21,7 +21,7 @@ urlpatterns = [
 
     url(r'^nueva_biblioteca_compartida/(?P<slug_ciudad>\w+)/(?P<id_ciudad>\d+)/$', views.nueva_biblioteca_compartida, 
         name="nueva_biblioteca_compartida"),
-    url(r'^editar_info_bcompartida/(?P<slug_biblioteca_compartida>[-\w]+)/$', views.editar_info_bcompartida, 
+    url(r'^editar_info_bcompartida/(?P<slug_biblioteca_compartida>[-\w]+)/$', views.editar_info_bcompartida,
         name="editar_info_bcompartida"),
     url(r'^editar_libros_bcompartida/(?P<slug_biblioteca_compartida>[-\w]+)/$', views.editar_libros_bcompartida, 
         name="editar_libros_bcompartida"),

@@ -11,6 +11,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
+from social.apps.django_app.default.models import UserSocialAuth
 
 from cities_light.models import City
 from libros.models import LibrosDisponibles, LibrosPrestados, Libro, LibrosRequest, BibliotecaCompartida, \
@@ -150,7 +151,8 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
     if request.user.is_authenticated():
         perfil_usuario = obtener_perfil(request.user)
 
-    libros_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida__ciudad=ciudad, disponible=True)
+    libros_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida__ciudad=ciudad,
+                                                                   disponible=True)
     num_libros_disponibles = libros_disponibles.count()
     bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad)
 
@@ -204,10 +206,12 @@ def lista_libros_ciudad(request, slug_ciudad, filtro):
 
     if filtro == "titulo":
         libros_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida__ciudad=ciudad,
-                             disponible=True).select_related("libro").order_by("libro__titulo")
+                                                                       disponible=True).select_related(
+            "libro").order_by("libro__titulo")
     else:
         libros_disponibles = LibrosBibliotecaCompartida.objects.filter(biblioteca_compartida__ciudad=ciudad,
-                             disponible=True).select_related("libro").order_by("libro__autor")
+                                                                       disponible=True).select_related(
+            "libro").order_by("libro__autor")
 
     # Paginator
     paginator = Paginator(libros_disponibles, 100)
@@ -451,7 +455,6 @@ def nueva_biblioteca_compartida(request, slug_ciudad, id_ciudad):
 
 
 def biblioteca_compartida(request, slug_biblioteca_compartida):
-
     template = "libros/biblioteca_compartida.html"
 
     bcompartida = BibliotecaCompartida.objects.get(slug=slug_biblioteca_compartida)
@@ -531,7 +534,6 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
 
             return HttpResponseRedirect(reverse('libros:biblioteca_compartida',
                                                 kwargs={'slug_biblioteca_compartida': bcompartida.slug}))
-
     else:
         form = EditarBibliotecaCompartida(initial={
             'punto_google_maps': bcompartida.punto_google_maps,
@@ -542,7 +544,16 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
             'horario_apertura': bcompartida.horario_apertura,
         })
 
-    context = {'biblioteca_compartida': bcompartida, 'form': form}
+    # Si no es un usuario que hiso login con Facebook, entonces hay que mostrar link a editar_info_personal
+
+    if UserSocialAuth.objects.filter(user=request.user).exists():
+        es_usuario_social = True
+    else:
+        es_usuario_social = False
+
+        print es_usuario_social
+
+    context = {'biblioteca_compartida': bcompartida, 'form': form, 'es_usuario_social': es_usuario_social}
 
     return render(request, template, context)
 
@@ -957,8 +968,10 @@ def info_bcompartida(request):
 
         if id_bcompartida:
             bcompartida = get_object_or_404(BibliotecaCompartida, id=id_bcompartida)
-            dict_bcompartida = {'nombre': bcompartida.nombre, 'ciudad': bcompartida.ciudad.name, 'punto_google_maps': bcompartida.punto_google_maps,
-                                'direccion': bcompartida.direccion, 'imagen': bcompartida.imagen, 'tipo': bcompartida.tipo.nombre}
+            dict_bcompartida = {'nombre': bcompartida.nombre, 'ciudad': bcompartida.ciudad.name,
+                                'punto_google_maps': bcompartida.punto_google_maps,
+                                'direccion': bcompartida.direccion, 'imagen': bcompartida.imagen,
+                                'tipo': bcompartida.tipo.nombre}
 
             bcompartida_json = json.dumps(dict_bcompartida)
 

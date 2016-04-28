@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^mi_perfil/$', views.perfil_propio, name="perfil_propio"),
     url(r'^mi_perfil_libros/$', views.perfil_propio_libros, name="perfil_propio_libros"),
     url(r'^editar_perfil/$', views.editar_perfil, name="editar_perfil"),
+    url(r'^editar_info_personal/$', views.editar_info_personal, name="editar_info_personal"),
     url(r'^redirigir_login/$', views.redirigir_login, name="redirigir_login"),
 
     url(r'^usuario/libros/(?P<username>[-\w.]+)/$', views.perfil_usuario_libros, name="perfil_usuario_libros"),

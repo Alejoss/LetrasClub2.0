@@ -381,6 +381,17 @@ def editar_perfil(request):
 
 
 @login_required
+def editar_info_personal(request):
+    """
+    Permite editar info que esta en User object, incluido cambiar clave
+    """
+    template = "perfiles/editar_info_personal.html"
+
+    pass
+
+
+
+@login_required
 def libros_usuario_ajax(request):
     """
 	Crea un UsuarioLeyendo object y señala la fecha actual como inicio

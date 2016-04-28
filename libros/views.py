@@ -545,7 +545,6 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
         })
 
     # Si no es un usuario que hiso login con Facebook, entonces hay que mostrar link a editar_info_personal
-
     if UserSocialAuth.objects.filter(user=request.user).exists():
         es_usuario_social = True
     else:

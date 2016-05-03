@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<div class = "row">
+    <div class = "col-md-11 col-md-offset-1">
+    <hr class = "half-margins invisible">
+
+    {% if razon_mensaje == "cambio_contrasena" %}
+        <h2>Tu contraseña ha sido cambiada con éxito.</h2>
+        <br>
+        <p>Estamos redirigiéndote al perfil de <strong>{{ admin_bcompartida.biblioteca_compartida.nombre }}</strong></p>
+    {% elif razon_mensaje == "otra" %}  <!-- Opcion abierta -->
+    {% else %}
+        <h2>Pedido procesado con éxito, redirigiendo ...</h2>
+    {% endif %}
+
+    <a class = "btn btn-primary" href="{% url 'libros:libros_ciudad' 'quito' '18' %}">Regresar a la página de Quito</a>
+
+    <hr class = "invisible">
+    </div>
+</div>
+{% endblock content %}
+
+
+{% block extra_javascript %}
+    <script>
+    $(document).ready(function(){
+        setTimeout(function(){location.href="{{ url_redirigir }}"}, 4000);
+    });
+    </script>
+{% endblock extra_javascript %}

@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 
 from models import Perfil
 from libros.models import BibliotecaCompartida
@@ -53,6 +53,17 @@ class FormEditarPerfil(forms.ModelForm):
             'ciudad': forms.Select(attrs={'class': 'form-control'}),
             'numero_telefono_contacto': forms.TextInput(attrs={'class': 'form-control'})
         }
+
+
+class FormEditarInfoPersonal(PasswordChangeForm):
+
+    email = forms.EmailField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    old_password = forms.CharField(label="Contraseña actual", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_password1 = forms.CharField(label="Nueva Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_password2 = forms.CharField(label="Repite nueva contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        fields = ['email', 'old_password', 'new_password1', 'new_password2']
 
 
 class ContactForm(forms.Form):

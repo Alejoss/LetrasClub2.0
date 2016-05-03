@@ -22,7 +22,7 @@ from grupos.models import UsuariosGrupo, RequestInvitacion
 from notificaciones.models import Notificacion
 from comentarios.models import CommentPerfil
 
-from forms import FormRegistro, FormEditarPerfil, ContactForm, LoginAdminBcompartida
+from forms import FormRegistro, FormEditarPerfil, ContactForm, LoginAdminBcompartida, FormEditarInfoPersonal
 from letrasclub.utils import obtener_perfil, obtener_historial_libros, obtener_avatar_large, obtenerquito, \
     obtener_libros_perfil, obtener_usuario_leyendo, \
     notif_grupos_comenzo_leer, notif_grupos_termino_leer, enviar_mail_contactanos, obtener_muro_perfil
@@ -298,7 +298,6 @@ def login_admin_bcompartida(request):
 
                 if AdminsBibliotecaCompartida.objects.filter(biblioteca_compartida=bcompartida,
                                                              perfil=perfil_admin).exists():
-                    print "existe admin"
                     usuario_auth = authenticate(username=perfil_admin.usuario.username, password=password)
 
                     if usuario_auth is not None:
@@ -329,7 +328,6 @@ def login_admin_bcompartida(request):
 
 @login_required
 def redirigir_login(request):
-
     perfil = obtener_perfil(request.user)
     if AdminsBibliotecaCompartida.objects.filter(perfil=perfil).exists():
         admin_bcompartida_obj = AdminsBibliotecaCompartida.objects.filter(
@@ -386,9 +384,44 @@ def editar_info_personal(request):
     Permite editar info que esta en User object, incluido cambiar clave
     """
     template = "perfiles/editar_info_personal.html"
+    usuario_editar = request.user
 
-    pass
+    print "metodo actual: %s" % request.method
 
+    if request.method == "POST":
+
+        form = FormEditarInfoPersonal(usuario_editar, request.POST)
+
+        if form.is_valid():
+            form.save()  # Cambia la contraseña
+
+            email = form.cleaned_data['email']
+
+            usuario_editar.email = email
+            usuario_editar.save()
+
+            print request.user
+
+            # render html con mensaje temporal
+            perfil = obtener_perfil(usuario_editar)
+            admin_bcompartida = AdminsBibliotecaCompartida.objects.filter(perfil=perfil, activo=True).select_related(
+                'biblioteca_compartida').first()
+            razon_mensaje = 'cambio_contrasena'
+            template = "perfiles/mensaje_temporal.html"
+            url_redirigir = reverse('libros:biblioteca_compartida',
+                                    kwargs={'slug_biblioteca_compartida': admin_bcompartida.biblioteca_compartida.slug})
+
+            context = {'razon_mensaje': razon_mensaje, 'admin_bcompartida': admin_bcompartida,
+                       'url_redirigir': url_redirigir}
+
+            return render(request, template, context)
+
+    else:
+        form = FormEditarInfoPersonal(usuario_editar, initial={'email': usuario_editar.email})
+
+    context = {'form': form}
+
+    return render(request, template, context)
 
 
 @login_required
@@ -417,11 +450,7 @@ def leyendo_libro_ajax(request):
         autor = request.POST.get("autor", "")
         perfil = obtener_perfil(request.user)
 
-        print "libro_id: %s" % (libro_id)
-        print "titulo: %s" % (titulo)
-        print "autor: %s" % (autor)
         if not libro_id and (not titulo or not autor):
-            print "Reboto"
             # Si envio valores vacíos
             return HttpResponse(status=400)
 
@@ -610,7 +639,8 @@ def contactanos(request, razon_contacto):
         elif razon_contacto == "donacion":
 
             form = ContactForm(initial={'tema': "Hacer una donación de libros"})
-            form.fields['mensaje'].placeholder = "Hola, deseo donar mis libros, quiero que alguien más pueda leerlos ..."
+            form.fields[
+                'mensaje'].placeholder = "Hola, deseo donar mis libros, quiero que alguien más pueda leerlos ..."
 
         else:
             form = ContactForm()

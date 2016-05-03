@@ -18,7 +18,7 @@
 <div class = "col-md-4">
     <hr class = "invisible">
     {% if not es_usuario_social %}  <!-- Si no hiso login con Fb o una red social, mostrar formulario editar info personal -->
-        <p class = "well"><i class = "fa fa-cog"></i> Editar información <a href="">personal</a>.</p>
+        <p class = "well"><i class = "fa fa-cog"></i> Editar información <a href="{% url 'perfiles:editar_info_personal' %} ">personal</a>.</p>
     {% endif %}
 </div>
 <script type="text/javascript">	

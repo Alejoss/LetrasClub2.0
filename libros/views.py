@@ -550,8 +550,6 @@ def editar_info_bcompartida(request, slug_biblioteca_compartida):
     else:
         es_usuario_social = False
 
-        print es_usuario_social
-
     context = {'biblioteca_compartida': bcompartida, 'form': form, 'es_usuario_social': es_usuario_social}
 
     return render(request, template, context)

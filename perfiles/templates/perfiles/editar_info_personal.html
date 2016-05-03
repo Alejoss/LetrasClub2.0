@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class = "col-md-6 col-md-offset-1">
+	<hr class = "half-margins invisible">
+	<h2>Edita la información de {{user.username}}</h2>
+	<form class="form-horizontal" action="{% url 'perfiles:editar_info_personal' %}" method="post">
+		{% csrf_token %}		
+			<fieldset>
+				{{ form.non_field_errors }}
+
+                {{ form.email.label }}
+                {{ form.email }}
+                {{ form.email.errors }}
+
+                <div class="divider">
+                    <i class="fa fa-lock"></i>
+                </div>
+
+                {{ form.old_password.label }}
+                {{ form.old_password }}
+                {{ form.old_password.errors }}
+
+                {{ form.new_password1.label }}
+                {{ form.new_password1 }}
+                {{ form.new_password1.errors }}
+
+                {{ form.new_password2.label }}
+                {{ form.new_password2 }}
+                {{ form.new_password2.errors }}
+			<br>
+			<input class = "btn btn-success pull-right" type="submit" value="Enviar">
+	</form>
+	<hr class = "half-margins invisible">
+</div>
+
+<div class = "col-md-4">
+    <hr class = "invisible">
+</div>
+<script type="text/javascript">	
+</script>
+
+{% endblock content %}

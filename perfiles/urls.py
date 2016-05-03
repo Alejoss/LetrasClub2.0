@@ -18,6 +18,8 @@ urlpatterns = [
     url(r'^contactanos/(?P<razon_contacto>[-\w]+)/$', views.contactanos, name="contactanos"),
     url(r'^gracias_por_contactarnos/(?P<razon_contacto>[-\w]+)/(?P<correo_contacto>[\w\-@.]+)/$',
         views.DespuesContacto.as_view(), name="despues_contacto"),
+
+    # Otros
     url(r'^nosotros/$', views.SobreNosotros.as_view(), name="sobre_nosotros"),
 
     # Ajax

@@ -37,8 +37,14 @@ def main(request):
     """
     template = "libros/inicio.html"
 
-    ciudad = City.objects.get(pk=18)
-    bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad, eliminada=False)[:12]
+    # PKs de las bcompartidas que salen en la portada
+    pks_bcompartidas_portada = {'esto': 1, 'es': 2, 'algo': 3, 'que': 4, 'no': 5, 'deberia': 6, 'suceder': 7}
+    pks_list = []
+
+    for bcompartida_pk in pks_bcompartidas_portada.itervalues():
+        pks_list.append(bcompartida_pk)
+
+    bibliotecas_compartidas = BibliotecaCompartida.objects.filter(pk__in=pks_list)
 
     context = {'bibliotecas_compartidas': bibliotecas_compartidas}
     return render(request, template, context)

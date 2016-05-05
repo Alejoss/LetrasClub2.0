@@ -25,9 +25,14 @@ class FormPedirLibro(forms.Form):
 
 
 class NuevaBibliotecaCompartida(forms.ModelForm):
+    direccion = forms.CharField(required=False, label="Dirección", widget=Textarea(attrs={'class': 'form-control'}))
+    direccion_web = forms.CharField(required=False, label="Sitio Web", widget=URLInput(attrs={'class': 'form-control'}))
+    reglas_extra = forms.CharField(required=False, label="Reglas Extra", widget=Textarea(
+        attrs={'class': 'form-control', 'placeholder': "Por ej: Solamente intercambiamos cómics."}))
+
     class Meta:
         model = BibliotecaCompartida
-        fields = ('nombre', 'direccion', 'imagen', 'horario_apertura')
+        fields = ('nombre', 'direccion', 'imagen', 'horario_apertura', 'reglas_extra')
 
         widgets = {
             'nombre': TextInput(attrs={'class': 'form-control'}),
@@ -35,14 +40,15 @@ class NuevaBibliotecaCompartida(forms.ModelForm):
             'horario_apertura': TextInput(attrs={'class': 'form-control'}),
             'imagen': URLInput(attrs={'class': 'form-control'}),
             'punto_google_maps': TextInput(attrs={'class': 'form-control'}),
-            'direccion_web': URLInput(attrs={'class': 'form-control'})
+            'direccion_web': URLInput(attrs={'class': 'form-control'}),
+            'reglas_extra': Textarea(attrs={'class': 'form-control'}),
         }
 
 
 class EditarBibliotecaCompartida(NuevaBibliotecaCompartida):
-
     class Meta(NuevaBibliotecaCompartida.Meta):
-        fields = ('nombre', 'direccion', 'imagen', 'punto_google_maps', 'direccion_web', 'horario_apertura')
+        fields = ('nombre', 'direccion', 'imagen', 'punto_google_maps',
+                  'direccion_web', 'horario_apertura', 'reglas_extra')
 
 
 class FormPrestarLibroBCompartida(forms.Form):

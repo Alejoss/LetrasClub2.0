@@ -285,11 +285,9 @@ def login_admin_bcompartida(request):
         form.fields["biblioteca_compartida"].queryset = bibliotecas_compartidas
 
         if form.is_valid():
-            nombre_bcompartida = form.cleaned_data['biblioteca_compartida']
+            bcompartida = form.cleaned_data['biblioteca_compartida']
             password = form.cleaned_data['password']
             n_usuario = form.cleaned_data['nombre_usuario']
-
-            bcompartida = BibliotecaCompartida.objects.get(nombre=nombre_bcompartida, eliminada=False)
 
             if User.objects.filter(username=n_usuario).exists():
                 usuario = User.objects.get(username=n_usuario)

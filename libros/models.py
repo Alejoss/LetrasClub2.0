@@ -149,7 +149,7 @@ class BibliotecaCompartida(models.Model):
             return None
 
     def __unicode__(self):
-        return "%s %s" % (self.id, self.nombre)
+        return self.nombre
 
 
 class AdminsBibliotecaCompartida(models.Model):

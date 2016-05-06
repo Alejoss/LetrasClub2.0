@@ -9,6 +9,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
 ADMINS = ('Alejandro', 'alejoveintimilla@gmail.com')
+SERVER_EMAIL = "letraserrores@no-reply.com"
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['LIBROS_SECRET_KEY']

@@ -28,7 +28,7 @@ def obtener_avatar_large(perfil):
         if "facebook" in perfil.imagen_perfil:
             avatar_large = "%s?type=large" % (perfil.imagen_perfil)
         elif "google" in perfil.imagen_perfil:
-            avatar_large = (perfil.imagen_perfil).replace("sz=50", "sz=400")
+            avatar_large = perfil.imagen_perfil.replace("sz=50", "sz=400")
         else:
             avatar_large = perfil.imagen_perfil
     else:

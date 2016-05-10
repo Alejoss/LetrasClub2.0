@@ -5,6 +5,7 @@ from libros import views
 
 urlpatterns = [
     url(r'^$', views.main, name='main_redirect'),
+    url(r'^generar_error/$', views.generar_error),
     url(r'^libros/', include('libros.urls', namespace="libros")),
     url(r'^grupos/', include('grupos.urls', namespace="grupos")),
     url(r'^perfil/', include('perfiles.urls', namespace="perfiles")),

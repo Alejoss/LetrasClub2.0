@@ -30,6 +30,10 @@ from letrasclub.utils import obtener_perfil, definir_fecha_devolucion, obtenerqu
     obtener_muro_bcompartida
 
 
+def generar_error(request):
+    return HttpResponse("Error!!", status=500)
+
+
 def main(request):
     """
     Muestra un search de libros, las últimas acciones que han tomado los usuarios en la red,

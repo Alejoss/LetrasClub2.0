@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
-ADMINS = (('Alejandro', 'alejoveintimilla@gmail.com'), ('Criptoanarquist', 'thecriptoanarquist@gmail.com'))  # Se utiliza para enviar emails de contacto
+ADMINS = (('Alejandro', 'alejoveintimilla@gmail.com'),)  # Se utiliza para enviar emails de contacto
 SERVER_EMAIL = "letraserrores@no-reply.com"
 
 # SECURITY WARNING: keep the secret key used in production secret!

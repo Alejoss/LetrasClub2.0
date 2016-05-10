@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
-ADMINS = (('Alejandro', 'alejoveintimilla@gmail.com'),)
+ADMINS = (('Alejandro', 'alejoveintimilla@gmail.com'), ('Criptoanarquist', 'thecriptoanarquist@gmail.com'))  # Se utiliza para enviar emails de contacto
 SERVER_EMAIL = "letraserrores@no-reply.com"
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -16,9 +16,9 @@ SECRET_KEY = os.environ['LIBROS_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-HEROKU = True
-HEROKU_DB = True
-AMAZON_S3 = True
+HEROKU = False
+HEROKU_DB = False
+AMAZON_S3 = False
 
 ALLOWED_HOSTS = ["*"]
 

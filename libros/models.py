@@ -15,7 +15,7 @@ class Libro(models.Model):
     descripcion = models.TextField(null=True, blank=True, max_length=2500)
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        if not self.id or not self.slug:
             # nuevo objeto, crear slug
             self.slug = slugify(self.titulo)
 

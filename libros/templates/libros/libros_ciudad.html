@@ -126,10 +126,12 @@
         </p>
     </div>
 
+    <p><a class="pull-right" href="{% url 'libros:lista_libros_ciudad' ciudad.slug 'autor' %}"><strong>Ver todos los libros compartidos en Quito</strong>
+        <i class = "fa fa-sort-alpha-asc"></i></a>
+    </p>
+    <br>
     <p id = "nota_lista_libros">Últimos libros compartidos:</p>
     <div id = "libros">
-        <p><a class="pull-right" href="{% url 'libros:lista_libros_ciudad' ciudad.slug 'autor' %}">Ver todos los libros compartidos en Quito
-            <i class = "fa fa-list-ul"></i></a></p>
         <br>
         {% for l in lista_libros_disponibles %}
             <div class="alert callout alert-default">

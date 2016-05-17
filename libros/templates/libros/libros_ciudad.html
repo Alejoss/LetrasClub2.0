@@ -39,24 +39,23 @@
         <!-- Mapa de la Ciudad -->
         <div id="mapa_ciudad" data-url-cincobcompartida="{% url 'libros:cinco_bcompartida' %}" class="mapa_ciudad"><!-- map container --></div>
 
-        <!-- facebook -->
-        <div class = "visible-sm visible-xs">
+        <div class = "visible-sm visible-xs buscar_box">
             <!-- Buscar -->
             <div class = "visible-sm col-sm-6 col-sm-offset-1">
                 <hr class = "invisible">
                 <div class="btn-toolbar pull-right" role="toolbar">
-                    <div class="btn-group btn-group">
-                        <button id="elegir_autor" type="button" class="btn btn-default active">Autor</button>
-                        <button id="elegir_titulo" type="button" class="btn btn-default">Título</button>
+                <div class="btn-group btn-group">
+                        <button type="button" class="elegir_autor btn btn-default active">Autor</button>
+                        <button type="button" class="elegir_titulo btn btn-default">Título</button>
                     </div>
                 </div>
 
-                <form id="form_buscar" method="get" action="" class="input-group">
-                    <input id="busqueda_input" type="text" class="form-control"
+                <form method="get" action="" class="form_buscar input-group">
+                    <input type="text" class="busqueda_input form-control"
                            name="q" placeholder="Buscar por autor"/>
-                    <input id="busqueda_filtro" type="hidden" name="filtro" value="autor">
+                    <input class = "busqueda_filtro" type="hidden" name="filtro" value="autor">
                     <span class="input-group-btn">
-                        <button id="buscar_libro" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                        <button class="buscar_libro btn btn-primary"><i class="fa fa-search"></i></button>
                     </span>
                 </form>
             </div>
@@ -92,20 +91,20 @@
 	<hr class =" half-margins invisible">
 
     <!-- Buscar -->
-    <div class = "hidden-sm">
+    <div class = "hidden-sm buscar_box">
         <div class="btn-toolbar pull-right" role="toolbar">
             <div class="btn-group btn-group">
-                <button id="elegir_autor" type="button" class="btn btn-default active">Autor</button>
-                <button id="elegir_titulo" type="button" class="btn btn-default">Título</button>
+                <button type="button" class="elegir_autor btn btn-default active">Autor</button>
+                <button type="button" class="elegir_titulo btn btn-default">Título</button>
             </div>
         </div>
 
-        <form id="form_buscar" method="get" action="" class="input-group">
-            <input id="busqueda_input" type="text" class="form-control"
+        <form method="get" action="" class="form_buscar input-group">
+            <input type="text" class="busqueda_input form-control"
                    name="q" placeholder="Buscar por autor"/>
-            <input id="busqueda_filtro" type="hidden" name="filtro" value="autor">
+            <input class = "busqueda_filtro" type="hidden" name="filtro" value="autor">
             <span class="input-group-btn">
-                <button id="buscar_libro" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                <button class="buscar_libro btn btn-primary"><i class="fa fa-search"></i></button>
             </span>
         </form>
     </div>
@@ -324,28 +323,33 @@
         initMap();
 
         // Buscar libro
-        $("#elegir_autor").on("click", function(e){
+        $(".elegir_autor").on("click", function(e){
             e.preventDefault();
-            $("#busqueda_input").attr("placeholder", "Buscar por autor");
-            $("#busqueda_filtro").attr("value", "autor");
-            $("#elegir_titulo").removeClass("active");
-            $("#elegir_autor").addClass("active");
+            $(".busqueda_input").attr("placeholder", "Buscar por autor");
+            $(".busqueda_filtro").attr("value", "autor");
+            $(".elegir_titulo").removeClass("active");
+            $(".elegir_autor").addClass("active");
         });
 
-        $("#elegir_titulo").on("click", function(e){
+        $(".elegir_titulo").on("click", function(e){
             e.preventDefault();
-            $("#busqueda_input").attr("placeholder", "Buscar por titulo");
-            $("#busqueda_filtro").attr("value", "titulo");
-            $("#elegir_autor").removeClass("active");
-            $("#elegir_titulo").addClass("active");
+            $(".busqueda_input").attr("placeholder", "Buscar por titulo");
+            $(".busqueda_filtro").attr("value", "titulo");
+            $(".elegir_autor").removeClass("active");
+            $(".elegir_titulo").addClass("active");
         });
 
-        $("#buscar_libro").on("click", function(e){
+        $(".buscar_libro").on("click", function(e){
             e.preventDefault();
+            console.log("activo buscar_libro");
             $("#libros").html('<div class = "well"> <i class = "centrar fa fa-circle-o-notch fa-spin"></i> </div>');
 
-            var q = $("#busqueda_input").val();
-            var filtro = $("#busqueda_filtro").val();
+            var buscar_box = $(this).closest('.buscar_box');
+            var q = buscar_box.find('.busqueda_input').val();
+
+            console.log("q:" + q);
+            var filtro = buscar_box.find(".busqueda_filtro").val();
+            console.log("filtro:" + filtro);
 
             $.ajax({
                 method: "get",

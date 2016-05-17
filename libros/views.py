@@ -891,6 +891,7 @@ def buscar_ajax(request, id_ciudad):
     """
     busca un libro disponible con ajax SOLAMENTE entre libros compartidos en una Biblioteca Compartida
     """
+    print "llego buscar_ajax"
     if request.is_ajax():
 
         if request.method == "GET":
@@ -917,12 +918,17 @@ def buscar_ajax(request, id_ciudad):
                         lista_libros_disponibles.append(libro_disp_dict)
 
                     lista_libros_disponibles = json.dumps(lista_libros_disponibles)
+                    print "list_libros_disponibles: %s" % lista_libros_disponibles
 
                     return HttpResponse(unicode(lista_libros_disponibles), status=200)
                 else:
-                    return HttpResponse(status=400)
+                    return HttpResponse("No query_string en request", status=400)
+            else:
+                return HttpResponse("No q en request", status=400)
         else:
-            return HttpResponse(status=400)
+            return HttpResponse("Solo GET permitido", status=400)
+
+    return HttpResponse("Ajax requerido", status=400)
 
 
 @login_required

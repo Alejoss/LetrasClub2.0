@@ -31,7 +31,7 @@
 
             <p id="mostrar_todos" class="hidden">
                 <a class = "pull-right" href="{% url 'libros:lista_libros_ciudad' ciudad.slug 'autor' %}">
-                    Mostrar todos los libros <i class = "fa fa-list-ul"></i>
+                    Mostrar todos los libros <i class = "fa fa-sort-alpha-asc"></i>
                 </a>
             </p>
 
@@ -60,7 +60,8 @@
                 {% for l in libros_disponibles %}
                     <div class="alert callout alert-default">
                         <div class="row">
-                            <h6><a href="">{{ l.biblioteca_compartida.nombre }} </a> - <strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
+                            <h6><a href="{% url 'libros:biblioteca_compartida' l.biblioteca_compartida.slug %} ">
+                                {{ l.biblioteca_compartida.nombre }} </a> - <strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
                             </h6>
                         </div>
                     </div>
@@ -150,6 +151,8 @@ $("#buscar_libro").on("click", function(e){
                 $("#ordenar").hide();
 
                 $(libros_encontrados).each(function(index, value){
+                    console.log(value);
+                    console.log(value.url_bcompartida);
                     var el = $("<div/>");  // es necesario para el loadTemplate
                     var linea_libro = el.loadTemplate($("#resultado_busqueda"),{
                         url_bcompartida : value.url_bcompartida,

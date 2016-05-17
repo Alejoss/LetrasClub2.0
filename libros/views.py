@@ -891,7 +891,6 @@ def buscar_ajax(request, id_ciudad):
     """
     busca un libro disponible con ajax SOLAMENTE entre libros compartidos en una Biblioteca Compartida
     """
-    print "llego buscar_ajax"
     if request.is_ajax():
 
         if request.method == "GET":
@@ -913,12 +912,12 @@ def buscar_ajax(request, id_ciudad):
 
                     for libro_disp in libros_disponibles:
                         libro_disp_dict = {'autor': libro_disp.libro.autor, 'titulo': libro_disp.libro.titulo,
-                                           'url_bcompartida': 'falta',
+                                           'url_bcompartida': reverse('libros:biblioteca_compartida',
+                                                                      kwargs={'slug_biblioteca_compartida': libro_disp.biblioteca_compartida.slug}),
                                            'nombre_bcompartida': libro_disp.biblioteca_compartida.nombre}
                         lista_libros_disponibles.append(libro_disp_dict)
 
                     lista_libros_disponibles = json.dumps(lista_libros_disponibles)
-                    print "list_libros_disponibles: %s" % lista_libros_disponibles
 
                     return HttpResponse(unicode(lista_libros_disponibles), status=200)
                 else:

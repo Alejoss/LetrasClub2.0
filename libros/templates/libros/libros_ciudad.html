@@ -133,12 +133,21 @@
     <p id = "nota_lista_libros">Últimos libros compartidos:</p>
     <div id = "libros">
         <br>
-        {% for l in lista_libros_disponibles %}
+        {% for notificacion in actividad %}
             <div class="alert callout alert-default">
                 <div class="row">
-                    <h6><a href="{% url 'libros:biblioteca_compartida' l.biblioteca_compartida.slug %} ">
-                        {{ l.biblioteca_compartida.nombre }} </a> - <strong>{{l.libro.titulo}}</strong> {{l.libro.autor}}
-                    </h6>
+                    {% if notificacion.tipo == "bcompartida_compartio" %}
+                        <h6><a href="{% url 'libros:biblioteca_compartida' notificacion.biblioteca_compartida.slug %} ">
+                            {{ notificacion.biblioteca_compartida.nombre }} </a> compartió el libro
+                            <strong>{{notificacion.libro.titulo}}</strong> de <strong>{{notificacion.libro.autor}}</strong>.
+                        </h6>
+                    {% elif notificacion.tipo == "bcompartida_cambio" %}
+                        <h6><a href="{% url 'libros:biblioteca_compartida' notificacion.biblioteca_compartida.slug %} ">
+                            {{ notificacion.biblioteca_compartida.nombre }} </a> cambió
+                            <strong>{{notificacion.libro.titulo}}</strong> de <strong>{{notificacion.libro.autor}} </strong>por
+                            <strong>{{ notificacion.segundo_libro.titulo }} </strong> de <strong>{{ notificacion.segundo_libro.autor }}</strong>.
+                        </h6>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
-
 from datetime import datetime
+from itertools import chain
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
@@ -164,12 +164,22 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
     num_libros_disponibles = libros_disponibles.count()
     bibliotecas_compartidas = BibliotecaCompartida.objects.filter(ciudad=ciudad)
 
-    # Muestra libros disponibles, dos libro de cada bcompartida.
-    lista_libros_disponibles = []
+    # actividad - Muestra los últimos libros compartidos de cada biblioteca, y los últimos cambios
+    ultimos_libros_compartidos = []
     for bcompartida in bibliotecas_compartidas:
-        libro_bcompartida = libros_disponibles.filter(biblioteca_compartida=bcompartida, disponible=True).last()
-        if libro_bcompartida:
-            lista_libros_disponibles.append(libro_bcompartida)
+        if Notificacion.objects.filter(tipo="bcompartida_compartio",
+                                       biblioteca_compartida=bcompartida).exists():
+            notificacion_compartio = Notificacion.objects.filter(tipo="bcompartida_compartio",
+                                                                 biblioteca_compartida=bcompartida).latest()
+            ultimos_libros_compartidos.append(notificacion_compartio)
+
+    # Va a dar problema si hay más ciudades
+    lista_cambios = []
+    notificaciones_cambios = Notificacion.objects.filter(tipo="bcompartida_cambio")
+    for ncambio in notificaciones_cambios:
+        lista_cambios.append(ncambio)
+
+    actividad = sorted(chain(ultimos_libros_compartidos, lista_cambios), key=lambda n: n.fecha)
 
     # Puntos Goolge Maps
     gmap_bcompartidas = []
@@ -193,7 +203,7 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
 
     context = {
         'ciudad': ciudad,
-        'lista_libros_disponibles': lista_libros_disponibles,
+        'actividad': actividad,
         'num_libros_disponibles': num_libros_disponibles,
         'bibliotecas_compartidas': bibliotecas_compartidas,
         'gmap_bcompartidas': gmap_bcompartidas,
@@ -913,7 +923,8 @@ def buscar_ajax(request, id_ciudad):
                     for libro_disp in libros_disponibles:
                         libro_disp_dict = {'autor': libro_disp.libro.autor, 'titulo': libro_disp.libro.titulo,
                                            'url_bcompartida': reverse('libros:biblioteca_compartida',
-                                                                      kwargs={'slug_biblioteca_compartida': libro_disp.biblioteca_compartida.slug}),
+                                                                      kwargs={
+                                                                          'slug_biblioteca_compartida': libro_disp.biblioteca_compartida.slug}),
                                            'nombre_bcompartida': libro_disp.biblioteca_compartida.nombre}
                         lista_libros_disponibles.append(libro_disp_dict)
 

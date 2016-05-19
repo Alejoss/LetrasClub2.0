@@ -12,7 +12,7 @@ class NManager(models.Manager):
 	"""
 
     def compartio_libro_abierto(self, perfil_actor, libro):
-        print "compartio_libro_abierto: %s" % (libro)
+        print "compartio_libro_abierto: %s" % libro
         notificacion = self.create(perfil_actor=perfil_actor, libro=libro, tipo="compartio_libro_abierto")
 
         return notificacion
@@ -97,6 +97,7 @@ class Notificacion(models.Model):
 
     class Meta:
         ordering = ["-fecha"]
+        get_latest_by = 'fecha'
 
     def __unicode__(self):
         return "Notificacion: %s - %s - %s" % (self.perfil_actor, self.tipo, self.libro.titulo)

@@ -170,7 +170,7 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
         if Notificacion.objects.filter(tipo="bcompartida_compartio",
                                        biblioteca_compartida=bcompartida).exists():
             notificacion_compartio = Notificacion.objects.filter(tipo="bcompartida_compartio",
-                                                                 biblioteca_compartida=bcompartida).latest()
+                                                                 biblioteca_compartida=bcompartida).last()
             ultimos_libros_compartidos.append(notificacion_compartio)
 
     # Va a dar problema si hay más ciudades

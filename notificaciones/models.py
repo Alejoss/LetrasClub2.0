@@ -97,7 +97,6 @@ class Notificacion(models.Model):
 
     class Meta:
         ordering = ["-fecha"]
-        get_latest_by = 'fecha'
 
     def __unicode__(self):
         return "Notificacion: %s - %s - %s" % (self.perfil_actor, self.tipo, self.libro.titulo)

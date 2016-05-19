@@ -103,6 +103,9 @@ def nuevo_libro(request, tipo_dueno, slug_biblioteca_compartida):
                                                                       libro=libro_creado)
                     libro_disponible_obj.save()
 
+                    # Crear notificacion compartio libro abierto
+                    Notificacion.objects.bcompartida_compartio(bcompartida, libro_creado)
+
                     return HttpResponseRedirect(
                         reverse('libros:editar_libros_bcompartida',
                                 kwargs={'slug_biblioteca_compartida': bcompartida.slug}))

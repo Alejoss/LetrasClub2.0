@@ -15,10 +15,10 @@ SERVER_EMAIL = "letraserrores@no-reply.com"
 SECRET_KEY = os.environ['LIBROS_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-HEROKU = True
-HEROKU_DB = True
-AMAZON_S3 = True
+DEBUG = True
+HEROKU = False
+HEROKU_DB = False
+AMAZON_S3 = False
 
 ALLOWED_HOSTS = ["*"]
 

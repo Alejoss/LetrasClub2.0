@@ -252,6 +252,8 @@
 
         function initMap() {
             var map = new google.maps.Map(document.getElementById('mapa_ciudad'), map_options);
+            var infowindow = new google.maps.InfoWindow();
+
             marker_objects = [];
 
             function AutoCenter() {
@@ -263,7 +265,6 @@
             }
 
             function sumarMensaje(marker, biblioteca_slug) {
-                var infowindow = new google.maps.InfoWindow();
                 var contenido_infowindow = "Biblioteca Compartida";
 
                 marker.addListener('click', function () {

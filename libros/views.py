@@ -182,7 +182,8 @@ def libros_ciudad(request, slug_ciudad, id_ciudad):
     for ncambio in notificaciones_cambios:
         lista_cambios.append(ncambio)
 
-    actividad = sorted(chain(ultimos_libros_compartidos, lista_cambios), key=lambda n: n.fecha)
+    actividad = sorted(chain(ultimos_libros_compartidos, lista_cambios), key=lambda n: n.fecha) # Mas nuevos abajo
+    actividad = actividad[::-1]
 
     # Puntos Goolge Maps
     gmap_bcompartidas = []

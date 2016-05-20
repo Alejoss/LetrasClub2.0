@@ -40,7 +40,7 @@ def main(request):
     # PKs de las bcompartidas que salen en la portada
     pks_bcompartidas_portada = {'Mercado de Libros': 2, 'Red de Libros': 3, 'Renacer Cultural': 5, 'CafeArte': 4,
                                 'Z Lifestyle Gallery': 13, 'La Cafeteria': 14, 'Thani': 15, 'Biblos Mauricio': 16,
-                                'UWI': 17, 'Andoteca de Guapulo': 8, 'Andoteca Pobre Diablo': 12, 'Andoteca Nayon': 11}
+                                'UWI': 17, 'La Liebre': 19, 'Andoteca Pobre Diablo': 12, 'Grima': 20}
     pks_list = []
 
     for bcompartida_pk in pks_bcompartidas_portada.itervalues():
